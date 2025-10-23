@@ -23,20 +23,15 @@ export async function login(state: { error: string }, formData: FormData) {
     return { error: "Usuario o contraseña incorrectos" };
   }
 
-  try {
-    const hasActiveSubscription = await checkSubscription(authData.user.id);
+  const hasActiveSubscription = await checkSubscription(authData.user.id);
 
-    if (!hasActiveSubscription) {
-      revalidatePath("/", "layout");
-      redirect("/payment");
-    }
-
+  if (!hasActiveSubscription) {
     revalidatePath("/", "layout");
-    redirect("/reservation");
-  } catch (error) {
-    console.error("Error in subscription check:", error);
     redirect("/payment");
   }
+
+  revalidatePath("/", "layout");
+  redirect("/reservation");
 }
 
 export async function signup(state: { error: string }, formData: FormData) {
