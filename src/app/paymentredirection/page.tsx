@@ -1,13 +1,19 @@
 import { stripe } from "@/lib/stripe/types";
 import { redirect } from "next/navigation";
 
-export default async function PaymentRedirectionPage({
-  searchParams,
-}: {
-  searchParams: { session_id?: string };
-}) {
+interface PageParams {
+  session_id?: string;
+  [key: string]: string | string[] | undefined;
+}
+
+interface Props {
+  searchParams: Promise<PageParams>;
+}
+
+export default async function PaymentRedirectionPage({ searchParams }: Props) {
   const params = await searchParams;
-  const session_id = params?.session_id ?? "";
+  const session_id =
+    typeof params.session_id === "string" ? params.session_id : "";
 
   if (!session_id)
     return (
