@@ -11,9 +11,6 @@ export default function VerifyEmailPage() {
           <br />
           Una vez confirmada, podrás continuar.
         </p>
-        <a href="/payment" className="mt-4 text-blue-600 underline">
-          Si ya has confirmado el email, haz click aquí para continuar.
-        </a>
       </div>
     </div>
   );

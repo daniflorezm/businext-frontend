@@ -1,4 +1,4 @@
 "use client";
 export default function ErrorPage() {
-  return <p>Sorry, something went wrong</p>;
+  return <p>Algo ha ido mal, reintenta acceder nuevamente</p>;
 }

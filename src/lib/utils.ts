@@ -46,6 +46,7 @@ export const mapConfigurationToApi = (configuration: Configuration) => {
 export const routesWithoutHeader = [
   "/",
   "/login",
+  "/login/verify",
   "/resetpassword",
   "/payment",
   "/paymentredirection",
