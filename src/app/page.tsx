@@ -203,7 +203,7 @@ export default function Home() {
           ¿Listo para transformar tu negocio?
         </h2>
         <a
-          href="/reservation"
+          href="/login"
           className="px-8 py-3 rounded-xl bg-blue-600 text-white font-bold text-lg shadow hover:bg-blue-700 transition"
         >
           Comienza ahora

@@ -5,11 +5,12 @@ export async function checkSubscription(userId: string) {
     const supabase = await createClient();
 
     // Primero, verificamos si existe alguna suscripción para el usuario
-    const { data: subscription, error } = await supabase
+    const { data: subscriptions, error } = await supabase
       .from("subscriptions")
-      .select("status")
+      .select("*")
       .eq("user_id", userId)
-      .single();
+      .eq("status", "active")
+      .limit(1);
 
     if (error) {
       if (error.code === "PGRST116") {
@@ -19,7 +20,7 @@ export async function checkSubscription(userId: string) {
       return false;
     }
 
-    return subscription.status === "active";
+    return Boolean(subscriptions && subscriptions.length > 0);
   } catch (error) {
     console.error("Error in checkSubscription:", error);
     return false;

@@ -45,6 +45,7 @@ export function useFinances() {
             "Content-Type": "application/json",
             ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
           },
+          credentials: "include",
         }
       );
       if (!response.ok) {

@@ -32,6 +32,15 @@ export async function POST(req: Request) {
             break;
           }
 
+          // First, deactivate any existing active subscriptions for this user
+          await supabase
+            .from("subscriptions")
+            .update({ status: "canceled", updated_at: new Date() })
+            .eq("user_id", session.client_reference_id)
+            .eq("status", "active")
+            .neq("stripe_subscription_id", subscriptionDetails.id);
+
+          // Then create/update the new subscription
           await supabase.from("subscriptions").upsert(
             {
               user_id: session.client_reference_id,
@@ -68,8 +77,7 @@ export async function POST(req: Request) {
           break;
         }
 
-        // Actualizar el status
-        await supabase
+        const { data: subscriptionUpdated, error } = await supabase
           .from("subscriptions")
           .update({
             status: subscription.status,
@@ -77,19 +85,37 @@ export async function POST(req: Request) {
           })
           .eq("stripe_subscription_id", subscription.id);
 
-        console.log(`Status actualizado a: ${subscription.status}`);
+        if (error) {
+          console.error("Error updating subscription:", error);
+          break;
+        }
+
+        if (subscriptionUpdated) {
+          console.log(`Suscripcion ${subscription.id} ha sido actualizada`);
+        } else {
+          console.log(
+            `No se encontró la suscripción ${subscription.id} para actualizar`
+          );
+        }
+
+        console.log("Status actualizado a ", subscription.status);
         break;
 
       case "customer.subscription.deleted":
         const deletedSubscription = event.data.object as Stripe.Subscription;
 
-        await supabase
+        const { error: deleteError } = await supabase
           .from("subscriptions")
           .update({
             status: "canceled",
             updated_at: new Date(),
           })
           .eq("stripe_subscription_id", deletedSubscription.id);
+
+        if (deleteError) {
+          console.error("Error canceling subscription:", deleteError);
+          break;
+        }
 
         console.log(`Suscripción cancelada: ${deletedSubscription.id}`);
         break;

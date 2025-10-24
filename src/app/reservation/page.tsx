@@ -17,7 +17,9 @@ export default function ReservationPage() {
     getAllReservations();
   }, []);
 
-  let filteredReservations = [...reservationData];
+  let filteredReservations = [...reservationData].filter(
+    (res) => res.status === "PENDING"
+  );
   if (filter === "OLDEST") {
     filteredReservations.sort(
       (a, b) =>

@@ -1,21 +1,15 @@
-"use client";
 import "./globals.css";
-import { Header } from "@/components/common/Header";
-import { usePathname } from "next/navigation";
-import { routesWithoutHeader } from "@/lib/utils";
+import { HeaderWrapper } from "@/components/common/HeaderWrapper";
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const notContainHeader = routesWithoutHeader.includes(pathname);
-
   return (
     <html lang="en">
       <body>
-        {!notContainHeader && <Header />}
+        <HeaderWrapper />
         {children}
       </body>
     </html>
