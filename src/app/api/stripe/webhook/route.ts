@@ -32,29 +32,25 @@ export async function POST(req: Request) {
             break;
           }
 
-          // First, deactivate any existing active subscriptions for this user
-          await supabase
-            .from("subscriptions")
-            .update({ status: "canceled", updated_at: new Date() })
-            .eq("user_id", session.client_reference_id)
-            .eq("status", "active")
-            .neq("stripe_subscription_id", subscriptionDetails.id);
-
-          // Then create/update the new subscription
-          await supabase.from("subscriptions").upsert(
+          const { data, error } = await supabase.rpc(
+            "handle_new_subscription",
             {
-              user_id: session.client_reference_id,
-              stripe_subscription_id: subscriptionDetails.id,
-              status: subscriptionDetails.status,
-              updated_at: new Date(),
-            },
-            {
-              onConflict: "stripe_subscription_id",
-              ignoreDuplicates: false,
+              p_user_id: session.client_reference_id,
+              p_stripe_subscription_id: subscriptionDetails.id,
+              p_status: subscriptionDetails.status,
             }
           );
 
-          console.log(`Suscripción creada: ${subscriptionDetails.id}`);
+          if (error) {
+            console.error("Error handling subscription:", error);
+            // Importante: devolver error para que Stripe reintente
+            return NextResponse.json(
+              { error: "Failed to process subscription" },
+              { status: 500 }
+            );
+          }
+
+          console.log(`Suscripción procesada: ${subscriptionDetails.id}`);
         }
         break;
 
@@ -62,14 +58,12 @@ export async function POST(req: Request) {
       case "customer.subscription.updated":
         const subscription = event.data.object as Stripe.Subscription;
 
-        // Verificar si ya existe la suscripción
         const { data: existingSub } = await supabase
           .from("subscriptions")
           .select("id, user_id")
           .eq("stripe_subscription_id", subscription.id)
           .single();
 
-        // Si no existe, probablemente llegó antes que el checkout.session.completed
         if (!existingSub) {
           console.log(
             `Suscripción ${subscription.id} no encontrada, esperando checkout.session.completed`
@@ -77,7 +71,7 @@ export async function POST(req: Request) {
           break;
         }
 
-        const { data: subscriptionUpdated, error } = await supabase
+        await supabase
           .from("subscriptions")
           .update({
             status: subscription.status,
@@ -85,37 +79,19 @@ export async function POST(req: Request) {
           })
           .eq("stripe_subscription_id", subscription.id);
 
-        if (error) {
-          console.error("Error updating subscription:", error);
-          break;
-        }
-
-        if (subscriptionUpdated) {
-          console.log(`Suscripcion ${subscription.id} ha sido actualizada`);
-        } else {
-          console.log(
-            `No se encontró la suscripción ${subscription.id} para actualizar`
-          );
-        }
-
-        console.log("Status actualizado a ", subscription.status);
+        console.log(`Suscripción actualizada: ${subscription.id}`);
         break;
 
       case "customer.subscription.deleted":
         const deletedSubscription = event.data.object as Stripe.Subscription;
 
-        const { error: deleteError } = await supabase
+        await supabase
           .from("subscriptions")
           .update({
             status: "canceled",
             updated_at: new Date(),
           })
           .eq("stripe_subscription_id", deletedSubscription.id);
-
-        if (deleteError) {
-          console.error("Error canceling subscription:", deleteError);
-          break;
-        }
 
         console.log(`Suscripción cancelada: ${deletedSubscription.id}`);
         break;
