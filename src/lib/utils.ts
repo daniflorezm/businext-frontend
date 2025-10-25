@@ -51,3 +51,14 @@ export const routesWithoutHeader = [
   "/payment",
   "/paymentredirection",
 ];
+
+export const authOnlyRoutes = ["/payment", "/paymentredirection"];
+
+export const publicRoutes = [
+  "/",
+  "/login",
+  "/login/verify",
+  "/auth/confirm",
+  "/resetpassword",
+  "/error",
+];

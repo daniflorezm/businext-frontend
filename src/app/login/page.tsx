@@ -3,7 +3,7 @@
 import { login, signup } from "@/app/login/actions";
 import { useRef } from "react";
 import { useActionState, useState } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [loginState, loginAction] = useActionState(login, { error: "" });
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [recoveryLoading, setRecoveryLoading] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const recoveryEmailRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   async function handleRecovery(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +57,7 @@ export default function LoginPage() {
         <div className="flex justify-center mb-2">
           <button
             type="button"
-            onClick={() => redirect("/")}
+            onClick={() => router.push("/")}
             className="px-6 py-2 rounded-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 tracking-wide ring-2 ring-blue-200 hover:ring-blue-400 focus:outline-none focus:ring-4 flex items-center justify-center gap-2"
           >
             Volver al dashboard
