@@ -16,7 +16,18 @@ export async function GET() {
         ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
       },
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error fetching configuration data" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error fetching configuration data:", error);
@@ -43,7 +54,18 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify(mappedBody),
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error creating configuration" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error creating configuration:", error);
@@ -75,7 +97,18 @@ export async function DELETE(request: NextRequest) {
         ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
       },
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error deleting configuration" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error deleting configuration:", error);
@@ -109,7 +142,18 @@ export async function PATCH(request: NextRequest) {
       },
       body: JSON.stringify(configuration),
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error updating configuration" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error updating configuration:", error);

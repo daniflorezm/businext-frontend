@@ -21,7 +21,18 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error fetching reservations data" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error fetching reservations data:", error);
@@ -47,7 +58,18 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify(body),
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error creating reservation" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error creating reservation:", error);
@@ -79,7 +101,18 @@ export async function DELETE(request: NextRequest) {
         ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
       },
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error deleting reservation" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error deleting reservation:", error);
@@ -113,7 +146,18 @@ export async function PATCH(request: NextRequest) {
       },
       body: JSON.stringify(reservation),
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error updating reservation" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error updating reservation:", error);

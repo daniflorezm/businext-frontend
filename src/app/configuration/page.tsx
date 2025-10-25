@@ -6,6 +6,7 @@ import { useConfiguration } from "@/hooks/useConfiguration";
 import InformationLoader from "@/components/common/InformationLoader";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Configuration } from "@/lib/configuration/types";
+import { cancelUserSubscription } from "@/app/actions/cancelSubscription";
 
 export default function ConfigurationPage() {
   const {
@@ -57,6 +58,27 @@ export default function ConfigurationPage() {
   if (loading) {
     return <InformationLoader />;
   }
+
+  const handleCancelSubscription = async () => {
+    try {
+      const confirm = window.confirm(
+        "¿Estás seguro de que deseas cancelar tu suscripción?"
+      );
+      if (!confirm) {
+        return;
+      }
+      await cancelUserSubscription();
+      alert(
+        "Suscripción cancelada. Seguirás teniendo acceso hasta el final del periodo actual."
+      );
+    } catch (err: any) {
+      alert(
+        "Error al cancelar la suscripción: " +
+          (err?.message || "Intenta de nuevo")
+      );
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col w-full min-h-screen py-10 px-2 sm:px-4 md:px-8 items-center gap-6 bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
@@ -93,12 +115,20 @@ export default function ConfigurationPage() {
             data={configurationData[0]}
           />
         </div>
-        <div className="flex justify-center w-full">
+        <div className="flex flex-col justify-center w-full gap-2 mt-4 items-center">
           <button
             type="submit"
-            className="rounded-xl px-6 py-3 font-semibold bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-lg hover:from-blue-600 hover:to-blue-800 transition text-lg md:text-xl mt-4"
+            className="rounded-xl px-6 py-3 font-semibold bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-lg hover:from-blue-600 hover:to-blue-800 transition text-lg md:text-xl"
           >
             Guardar configuración
+          </button>
+          <button
+            type="button"
+            onClick={handleCancelSubscription}
+            className="mt-2 text-xl text-red-500 bg-transparent px-3 py-1 rounded hover:underline focus:outline-none"
+            style={{ border: "none", boxShadow: "none" }}
+          >
+            Cancelar suscripción
           </button>
         </div>
       </div>

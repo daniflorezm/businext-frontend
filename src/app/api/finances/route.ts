@@ -15,7 +15,18 @@ export async function GET() {
         ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
       },
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error fetching finances data" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error fetching finances data:", error);
@@ -41,7 +52,18 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify(body),
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error creating finance" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error creating finance:", error);
@@ -73,7 +95,18 @@ export async function DELETE(request: NextRequest) {
         ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
       },
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error deleting finance" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error deleting finance:", error);
@@ -107,7 +140,18 @@ export async function PATCH(request: NextRequest) {
       },
       body: JSON.stringify(finance),
     });
-    const data = await response.json();
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || "Error updating finance" },
+        { status: response.status }
+      );
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error updating finance:", error);
