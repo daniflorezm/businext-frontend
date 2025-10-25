@@ -34,6 +34,7 @@ export async function fetchClientSecret() {
     mode: "subscription",
     return_url: `${origin}/paymentredirection?session_id={CHECKOUT_SESSION_ID}`,
     automatic_tax: { enabled: true },
+    allow_promotion_codes: true,
   });
 
   return session.client_secret;
