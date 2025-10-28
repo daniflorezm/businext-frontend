@@ -15,7 +15,7 @@ export function useProduct() {
       }
       const data = await response.json();
       setProductData(data);
-      return productData;
+      return data;
     } catch (error) {
       setError(error as Error);
       return [];
@@ -31,6 +31,9 @@ export function useProduct() {
       const response = await fetch("api/products", {
         method: "POST",
         body: JSON.stringify(newProduct),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       if (!response.ok) {
         throw new Error("Failed to create product");

@@ -34,6 +34,9 @@ export function useConfiguration() {
       const response = await fetch("api/configuration", {
         method: "POST",
         body: JSON.stringify(newConfiguration),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       if (!response.ok) {
         throw new Error("Failed to create configuration");

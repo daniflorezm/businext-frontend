@@ -25,7 +25,7 @@ export function useReservation() {
       const data = await response.json();
       const reservationDataMapped = data.map(mapReservationFromApi);
       setReservationData(reservationDataMapped);
-      return reservationData;
+      return reservationDataMapped;
     } catch (error) {
       setError(error as Error);
       return [];
@@ -42,6 +42,9 @@ export function useReservation() {
       const response = await fetch("api/reservations", {
         method: "POST",
         body: JSON.stringify(newReservation),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       if (!response.ok) {
         throw new Error("Failed to create reservation");

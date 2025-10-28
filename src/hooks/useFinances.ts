@@ -22,7 +22,7 @@ export function useFinances() {
       }
       const data = await response.json();
       setFinancesData(data);
-      return financesData;
+      return data;
     } catch (error) {
       setError(error as Error);
       return [];
