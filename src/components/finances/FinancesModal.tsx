@@ -84,6 +84,14 @@ export const FinancesModal = ({
             />
             <div className="flex flex-col sm:flex-row justify-between gap-2 mt-4">
               <button
+                type="button"
+                onClick={() => handleOpenModal()}
+                className="w-full sm:w-auto px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 shadow hover:from-gray-400 hover:to-gray-500 transition"
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button
                 type="submit"
                 className="w-full sm:w-auto px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-green-400 to-green-600 text-white shadow hover:from-green-500 hover:to-green-700 transition flex items-center justify-center"
                 disabled={loading}
@@ -115,14 +123,6 @@ export const FinancesModal = ({
                 ) : (
                   "Guardar"
                 )}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleOpenModal()}
-                className="w-full sm:w-auto px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 shadow hover:from-gray-400 hover:to-gray-500 transition"
-                disabled={loading}
-              >
-                Cancelar
               </button>
             </div>
           </form>

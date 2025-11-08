@@ -5,10 +5,12 @@ import {
   FinancesBalanceCardProps,
   FinanceBalanceType,
 } from "@/lib/finances/types";
+import { monthOptions } from "@/lib/finances/types";
 
 export const FinancesBalanceCard = ({
   type,
   amount,
+  monthName,
 }: FinancesBalanceCardProps) => {
   const imageSelected =
     type === "income"
@@ -47,6 +49,7 @@ export const FinancesBalanceCard = ({
               <p className="text-sm text-gray-500 font-semibold mb-1 tracking-wide uppercase">
                 {FinanceBalanceType[type]}
               </p>
+              <p className="text-xs text-gray-700 mb-2">Mes: {monthName}</p>
               <p
                 className={`text-3xl font-extrabold ${textColor} drop-shadow-sm`}
               >

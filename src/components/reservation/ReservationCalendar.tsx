@@ -53,12 +53,27 @@ export const ReservationCalendar = ({
 
   const loadEvents = async () => {
     try {
-      const mapped = reservationData.map((r, idx) => ({
+      // Build a stable mapping employee -> color index
+      const staffList: string[] = [];
+      reservationData.forEach((r) => {
+        const name =
+          r.inCharge && typeof r.inCharge === "string" ? r.inCharge : "";
+        if (name && !staffList.includes(name)) staffList.push(name);
+      });
+
+      const staffColorMap: Record<string, number> = {};
+      staffList.forEach((name, i) => {
+        staffColorMap[name] = i % eventColors.length;
+      });
+
+      const mapped = reservationData.map((r) => ({
         id: r.id,
-        title: r.customerName,
+        // Include employee name next to customer name
+        title: `${r.customerName} — ${r.inCharge ?? ""}`,
         start: new Date(r.reservationStartDate),
         end: new Date(r.reservationEndDate),
-        colorIdx: idx % eventColors.length,
+        colorIdx: staffColorMap[r.inCharge as string] ?? 0,
+        inCharge: r.inCharge,
       }));
 
       setEvents(mapped);
@@ -70,6 +85,17 @@ export const ReservationCalendar = ({
 
   const handleViewChange = (newView: View) => {
     setView(newView);
+  };
+
+  // When clicking a day cell in month view, react-big-calendar calls onDrillDown
+  // with the date for that cell. Use it to switch to 'day' view and center on
+  // the clicked date.
+  const handleDrillDown = (date: Date, viewName: View) => {
+    // only perform drilldown when currently in month view (prevents loops)
+    if (view === "month") {
+      setDate(date);
+      setView("day");
+    }
   };
 
   const handleNavigate = (newDate: Date) => {
@@ -150,6 +176,20 @@ export const ReservationCalendar = ({
             date={date}
             onView={handleViewChange}
             onNavigate={handleNavigate}
+            onDrillDown={handleDrillDown}
+            // Make cells selectable so we can detect clicks on month cells.
+            selectable
+            // When drilling down from month, target day view
+            drilldownView="day"
+            // Fallback: onSelectSlot is called for clicks on cells (start = date)
+            onSelectSlot={(slotInfo) => {
+              // slotInfo.start is the clicked date
+              if (view === "month" && slotInfo && (slotInfo as any).start) {
+                const clicked = (slotInfo as any).start as Date;
+                setDate(clicked);
+                setView("day");
+              }
+            }}
             culture="es-ES"
             messages={{
               next: "Siguiente",

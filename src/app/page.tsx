@@ -62,7 +62,7 @@ export default function Home() {
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span>Pago único</span>
+                <span>Interfaz intuitiva</span>
               </div>
               <div className="flex items-center space-x-2">
                 <svg

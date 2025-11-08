@@ -3,6 +3,7 @@ import { Reservation, StatusOptions } from "@/lib/reservation/types";
 import { useReservation } from "@/hooks/useReservation";
 import { ReservationModal } from "@/components/reservation/ReservationModal";
 import { DeleteModal } from "@/components/reservation/DeleteReservationModal";
+import { CompleteReservationModal } from "@/components/reservation/CompleteReservationModal";
 
 export const BookListItem = (reservation: Reservation) => {
   const {
@@ -18,13 +19,16 @@ export const BookListItem = (reservation: Reservation) => {
   const { deleteReservation, updateReservation, loading } = useReservation();
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [openCompleteModal, setOpenCompleteModal] = useState(false);
   const handleOpenDeleteModal = () => {
     setOpenDeleteModal(!openDeleteModal);
   };
   const handleOpenEditModal = () => {
     setOpenEditModal(!openEditModal);
   };
-
+  const handleOpenCompleteReservationModal = () => {
+    setOpenCompleteModal(!openCompleteModal);
+  };
   const formatDate = (dateStr: string) => {
     const isodate = new Date(dateStr);
 
@@ -36,7 +40,7 @@ export const BookListItem = (reservation: Reservation) => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-lg border border-blue-100 p-6 sm:p-8 flex flex-col gap-4 transition hover:shadow-2xl hover:border-blue-200">
+    <div className="w-full max-w-2xl mx-auto bg-gradient-to-br from-blue-200 via-white to-blue-300 rounded-2xl shadow-xl border-2 border-blue-400 p-6 sm:p-8 flex flex-col gap-4 transition hover:shadow-2xl hover:border-blue-600">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="flex items-center mb-2">
           <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-100 border-2 border-blue-400 shadow-lg mr-4">
@@ -115,19 +119,32 @@ export const BookListItem = (reservation: Reservation) => {
           </span>
         </div>
       </div>
-      <div className="flex justify-end gap-4 mt-2">
-        <button
-          className="px-4 py-2 rounded-lg font-semibold bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow hover:from-blue-500 hover:to-blue-700 transition border border-blue-500"
-          onClick={() => setOpenEditModal(true)}
-        >
-          Editar
-        </button>
-        <button
-          className="px-4 py-2 rounded-lg font-semibold bg-gradient-to-r from-red-400 to-red-600 text-white shadow hover:from-red-500 hover:to-red-700 transition border border-red-500"
-          onClick={() => setOpenDeleteModal(true)}
-        >
-          Eliminar
-        </button>
+      <div className="mt-2 w-full">
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
+          <div className="w-full sm:w-auto">
+            <button
+              className="w-full sm:w-auto px-4 py-2 rounded-lg font-semibold bg-gradient-to-r from-green-400 to-green-600 text-white shadow hover:from-green-500 hover:to-green-700 transition border border-green-500"
+              onClick={() => setOpenCompleteModal(true)}
+            >
+              Completar
+            </button>
+          </div>
+
+          <div className="flex w-full sm:w-auto flex-col sm:flex-row sm:items-center gap-3">
+            <button
+              className="w-full sm:w-auto px-4 py-2 rounded-lg font-semibold bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow hover:from-blue-500 hover:to-blue-700 transition border border-blue-500"
+              onClick={() => setOpenEditModal(true)}
+            >
+              Editar
+            </button>
+            <button
+              className="w-full sm:w-auto px-4 py-2 rounded-lg font-semibold bg-gradient-to-r from-red-400 to-red-600 text-white shadow hover:from-red-500 hover:to-red-700 transition border border-red-500"
+              onClick={() => setOpenDeleteModal(true)}
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
       </div>
       {openDeleteModal && (
         <DeleteModal
@@ -136,6 +153,16 @@ export const BookListItem = (reservation: Reservation) => {
           openDeleteModal={openDeleteModal}
           handleOpenDeleteModal={handleOpenDeleteModal}
           deleteReservation={deleteReservation}
+        />
+      )}
+      {openCompleteModal && (
+        <CompleteReservationModal
+          data={reservation}
+          openCompleteReservationModal={openCompleteModal}
+          handleOpenCompleteReservationModal={
+            handleOpenCompleteReservationModal
+          }
+          updateReservation={updateReservation}
         />
       )}
       {openEditModal && (

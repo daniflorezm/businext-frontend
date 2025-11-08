@@ -6,12 +6,15 @@ export type Finances = {
   type: string;
   creator: string;
   created_at?: string;
+  reservation_id?: number;
 };
 
 export type FinancesModalProps = {
   isOpen: boolean;
   handleOpenModal: () => void;
 };
+
+export type FinanceRecordItemProps = Finances & { customerName?: string };
 
 export const PlaceHoldersFinancesMapping = {
   id: "ID",
@@ -53,6 +56,7 @@ export const FinanceBalanceType = {
 export type FinancesBalanceCardProps = {
   type: keyof typeof FinanceBalanceType;
   amount: number;
+  monthName: string;
 };
 
 export type AnualBalances = {

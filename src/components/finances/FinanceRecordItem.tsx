@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { DeleteFinancesRecordModal } from "@/components/finances/DeleteFinancesRecordModal";
 import { useFinances } from "@/hooks/useFinances";
-import { Finances } from "@/lib/finances/types";
-export const FinanceRecordItem = (financeRecord: Finances) => {
-  const { concept, amount, creator, type, created_at, id } = financeRecord;
+import { FinanceRecordItemProps } from "@/lib/finances/types";
+export const FinanceRecordItem = (financeRecord: FinanceRecordItemProps) => {
+  const { concept, amount, creator, type, created_at, id, customerName } =
+    financeRecord;
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const handleOpenDeleteModal = () => {
     setOpenDeleteModal(!openDeleteModal);
@@ -39,6 +40,11 @@ export const FinanceRecordItem = (financeRecord: Finances) => {
             <p className="text-xs text-gray-500 font-medium">
               Emisor: {creator}
             </p>
+            {customerName && (
+              <p className="text-xs text-blue-600 font-medium mt-1">
+                Cliente: {customerName}
+              </p>
+            )}
           </div>
         </div>
         {/* Right: Amount, Date, Delete */}
