@@ -1,0 +1,13 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /api
+Disallow: /actions
+
+# Host
+Host: http://localhost:3000
+
+# Sitemaps
+Sitemap: http://localhost:3000/sitemap.xml
+Sitemap: https://businext.greenfourtech.com/sitemap.xml
