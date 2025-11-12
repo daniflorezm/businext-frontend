@@ -6,7 +6,7 @@ export type Finances = {
   type: string;
   creator: string;
   created_at?: string;
-  reservation_id?: number;
+  reservation_id?: number | null;
 };
 
 export type FinancesModalProps = {

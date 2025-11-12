@@ -12,6 +12,7 @@ export default function ReservationPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState("ALL");
   const [employeeFilter, setEmployeeFilter] = useState("ALL");
+  const [customerSearch, setCustomerSearch] = useState("");
   const itemsPerPage = 6;
 
   useEffect(() => {
@@ -53,6 +54,14 @@ export default function ReservationPage() {
   let filteredReservations = [...reservationData].filter(
     (res) => res.status === "PENDING"
   );
+  // Filtro por nombre de cliente
+  if (customerSearch.trim()) {
+    filteredReservations = filteredReservations.filter((res) =>
+      res.customerName
+        ?.toLowerCase()
+        .includes(customerSearch.trim().toLowerCase())
+    );
+  }
 
   // Apply employee filter
   if (employeeFilter !== "ALL") {
@@ -120,6 +129,26 @@ export default function ReservationPage() {
                 {btn.label}
               </button>
             ))}
+          </div>
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-2 sm:mt-0">
+            <label
+              htmlFor="customer-search"
+              className="text-sm text-blue-700 font-medium"
+            >
+              Cliente:
+            </label>
+            <input
+              id="customer-search"
+              type="text"
+              value={customerSearch}
+              onChange={(e) => {
+                setCustomerSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Buscar por nombre"
+              className="w-full sm:w-[180px] px-3 py-1.5 rounded-md text-sm font-medium transition border border-blue-200 bg-white text-blue-700 shadow-sm hover:bg-blue-50"
+              aria-label="Filtrar por cliente"
+            />
           </div>
           <div className="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-2 sm:mt-0">
             <label

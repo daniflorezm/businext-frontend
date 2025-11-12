@@ -25,7 +25,8 @@ export const FinancesModal = ({
   const { createFinance, loading } = useFinances();
 
   const onSubmit: SubmitHandler<Finances> = async (data: Finances) => {
-    await createFinance(data);
+    data = { ...data, reservation_id: null };
+    const result = await createFinance(data);
     window.location.reload();
   };
   return (

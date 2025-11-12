@@ -69,12 +69,26 @@ export default function FinancesPage() {
     currentPage * itemsPerPage
   );
 
-  const totalIncome = filteredFinances
-    .filter((f) => f.type === "INCOME")
+  const totalIncome = financesData
+    .filter((f) => {
+      if (!f.created_at) return false;
+      const date = new Date(f.created_at);
+      const matchesMonth =
+        date.getMonth() === selectedMonth &&
+        date.getFullYear() === selectedYear;
+      return matchesMonth && f.type === "INCOME";
+    })
     .reduce((sum, f) => sum + f.amount, 0);
 
-  const totalExpense = filteredFinances
-    .filter((f) => f.type === "EXPENSE")
+  const totalExpense = financesData
+    .filter((f) => {
+      if (!f.created_at) return false;
+      const date = new Date(f.created_at);
+      const matchesMonth =
+        date.getMonth() === selectedMonth &&
+        date.getFullYear() === selectedYear;
+      return matchesMonth && f.type === "EXPENSE";
+    })
     .reduce((sum, f) => sum + f.amount, 0);
 
   const totalBalance = totalIncome - totalExpense;
