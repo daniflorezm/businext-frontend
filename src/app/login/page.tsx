@@ -19,6 +19,20 @@ export default function LoginPage() {
   const recoveryEmailRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  const handleSubmitAction = async (formData: FormData) => {
+    if (formLoading) return;
+    setFormLoading(true);
+    try {
+      if (mode === "login") {
+        await loginAction(formData);
+      } else {
+        await signupAction(formData);
+      }
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   async function handleRecovery(e: React.FormEvent) {
     e.preventDefault();
     setRecoveryLoading(true);
@@ -66,18 +80,7 @@ export default function LoginPage() {
         <h1 className="text-3xl font-extrabold text-blue-700 text-center mb-2 tracking-tight">
           {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
         </h1>
-        <form
-          className="flex flex-col gap-4"
-          action={async (formData) => {
-            setFormLoading(true);
-            if (mode === "login") {
-              await loginAction(formData);
-            } else {
-              await signupAction(formData);
-            }
-            setFormLoading(false);
-          }}
-        >
+        <form className="flex flex-col gap-4" action={handleSubmitAction}>
           {showRecovery && (
             <div className="flex flex-col gap-3 mb-2 p-4 rounded-xl border border-blue-200 bg-blue-50">
               <h2 className="text-blue-700 font-bold text-lg">
@@ -234,7 +237,13 @@ export default function LoginPage() {
                   ></path>
                 </svg>
               )}
-              {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+              {formLoading
+                ? mode === "login"
+                  ? "Iniciando…"
+                  : "Creando…"
+                : mode === "login"
+                ? "Iniciar sesión"
+                : "Crear cuenta"}
             </button>
           </div>
         </form>

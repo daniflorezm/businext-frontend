@@ -25,6 +25,7 @@ export default function FinancesPage() {
   const [filterType, setFilterType] = useState<"ALL" | "INCOME" | "EXPENSE">(
     "ALL"
   );
+  const [issuerFilter, setIssuerFilter] = useState<string>("");
   const itemsPerPage = 4;
 
   useEffect(() => {
@@ -54,7 +55,10 @@ export default function FinancesPage() {
     const matchesMonth =
       date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
     const matchesType = filterType === "ALL" ? true : f.type === filterType;
-    return matchesMonth && matchesType;
+    const matchesIssuer = issuerFilter
+      ? f.creator?.toLowerCase().includes(issuerFilter.toLowerCase())
+      : true;
+    return matchesMonth && matchesType && matchesIssuer;
   });
 
   const sortedReservations = [...filteredFinances].sort(
@@ -185,6 +189,25 @@ export default function FinancesPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                <label
+                  htmlFor="issuer"
+                  className="text-base font-semibold text-blue-700 sm:self-center sm:ml-2"
+                >
+                  Emisor
+                </label>
+                <input
+                  id="issuer"
+                  type="text"
+                  placeholder="Buscar por emisor..."
+                  value={issuerFilter}
+                  onChange={(e) => {
+                    setIssuerFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-2 rounded-lg border-2 border-blue-200 bg-blue-50 text-blue-900 font-semibold text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm hover:border-blue-400 placeholder:text-blue-400 w-full sm:w-auto"
+                />
               </div>
             </div>
             <button
