@@ -28,7 +28,7 @@
     "date-fns": "^4.1.0",
     "lucide-react": "^0.544.0",
     "moment": "^2.30.1",
-    "next": "^15.5.2",
+    "next": "^15.5.12",
     "next-sitemap": "^4.2.3",
     "nodemailer": "^7.0.10",
     "postcss": "^8.5.6",
