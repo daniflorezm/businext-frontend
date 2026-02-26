@@ -7,7 +7,6 @@ import {
   Reservation,
 } from "@/lib/reservation/types";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
-import { mapReservationToApi } from "@/lib/utils";
 
 export const CompleteReservationModal = ({
   data,
@@ -36,8 +35,7 @@ export const CompleteReservationModal = ({
     setIsSubmitting(true);
     try {
       const completedReservation = { ...data, status: "COMPLETED" };
-      const dataMapped = mapReservationToApi(completedReservation);
-      const updated = await updateReservation(dataMapped);
+      const updated = await updateReservation(completedReservation);
       if (updated) {
         await createFinanceRecord(completedReservation);
       }

@@ -2,7 +2,7 @@ import { Control, UseFormRegister } from "react-hook-form";
 export type Configuration = {
   id?: number;
   businessName: string;
-  staff: string;
+  staff: string[];
 };
 
 export type InputConfig = {

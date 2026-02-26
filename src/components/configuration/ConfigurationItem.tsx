@@ -10,7 +10,7 @@ import { useFieldArray, Control, UseFormRegister } from "react-hook-form";
 
 type FieldArraySectionProps = {
   inputName: string;
-  inputValue: keyof Configuration;
+  inputValue: "staff";
   control: Control<Configuration>;
   registerConf: UseFormRegister<Configuration>;
   addDeleteButton: boolean;
@@ -26,13 +26,14 @@ const FieldArraySection = ({
   data,
 }: FieldArraySectionProps) => {
   const { fields, append, remove, update } = useFieldArray({
-    name: inputValue,
+    // RHF useFieldArray types require object arrays; staff uses primitive strings at runtime
+    name: inputValue as never,
     control,
   });
 
   useEffect(() => {
-    const staffList = data?.staff.split(",");
-    staffList?.map((staff, index) => update(index, staff.trim()));
+    const staffList = data?.staff ?? [];
+    staffList.forEach((staff, index) => update(index, staff.trim()));
   }, [data]);
 
   const addItem = () => append("");
@@ -103,7 +104,7 @@ export const ConfigurationItem = ({
         {control && inputValue && registerConf ? (
           <FieldArraySection
             inputName={inputName}
-            inputValue={inputValue as keyof Configuration}
+            inputValue={inputValue as "staff"}
             control={control}
             registerConf={registerConf}
             addDeleteButton={addDeleteButton}

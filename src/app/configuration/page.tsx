@@ -19,27 +19,23 @@ export default function ConfigurationPage() {
   const { register, handleSubmit, setValue, control } = useForm<Configuration>({
     defaultValues: {
       businessName: "",
-      staff: "",
+      staff: [],
     },
   });
 
   const onSubmit: SubmitHandler<Configuration> = (data) => {
-    const staffFormatted = Array.isArray(data.staff)
-      ? data.staff.map((s) => s.trim()).filter((s) => s !== "")
-      : typeof data.staff === "string"
-      ? [data.staff.trim()].filter((s) => s !== "")
-      : [];
+    const staffFormatted = data.staff.filter((s) => s.trim() !== "");
     if (configurationData.length > 0) {
       const updateConfig = {
         id: configurationData[0].id,
         businessName: data.businessName,
-        staff: staffFormatted.toString(),
+        staff: staffFormatted,
       };
       updateConfiguration(updateConfig);
     } else {
       const createConfig = {
-        businessName: data.businessName.toString(),
-        staff: staffFormatted.toString(),
+        businessName: data.businessName,
+        staff: staffFormatted,
       };
       createConfiguration(createConfig);
     }

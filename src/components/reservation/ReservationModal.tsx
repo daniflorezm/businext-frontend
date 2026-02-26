@@ -6,7 +6,6 @@ import {
   ReservationModalProps,
   StatusOptions,
 } from "@/lib/reservation/types";
-import { mapReservationToApi } from "@/lib/utils";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
@@ -48,12 +47,10 @@ export const ReservationModal = ({
   const { getAllConfigurations, configurationData } = useConfiguration();
   const { getAllProducts, productData } = useProduct();
   const { createFinance } = useFinances();
-  const staffNames = configurationData[0]?.staff
-    ? configurationData[0].staff.split(",")
-    : [];
+  const staffNames = configurationData[0]?.staff ?? [];
   const staffOptions = Object.assign(
     {},
-    ...staffNames?.map((key) => ({ [key]: key }))
+    ...staffNames.map((key: string) => ({ [key]: key }))
   );
 
   const productOptions = Object.assign(
@@ -103,8 +100,7 @@ export const ReservationModal = ({
       const dataUpdated = getValues();
       data = { ...dataUpdated, id, reservationStartDate, reservationEndDate };
     }
-    const dataMapped = mapReservationToApi(data);
-    await executeAction(dataMapped);
+    await executeAction(data);
     window.location.reload();
   };
 
