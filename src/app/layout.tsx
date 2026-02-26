@@ -3,6 +3,8 @@ import { HeaderWrapper } from "@/components/common/HeaderWrapper";
 
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: {
     default: "Businext",
