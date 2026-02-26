@@ -24,7 +24,7 @@ export default function ConfigurationPage() {
   });
 
   const onSubmit: SubmitHandler<Configuration> = (data) => {
-    let staffFormatted = Array.isArray(data.staff)
+    const staffFormatted = Array.isArray(data.staff)
       ? data.staff.map((s) => s.trim()).filter((s) => s !== "")
       : typeof data.staff === "string"
       ? [data.staff.trim()].filter((s) => s !== "")
@@ -71,10 +71,10 @@ export default function ConfigurationPage() {
       alert(
         "Suscripción cancelada. Seguirás teniendo acceso hasta el final del periodo actual."
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert(
         "Error al cancelar la suscripción: " +
-          (err?.message || "Intenta de nuevo")
+          (err instanceof Error ? err.message : "Intenta de nuevo")
       );
     }
   };

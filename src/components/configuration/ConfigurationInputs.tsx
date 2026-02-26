@@ -14,7 +14,7 @@ export const ConfigurationInput = ({
 
   return (
     <input
-      {...register(fieldName as any)}
+      {...register(fieldName as `${typeof label}` | `staff.${number}`)}
       placeholder={PlaceHoldersConfigurationMapping[label]}
       defaultValue=""
       className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"

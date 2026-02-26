@@ -1,7 +1,7 @@
 import { Reservation } from "@/lib/reservation/types";
 import { Configuration } from "@/lib/configuration/types";
 
-export const mapReservationFromApi = (data: any) => {
+export const mapReservationFromApi = (data: Record<string, unknown>) => {
   return {
     id: data.id,
     customerName: data.customer_name,
@@ -27,7 +27,7 @@ export const mapReservationToApi = (reservation: Reservation) => {
   };
 };
 
-export const mapConfigurationFromApi = (data: any) => {
+export const mapConfigurationFromApi = (data: Record<string, unknown>) => {
   return {
     id: data.id,
     businessName: data.business_name,

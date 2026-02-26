@@ -17,7 +17,7 @@ export type ConfigurationItemProps = {
   addDeleteButton: boolean;
   inputConfig?: InputConfig;
   registerConf?: UseFormRegister<Configuration>;
-  control?: Control<any>;
+  control?: Control<Configuration>;
   data?: Configuration;
 };
 

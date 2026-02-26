@@ -221,7 +221,7 @@ export default function ReservationPage() {
             Cada vez que una reserva se marca como{" "}
             <span className="font-bold text-green-700">completada</span>, se
             crea automáticamente un registro financiero de tipo{" "}
-            <span className="font-bold text-blue-700">"ingreso"</span>.
+            <span className="font-bold text-blue-700">&quot;ingreso&quot;</span>.
           </span>
         </div>
         <div className="w-full max-w-5xl px-2 sm:px-0">

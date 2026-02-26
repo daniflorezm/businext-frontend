@@ -1,7 +1,7 @@
 import { UseFormRegister } from "react-hook-form";
 
 export type Reservation = {
-  [x: string]: any;
+  [x: string]: string | number | boolean | undefined;
   id?: number;
   customerName: string;
   inCharge: string;
@@ -14,7 +14,7 @@ export type Reservation = {
 
 export interface CalendarEvents {
   reservationData: Reservation[];
-  apiCreateEvent: (newEvent: any) => Promise<Reservation>;
+  apiCreateEvent: (newEvent: Reservation) => Promise<Reservation>;
   loading?: boolean;
 }
 
@@ -29,14 +29,14 @@ export type CompleteReservationModalProps = {
   data: Reservation;
   openCompleteReservationModal: boolean;
   handleOpenCompleteReservationModal: () => void;
-  updateReservation: (data: any) => Promise<Reservation>;
+  updateReservation: (data: Reservation) => Promise<Reservation>;
 };
 
 export type ReservationModalProps = {
   handleOpenModal: () => void;
   isOpen: boolean;
   operation: string;
-  executeAction: (data: any) => Promise<Reservation>;
+  executeAction: (data: Reservation) => Promise<Reservation>;
   reservationData?: Reservation;
   loading?: boolean;
 };
