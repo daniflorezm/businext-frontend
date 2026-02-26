@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "postbuild": "next-sitemap",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@4keys/date-fns-utc-locale-es": "^1.1.0",
