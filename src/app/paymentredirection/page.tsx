@@ -1,5 +1,6 @@
 import { stripe } from "@/lib/stripe/types";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 interface PageParams {
   session_id?: string;
@@ -21,12 +22,12 @@ export default async function PaymentRedirectionPage({ searchParams }: Props) {
         <div className="mb-4 p-4 bg-red-100 text-red-800 rounded-xl text-center font-semibold shadow border border-red-200">
           No se recibió el identificador de sesión. Intenta de nuevo.
         </div>
-        <a
+        <Link
           href="/"
           className="px-5 py-2 bg-blue-600 text-white rounded-xl font-semibold shadow-lg hover:bg-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           Volver al dashboard
-        </a>
+        </Link>
       </div>
     );
 
@@ -43,12 +44,12 @@ export default async function PaymentRedirectionPage({ searchParams }: Props) {
       <div className="mb-4 p-4 bg-red-100 text-red-800 rounded-xl text-center font-semibold shadow border border-red-200">
         El pago no pudo ser procesado correctamente.
       </div>
-      <a
+      <Link
         href="/"
         className="px-5 py-2 bg-blue-600 text-white rounded-xl font-semibold shadow-lg hover:bg-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
       >
         Volver al dashboard
-      </a>
+      </Link>
     </div>
   );
 }

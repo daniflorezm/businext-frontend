@@ -59,13 +59,13 @@ export const FinancesBarChart = ({
                 label: "Total Ingresos (€)",
                 data: dataset.map((data: { amount: number }) => data.amount),
                 backgroundColor: dataset.map(
-                  (_: any, i: number) => ChartsColors[i % ChartsColors.length]
+                  (_: unknown, i: number) => ChartsColors[i % ChartsColors.length]
                 ),
                 borderRadius: 12,
                 borderSkipped: false,
                 borderWidth: 0,
                 hoverBackgroundColor: dataset.map(
-                  (_: any, i: number) =>
+                  (_: unknown, i: number) =>
                     ChartsColors[(i + 2) % ChartsColors.length]
                 ),
                 barPercentage: 0.7,

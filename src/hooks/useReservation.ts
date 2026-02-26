@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Reservation } from "@/lib/reservation/types";
-import { mapReservationFromApi } from "@/lib/utils";
+import { mapReservationFromApi, mapReservationToApi } from "@/lib/utils";
 
 export function useReservation() {
   const [reservationData, setReservationData] = useState<Reservation[]>([]);
@@ -41,7 +41,7 @@ export function useReservation() {
       setLoading(true);
       const response = await fetch("api/reservations", {
         method: "POST",
-        body: JSON.stringify(newReservation),
+        body: JSON.stringify(mapReservationToApi(newReservation as Reservation)),
         headers: {
           "Content-Type": "application/json",
         },
@@ -85,7 +85,7 @@ export function useReservation() {
   const updateReservation = async (reservation: Reservation) => {
     try {
       setLoading(true);
-      const { id, ...updateData } = reservation;
+      const { id, ...updateData } = mapReservationToApi(reservation);
       const response = await fetch(`api/reservations?id=${id}`, {
         method: "PATCH",
         body: JSON.stringify(updateData),

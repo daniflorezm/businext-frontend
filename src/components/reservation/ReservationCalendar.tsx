@@ -27,7 +27,7 @@ export const ReservationCalendar = ({
     locales,
   });
 
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<{ id: number | undefined; title: string; start: Date; end: Date; colorIdx: number; inCharge: string | undefined }[]>([]);
   const [view, setView] = useState<View>("month");
   const [date, setDate] = useState(new Date());
 
@@ -184,8 +184,8 @@ export const ReservationCalendar = ({
             // Fallback: onSelectSlot is called for clicks on cells (start = date)
             onSelectSlot={(slotInfo) => {
               // slotInfo.start is the clicked date
-              if (view === "month" && slotInfo && (slotInfo as any).start) {
-                const clicked = (slotInfo as any).start as Date;
+              if (view === "month" && slotInfo?.start) {
+                const clicked = slotInfo.start as Date;
                 setDate(clicked);
                 setView("day");
               }

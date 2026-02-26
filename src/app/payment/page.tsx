@@ -8,6 +8,7 @@ import { loadStripe } from "@stripe/stripe-js";
 
 import { fetchClientSecret as fetchClientSecretOriginal } from "@/app/actions/stripe";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function PaymentPage() {
   const [showReturnBotton, setShowReturnBotton] = useState(false);
@@ -36,7 +37,7 @@ export default function PaymentPage() {
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
         {showReturnBotton && (
-          <a
+          <Link
             href="/"
             className="mt-8 flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl font-semibold shadow-lg hover:bg-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto max-w-xs mx-auto"
           >
@@ -55,7 +56,7 @@ export default function PaymentPage() {
               />
             </svg>
             Volver al dashboard
-          </a>
+          </Link>
         )}
       </div>
     </div>
