@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { Product } from "@/lib/product/types";
-import { mapConfigurationFromApi } from "@/lib/utils";
 export function useProduct() {
   const [productData, setProductData] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,7 +41,7 @@ export function useProduct() {
       return data;
     } catch (error) {
       setError(error as Error);
-      return {} as Product;
+      return null;
     } finally {
       setLoading(false);
     }
@@ -64,7 +63,7 @@ export function useProduct() {
       return result;
     } catch (error) {
       setError(error as Error);
-      return {} as Product;
+      return null;
     } finally {
       setLoading(false);
     }
@@ -88,7 +87,7 @@ export function useProduct() {
       return result;
     } catch (error) {
       setError(error as Error);
-      return {} as Product;
+      return null;
     } finally {
       setLoading(false);
     }

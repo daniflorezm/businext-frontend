@@ -36,7 +36,7 @@ export function useReservation() {
 
   const createReservation: (
     newReservation: Omit<Reservation, "id">
-  ) => Promise<Reservation> = async (newReservation) => {
+  ) => Promise<Reservation | null> = async (newReservation) => {
     try {
       setLoading(true);
       const response = await fetch("api/reservations", {
@@ -54,7 +54,7 @@ export function useReservation() {
       return createdReservation;
     } catch (error) {
       setError(error as Error);
-      return {} as Reservation;
+      return null;
     } finally {
       setLoading(false);
     }
@@ -76,13 +76,13 @@ export function useReservation() {
       return result;
     } catch (error) {
       setError(error as Error);
-      return {} as Reservation;
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateReservation = async (reservation: Reservation) => {
+  const updateReservation = async (reservation: Reservation): Promise<Reservation | null> => {
     try {
       setLoading(true);
       const { id, ...updateData } = mapReservationToApi(reservation);
@@ -100,7 +100,7 @@ export function useReservation() {
       return result;
     } catch (error) {
       setError(error as Error);
-      return {} as Reservation;
+      return null;
     } finally {
       setLoading(false);
     }

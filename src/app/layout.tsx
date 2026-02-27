@@ -1,5 +1,6 @@
 import "./globals.css";
 import { HeaderWrapper } from "@/components/common/HeaderWrapper";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 import type { Metadata } from "next";
 
@@ -70,7 +71,9 @@ export default function RootLayout({
       </head>
       <body>
         <HeaderWrapper />
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </body>
     </html>
   );
