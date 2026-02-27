@@ -4,7 +4,7 @@ import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
 import { PackageSearch } from "lucide-react";
 import { Product } from "@/lib/product/types";
 import { useProduct } from "@/hooks/useProduct";
-import InformationLoader from "@/components/common/InformationLoader";
+import SkeletonLoader from "@/components/common/SkeletonLoader";
 
 export default function ProductsPage() {
   const {
@@ -63,7 +63,7 @@ export default function ProductsPage() {
   }, [productData]);
 
   if (loading) {
-    return <InformationLoader />;
+    return <SkeletonLoader />;
   }
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

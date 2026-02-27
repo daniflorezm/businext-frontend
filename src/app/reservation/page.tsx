@@ -4,7 +4,7 @@ import { BookListItem } from "../../components/reservation/ReservationItem";
 import { useReservation } from "@/hooks/useReservation";
 import { Reservation } from "@/lib/reservation/types";
 import { ReservationCalendar } from "@/components/reservation/ReservationCalendar";
-import InformationLoader from "@/components/common/InformationLoader";
+import SkeletonLoader from "@/components/common/SkeletonLoader";
 
 export default function ReservationPage() {
   const { getAllReservations, createReservation, reservationData, loading } =
@@ -226,7 +226,7 @@ export default function ReservationPage() {
         </div>
         <div className="w-full max-w-5xl px-2 sm:px-0">
           {loading ? (
-            <InformationLoader />
+            <SkeletonLoader />
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
