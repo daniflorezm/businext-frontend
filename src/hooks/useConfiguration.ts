@@ -28,7 +28,7 @@ export function useConfiguration() {
   };
   const createConfiguration: (
     newConfiguration: Omit<Configuration, "id">
-  ) => Promise<Configuration> = async (newConfiguration) => {
+  ) => Promise<Configuration | null> = async (newConfiguration) => {
     try {
       setLoading(true);
       const response = await fetch("api/configuration", {
@@ -46,7 +46,7 @@ export function useConfiguration() {
       return createdConfiguration;
     } catch (error) {
       setError(error as Error);
-      return {} as Configuration;
+      return null;
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ export function useConfiguration() {
       return result;
     } catch (error) {
       setError(error as Error);
-      return {} as Configuration;
+      return null;
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ export function useConfiguration() {
       return result;
     } catch (error) {
       setError(error as Error);
-      return {} as Configuration;
+      return null;
     } finally {
       setLoading(false);
     }

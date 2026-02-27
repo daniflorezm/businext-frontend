@@ -14,7 +14,7 @@ export type Reservation = {
 
 export interface CalendarEvents {
   reservationData: Reservation[];
-  apiCreateEvent: (newEvent: Reservation) => Promise<Reservation>;
+  apiCreateEvent: (newEvent: Reservation) => Promise<Reservation | null>;
   loading?: boolean;
 }
 
@@ -29,14 +29,14 @@ export type CompleteReservationModalProps = {
   data: Reservation;
   openCompleteReservationModal: boolean;
   handleOpenCompleteReservationModal: () => void;
-  updateReservation: (data: Reservation) => Promise<Reservation>;
+  updateReservation: (data: Reservation) => Promise<Reservation | null>;
 };
 
 export type ReservationModalProps = {
   handleOpenModal: () => void;
   isOpen: boolean;
   operation: string;
-  executeAction: (data: Reservation) => Promise<Reservation>;
+  executeAction: (data: Reservation) => Promise<Reservation | null>;
   reservationData?: Reservation;
   loading?: boolean;
 };

@@ -12,20 +12,49 @@ import Link from "next/link";
 
 export default function PaymentPage() {
   const [showReturnBotton, setShowReturnBotton] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
 
-  // Ensure fetchClientSecret always returns a string
   const fetchClientSecret = async (): Promise<string> => {
-    const secret = await fetchClientSecretOriginal();
-    if (secret === null) {
-      throw new Error("Client secret is null");
+    try {
+      const secret = await fetchClientSecretOriginal();
+      if (!secret) throw new Error("No se pudo iniciar el pago. Intenta de nuevo.");
+      setShowReturnBotton(true);
+      return secret;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error al conectar con el procesador de pagos.";
+      setStripeError(message);
+      throw err;
     }
-    setShowReturnBotton(true);
-    return secret;
   };
 
   const stripePromise = loadStripe(
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
   );
+
+  if (stripeError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-white via-blue-50 to-cyan-50 p-8">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md w-full text-center shadow">
+          <h2 className="text-xl font-bold text-red-700 mb-2">Error en el pago</h2>
+          <p className="text-red-600 text-sm mb-4">{stripeError}</p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => setStripeError(null)}
+              className="px-5 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+            >
+              Reintentar
+            </button>
+            <Link
+              href="/"
+              className="px-5 py-2 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition"
+            >
+              Volver al inicio
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div id="checkout" className="py-6 flex flex-col items-center">
