@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { ConfigurationItem } from "@/components/configuration/ConfigurationItem";
 import { Building2, Users } from "lucide-react";
 import { useConfiguration } from "@/hooks/useConfiguration";
-import InformationLoader from "@/components/common/InformationLoader";
+import SkeletonLoader from "@/components/common/SkeletonLoader";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Configuration } from "@/lib/configuration/types";
 import { cancelUserSubscription } from "@/app/actions/cancelSubscription";
@@ -52,7 +52,7 @@ export default function ConfigurationPage() {
   }, [configurationData]);
 
   if (loading) {
-    return <InformationLoader />;
+    return <SkeletonLoader />;
   }
 
   const handleCancelSubscription = async () => {

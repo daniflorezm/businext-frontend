@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useFinances } from "@/hooks/useFinances";
-import InformationLoader from "@/components/common/InformationLoader";
+import SkeletonLoader from "@/components/common/SkeletonLoader";
 import { FinanceRecordItem } from "@/components/finances/FinanceRecordItem";
 import { useReservation } from "@/hooks/useReservation";
 import { FinancesModal } from "@/components/finances/FinancesModal";
@@ -49,22 +49,31 @@ export default function FinancesPage() {
     (_, i) => now.getFullYear() - 2 + i
   ); // 2 años atras y 2 años adelante
 
-  const filteredFinances = financesData.filter((f) => {
-    if (!f.created_at) return false;
-    const date = new Date(f.created_at);
-    const matchesMonth =
-      date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
-    const matchesType = filterType === "ALL" ? true : f.type === filterType;
-    const matchesIssuer = issuerFilter
-      ? f.creator?.toLowerCase().includes(issuerFilter.toLowerCase())
-      : true;
-    return matchesMonth && matchesType && matchesIssuer;
-  });
+  const filteredFinances = useMemo(
+    () =>
+      financesData.filter((f) => {
+        if (!f.created_at) return false;
+        const date = new Date(f.created_at);
+        const matchesMonth =
+          date.getMonth() === selectedMonth &&
+          date.getFullYear() === selectedYear;
+        const matchesType = filterType === "ALL" ? true : f.type === filterType;
+        const matchesIssuer = issuerFilter
+          ? f.creator?.toLowerCase().includes(issuerFilter.toLowerCase())
+          : true;
+        return matchesMonth && matchesType && matchesIssuer;
+      }),
+    [financesData, selectedMonth, selectedYear, filterType, issuerFilter]
+  );
 
-  const sortedReservations = [...filteredFinances].sort(
-    (a, b) =>
-      new Date(b.created_at ? b.created_at : "").getTime() -
-      new Date(a.created_at ? a.created_at : "").getTime()
+  const sortedReservations = useMemo(
+    () =>
+      [...filteredFinances].sort(
+        (a, b) =>
+          new Date(b.created_at ?? "").getTime() -
+          new Date(a.created_at ?? "").getTime()
+      ),
+    [filteredFinances]
   );
 
   const totalPages = Math.ceil(sortedReservations.length / itemsPerPage);
@@ -73,27 +82,37 @@ export default function FinancesPage() {
     currentPage * itemsPerPage
   );
 
-  const totalIncome = financesData
-    .filter((f) => {
-      if (!f.created_at) return false;
-      const date = new Date(f.created_at);
-      const matchesMonth =
-        date.getMonth() === selectedMonth &&
-        date.getFullYear() === selectedYear;
-      return matchesMonth && f.type === "INCOME";
-    })
-    .reduce((sum, f) => sum + f.amount, 0);
+  const totalIncome = useMemo(
+    () =>
+      financesData
+        .filter((f) => {
+          if (!f.created_at) return false;
+          const date = new Date(f.created_at);
+          return (
+            date.getMonth() === selectedMonth &&
+            date.getFullYear() === selectedYear &&
+            f.type === "INCOME"
+          );
+        })
+        .reduce((sum, f) => sum + f.amount, 0),
+    [financesData, selectedMonth, selectedYear]
+  );
 
-  const totalExpense = financesData
-    .filter((f) => {
-      if (!f.created_at) return false;
-      const date = new Date(f.created_at);
-      const matchesMonth =
-        date.getMonth() === selectedMonth &&
-        date.getFullYear() === selectedYear;
-      return matchesMonth && f.type === "EXPENSE";
-    })
-    .reduce((sum, f) => sum + f.amount, 0);
+  const totalExpense = useMemo(
+    () =>
+      financesData
+        .filter((f) => {
+          if (!f.created_at) return false;
+          const date = new Date(f.created_at);
+          return (
+            date.getMonth() === selectedMonth &&
+            date.getFullYear() === selectedYear &&
+            f.type === "EXPENSE"
+          );
+        })
+        .reduce((sum, f) => sum + f.amount, 0),
+    [financesData, selectedMonth, selectedYear]
+  );
 
   const totalBalance = totalIncome - totalExpense;
 
@@ -101,7 +120,7 @@ export default function FinancesPage() {
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       {loading ? (
         <div className="flex justify-center items-center min-h-screen">
-          <InformationLoader />
+          <SkeletonLoader rows={6} />
         </div>
       ) : (
         <>

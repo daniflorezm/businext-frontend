@@ -1,39 +1,34 @@
 "use client";
 import { useState } from "react";
+import useSWR from "swr";
 import { Finances, AnualBalances } from "@/lib/finances/types";
+import { fetcher } from "@/lib/fetcher";
 import { createClient } from "@/utils/supabase/client";
 
+const SWR_KEY = "/api/finances";
+
 export function useFinances() {
-  const [financesData, setFinancesData] = useState<Finances[]>([]);
+  const {
+    data: financesData = [],
+    isLoading: swrLoading,
+    error,
+    mutate,
+  } = useSWR<Finances[]>(SWR_KEY, fetcher);
+
   const [anualFinancesData, setAnualFinancesData] = useState<AnualBalances[]>(
     []
   );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [anualLoading, setAnualLoading] = useState(false);
+
+  const loading = swrLoading || anualLoading;
 
   const supabase = createClient();
 
-  const getAllFinances: () => Promise<Finances[]> = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/finances`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch finances");
-      }
-      const data = await response.json();
-      setFinancesData(data);
-      return data;
-    } catch (error) {
-      setError(error as Error);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
+  const getAllFinances = () => mutate();
 
   const getAnualFinances = async (year: string) => {
     try {
-      setLoading(true);
+      setAnualLoading(true);
       const { data: sessionData } = await supabase.auth.getSession();
       const jwt = sessionData?.session?.access_token;
       const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
@@ -48,88 +43,62 @@ export function useFinances() {
           credentials: "include",
         }
       );
-      if (!response.ok) {
-        throw new Error("Failed to fetch annual finances");
-      }
+      if (!response.ok) throw new Error("Failed to fetch annual finances");
       const data = await response.json();
       setAnualFinancesData(data);
       return data;
-    } catch (error) {
-      setError(error as Error);
+    } catch {
       return null;
     } finally {
-      setLoading(false);
+      setAnualLoading(false);
     }
   };
 
-  const createFinance: (
+  const createFinance = async (
     newFinance: Omit<Finances, "id">
-  ) => Promise<Finances> = async (newFinance) => {
+  ): Promise<Finances | null> => {
     try {
-      setLoading(true);
       const response = await fetch("/api/finances", {
         method: "POST",
         body: JSON.stringify(newFinance),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
-      if (!response.ok) {
-        throw new Error("Failed to create finance");
-      }
+      if (!response.ok) throw new Error("Failed to create finance");
       const data = await response.json();
+      await mutate();
       return data;
-    } catch (error) {
-      setError(error as Error);
-      return {} as Finances;
-    } finally {
-      setLoading(false);
+    } catch {
+      return null;
     }
   };
 
   const deleteFinance = async (id: number) => {
     try {
-      setLoading(true);
       const response = await fetch(`/api/finances?id=${id}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
-      if (!response.ok) {
-        throw new Error("Failed to delete finance");
-      }
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      setError(error as Error);
-      return {} as Finances;
-    } finally {
-      setLoading(false);
+      if (!response.ok) throw new Error("Failed to delete finance");
+      await mutate();
+      return response.json();
+    } catch {
+      return null;
     }
   };
 
   const updateFinance = async (finance: Finances) => {
     try {
-      setLoading(true);
       const { id, ...updateData } = finance;
       const response = await fetch(`/api/finances?id=${id}`, {
         method: "PATCH",
         body: JSON.stringify(updateData),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
-      if (!response.ok) {
-        throw new Error("Failed to update finance");
-      }
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      setError(error as Error);
-      return {} as Finances;
-    } finally {
-      setLoading(false);
+      if (!response.ok) throw new Error("Failed to update finance");
+      await mutate();
+      return response.json();
+    } catch {
+      return null;
     }
   };
 
