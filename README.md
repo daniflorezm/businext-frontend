@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Businext — Frontend
+
+Next.js 15 + React 19 + TypeScript app for the Businext business booking & management SaaS.
+
+## Stack
+
+- **Next.js 15** App Router
+- **React 19**
+- **TypeScript**
+- **Tailwind CSS** — utility-first styling, mobile-first
+- **SWR** — data fetching, caching and optimistic updates
+- **React Hook Form** — form management
+- **Supabase** — authentication
+- **Lucide React** — icons
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── api/               # Next.js API routes (proxy to FastAPI backend)
+│   ├── configuration/     # Business configuration page
+│   ├── finances/          # Finances page
+│   ├── products/          # Products page
+│   ├── reservation/       # Reservations page
+│   ├── login/             # Auth pages
+│   └── layout.tsx         # Root layout (AppShell + ErrorBoundary)
+├── components/
+│   ├── common/
+│   │   ├── AppShell.tsx         # Layout shell (sidebar visibility)
+│   │   ├── ConfirmDialog.tsx    # Accessible confirmation modal (replaces window.confirm)
+│   │   ├── SkeletonLoader.tsx   # Section-level loading skeletons
+│   │   ├── Toast.tsx            # Non-blocking notifications (replaces window.alert)
+│   │   ├── Sidebar.tsx          # Navigation sidebar
+│   │   └── ...
+│   ├── configuration/
+│   ├── finances/
+│   └── reservation/
+├── hooks/
+│   ├── useAccessContext.ts  # User role + capabilities (SWR, shared cache)
+│   ├── useConfiguration.ts  # Business config CRUD (SWR + optimistic UI)
+│   ├── useProduct.ts        # Products CRUD (SWR + optimistic UI)
+│   ├── useFinances.ts       # Finances CRUD (SWR)
+│   └── useReservation.ts    # Reservations CRUD (SWR)
+├── lib/
+│   ├── auth/              # Server session helpers
+│   ├── fetcher.ts         # SWR fetcher with retry logic (3 retries, exponential backoff)
+│   └── utils.ts           # API mappers (snake_case → camelCase)
+└── middleware.ts           # Supabase auth middleware
+```
 
-## Learn More
+## Key Patterns
 
-To learn more about Next.js, take a look at the following resources:
+### Data Fetching — SWR
+All hooks use SWR. Data is fetched automatically on mount — **do not** call refresh methods
+inside `useEffect` with an empty dependency array:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```typescript
+// ❌ Wrong — causes a duplicate request
+useEffect(() => { getAllProducts(); }, []);
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+// ✅ Correct — SWR fetches on mount automatically
+const { productData, loading } = useProduct();
+```
 
-## Deploy on Vercel
+### Optimistic UI
+All CRUD operations update the UI instantly via `mutate(asyncFn, { optimisticData, rollbackOnError: true })`.
+No spinner needed for individual item operations.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Access Context
+`useAccessContext()` calls `/api/auth/me` once per 60 seconds and shares the result across
+all components (AppShell, Sidebar, pages). Never call `/api/auth/me` directly.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Gate permission-guarded data fetches behind `!contextLoading`:
+
+```typescript
+useEffect(() => {
+  if (!contextLoading && capabilities.canManageTeam) loadTeam();
+}, [contextLoading, capabilities.canManageTeam]);
+```
+
+### Shared UI Components
+- **`ConfirmDialog`** — replaces `window.confirm`. Accessible, Escape-to-cancel, focus-managed.
+- **`Toast` + `useToast`** — replaces `window.alert`. Auto-dismiss, `aria-live`, success/error.
+- **`SectionSkeleton` / `ProductGridSkeleton` / `TeamListSkeleton`** — per-section loading states.
+
+## Environment Variables
+
+```env
+NEXT_PUBLIC_API_BASE=http://localhost:8000    # FastAPI backend URL
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```

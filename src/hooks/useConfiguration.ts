@@ -24,16 +24,32 @@ export function useConfiguration() {
   const createConfiguration = async (
     newConfiguration: Omit<Configuration, "id">
   ): Promise<Configuration | null> => {
+    const optimistic: Configuration = { ...newConfiguration, id: -1 };
     try {
-      const response = await fetch("api/configuration", {
-        method: "POST",
-        body: JSON.stringify(newConfiguration),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) throw new Error("Failed to create configuration");
-      const data = await response.json();
-      await mutate();
-      return mapConfigurationFromApi(data);
+      await mutate(
+        async (current: Configuration[] = []) => {
+          const response = await fetch("/api/configuration", {
+            method: "POST",
+            body: JSON.stringify(newConfiguration),
+            headers: { "Content-Type": "application/json" },
+          });
+          if (!response.ok) throw new Error("Failed to create configuration");
+          const data = await response.json();
+          return [
+            ...current.filter((c) => c.id !== -1),
+            mapConfigurationFromApi(data),
+          ];
+        },
+        {
+          optimisticData: (current: Configuration[] = []) => [
+            ...current,
+            optimistic,
+          ],
+          rollbackOnError: true,
+          revalidate: false,
+        }
+      );
+      return optimistic;
     } catch {
       return null;
     }
@@ -41,29 +57,53 @@ export function useConfiguration() {
 
   const deleteConfiguration = async (id: number) => {
     try {
-      const response = await fetch(`/api/configuration?id=${id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) throw new Error("Failed to delete configuration");
-      await mutate();
-      return response.json();
+      await mutate(
+        async (current: Configuration[] = []) => {
+          const response = await fetch(`/api/configuration?id=${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+          });
+          if (!response.ok) throw new Error("Failed to delete configuration");
+          return current.filter((c) => c.id !== id);
+        },
+        {
+          optimisticData: (current: Configuration[] = []) =>
+            current.filter((c) => c.id !== id),
+          rollbackOnError: true,
+          revalidate: false,
+        }
+      );
     } catch {
       return null;
     }
   };
 
-  const updateConfiguration = async (configuration: Configuration) => {
+  const updateConfiguration = async (
+    configuration: Configuration
+  ): Promise<true | null> => {
+    const { id, ...updateData } = configuration;
     try {
-      const { id, ...updateData } = configuration;
-      const response = await fetch(`/api/configuration?id=${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(updateData),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) throw new Error("Failed to update configuration");
-      await mutate();
-      return response.json();
+      await mutate(
+        async (current: Configuration[] = []) => {
+          const response = await fetch(`/api/configuration?id=${id}`, {
+            method: "PATCH",
+            body: JSON.stringify(updateData),
+            headers: { "Content-Type": "application/json" },
+          });
+          if (!response.ok) throw new Error("Failed to update configuration");
+          const data = await response.json();
+          return current.map((c) =>
+            c.id === id ? mapConfigurationFromApi(data) : c
+          );
+        },
+        {
+          optimisticData: (current: Configuration[] = []) =>
+            current.map((c) => (c.id === id ? { ...c, ...updateData } : c)),
+          rollbackOnError: true,
+          revalidate: false,
+        }
+      );
+      return true;
     } catch {
       return null;
     }

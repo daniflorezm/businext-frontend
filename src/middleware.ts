@@ -1,58 +1,117 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
-import { publicRoutes, authOnlyRoutes } from "@/lib/utils";
-import { checkSubscription } from "@/app/actions/checkSubscription";
-import { createClient } from "@/utils/supabase/server";
+import { publicRoutes } from "@/lib/utils";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+
+/**
+ * Fetches the access context from the backend using the provided JWT.
+ * Returns null on any auth/network error so the middleware can fall back gracefully.
+ */
+async function fetchAccessContext(jwt: string) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const pathname = url.pathname;
 
-  // Permitir acceso libre a rutas públicas
+  // Allow free access to public routes
   if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // Actualiza sesión
-  const response = await updateSession(request);
+  // Refresh the Supabase session cookie
+  const { response, user, session, error } = await updateSession(request);
 
   try {
-    // Obtener usuario de la sesión
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    // Si hay error o no hay usuario, redirigir a login
+    // Not authenticated — redirect to login
     if (error || !user) {
       url.pathname = "/login";
-      url.searchParams.set("redirect", pathname); // Guardar la ruta original
+      url.searchParams.set("redirect", pathname);
       return NextResponse.redirect(url);
     }
 
-    // Si es una ruta que solo requiere autenticación (payment, paymentredirection),
-    // permitir acceso sin verificar suscripción
-    if (authOnlyRoutes.includes(pathname)) {
+    // Fetch access context from the backend — single source of truth
+    const jwt = session?.access_token;
+    if (!jwt) {
+      url.pathname = "/login";
+      url.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(url);
+    }
+
+    const access = await fetchAccessContext(jwt);
+
+    if (!access) {
+      // Backend unreachable or token invalid — pass through and let pages handle it
       return response;
     }
 
-    // Para rutas protegidas, verificar suscripción activa
-    const hasSubscription = await checkSubscription(user.id);
+    // Member onboarding redirect
+    if (access.accountType === "member") {
+      if (access.memberStatus === "inactive") {
+        if (pathname !== "/error") {
+          url.pathname = "/error";
+          url.searchParams.set("message", "account-inactive");
+          return NextResponse.redirect(url);
+        }
+        return response;
+      }
 
-    if (!hasSubscription) {
-      // Evitar loop de redirección
-      if (pathname !== "/payment") {
-        url.pathname = "/payment";
-        url.searchParams.set("reason", "no-subscription");
+      if (access.memberStatus !== "active" && pathname !== "/employee/onboarding") {
+        url.pathname = "/employee/onboarding";
         return NextResponse.redirect(url);
       }
+
+      if (!access.capabilities.canAccessApp) {
+        url.pathname = "/error";
+        url.searchParams.set("message", "subscription-required");
+        return NextResponse.redirect(url);
+      }
+
+      if (access.memberStatus === "active" && pathname === "/employee/onboarding") {
+        url.pathname = "/reservation";
+        return NextResponse.redirect(url);
+      }
+
+      if (pathname === "/payment" || pathname === "/paymentredirection") {
+        url.pathname = "/reservation";
+        return NextResponse.redirect(url);
+      }
+
+      return response;
+    }
+
+    // Owner subscription check — redirect to payment if no active subscription
+    if (!access.capabilities.canAccessApp && pathname !== "/payment") {
+      if (pathname === "/paymentredirection") {
+        return response;
+      }
+      url.pathname = "/payment";
+      url.searchParams.set("reason", "no-subscription");
+      return NextResponse.redirect(url);
+    }
+
+    if (access.capabilities.canAccessApp && (pathname === "/payment" || pathname === "/paymentredirection")) {
+      url.pathname = "/reservation";
+      return NextResponse.redirect(url);
     }
 
     return response;
   } catch (err) {
-    console.error("Error en middleware:", err);
-    // En caso de error, redirigir a página de error
+    console.error("Middleware error:", err);
     url.pathname = "/error";
     url.searchParams.set("message", "authentication-error");
     return NextResponse.redirect(url);
@@ -61,14 +120,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Coincide con todas las rutas excepto:
-     * - api (rutas API)
-     * - _next/static (archivos estáticos)
-     * - _next/image (archivos de optimización de imágenes)
-     * - favicon.ico
-     * - archivos de imágenes (svg, png, jpg, jpeg, gif, webp)
-     */
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

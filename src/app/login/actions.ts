@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
-import { checkSubscription } from "@/app/actions/checkSubscription";
 
 export async function login(state: { error: string }, formData: FormData) {
   "use server";
@@ -23,20 +22,11 @@ export async function login(state: { error: string }, formData: FormData) {
     return { error: "Usuario o contraseña incorrectos" };
   }
 
-  const hasActiveSubscription = await checkSubscription(authData.user.id);
-
-  if (!hasActiveSubscription) {
-    revalidatePath("/", "layout");
-    redirect("/payment");
-  }
-
   revalidatePath("/", "layout");
   redirect("/reservation");
 }
 
 export async function signup(state: { error: string }, formData: FormData) {
-  const supabase = await createClient();
-
   const email = (formData.get("email") || "").toString().trim();
   const password = (formData.get("password") || "").toString();
   const fullName = (formData.get("fullName") || "").toString().trim();
@@ -68,32 +58,29 @@ export async function signup(state: { error: string }, formData: FormData) {
     return { error: "El nombre completo no debe contener números ni símbolos" };
   }
 
-  const { data: existsData, error: existsError } = await supabase.rpc(
-    "user_exists",
-    { email }
-  );
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, fullName }),
+    });
 
-  if (existsError) {
-    return { error: "Error verificando el usuario" };
-  }
+    let data;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { error: await response.text() };
+    }
 
-  if (existsData) {
-    return { error: "Este usuario ya está registrado." };
-  }
-
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { fullName },
-    },
-  });
-
-  if (error) {
-    return { error: error.message || "Error al crear la cuenta" };
+    if (!response.ok) {
+      return { error: data.error || data.detail || "Error al crear la cuenta" };
+    }
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error al crear la cuenta",
+    };
   }
 
   revalidatePath("/", "layout");
-
   redirect("/login/verify");
 }

@@ -1,13 +1,13 @@
 import { NextResponse, NextRequest } from "next/server";
 import { Reservation } from "@/lib/reservation/types";
-import { createClient } from "@/utils/supabase/server";
+import { getVerifiedServerAccessToken } from "@/lib/auth/server-session";
 
 export async function GET(request: NextRequest) {
   try {
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-    const supabase = await createClient();
-    const { data: sessionData } = await supabase.auth.getSession();
-    const jwt = sessionData?.session?.access_token;
+    const auth = await getVerifiedServerAccessToken();
+    if ("error" in auth) return auth.error;
+    const jwt = auth.jwt;
     const { searchParams } = request.nextUrl;
     const offset = searchParams.get("offset") || 0;
     const limit = searchParams.get("limit") || 100;
@@ -46,9 +46,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-    const supabase = await createClient();
-    const { data: sessionData } = await supabase.auth.getSession();
-    const jwt = sessionData?.session?.access_token;
+    const auth = await getVerifiedServerAccessToken();
+    if ("error" in auth) return auth.error;
+    const jwt = auth.jwt;
     const body: Reservation = await request.json();
     const response = await fetch(`${API_BASE}/reservations/`, {
       method: "POST",
@@ -83,9 +83,9 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-    const supabase = await createClient();
-    const { data: sessionData } = await supabase.auth.getSession();
-    const jwt = sessionData?.session?.access_token;
+    const auth = await getVerifiedServerAccessToken();
+    if ("error" in auth) return auth.error;
+    const jwt = auth.jwt;
     const { searchParams } = request.nextUrl;
     const id = searchParams.get("id");
     if (!id) {
@@ -126,9 +126,9 @@ export async function DELETE(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-    const supabase = await createClient();
-    const { data: sessionData } = await supabase.auth.getSession();
-    const jwt = sessionData?.session?.access_token;
+    const auth = await getVerifiedServerAccessToken();
+    if ("error" in auth) return auth.error;
+    const jwt = auth.jwt;
     const { searchParams } = request.nextUrl;
     const id = searchParams.get("id");
     if (!id) {

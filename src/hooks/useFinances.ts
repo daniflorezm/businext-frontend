@@ -1,102 +1,103 @@
 "use client";
-import { useState } from "react";
 import useSWR from "swr";
 import { Finances, AnualBalances } from "@/lib/finances/types";
 import { fetcher } from "@/lib/fetcher";
-import { createClient } from "@/utils/supabase/client";
 
 const SWR_KEY = "/api/finances";
 
-export function useFinances() {
+/**
+ * year — when provided, also fetches annual balance data for that year via SWR.
+ * Omit it in components that only need CRUD (modals, list items).
+ */
+export function useFinances(year?: number) {
   const {
     data: financesData = [],
-    isLoading: swrLoading,
+    isLoading: loading,
     error,
     mutate,
   } = useSWR<Finances[]>(SWR_KEY, fetcher);
 
-  const [anualFinancesData, setAnualFinancesData] = useState<AnualBalances[]>(
-    []
+  const { data: anualFinancesData = [] } = useSWR<AnualBalances[]>(
+    year ? `/api/finances/anual/${year}` : null,
+    year ? fetcher : null
   );
-  const [anualLoading, setAnualLoading] = useState(false);
-
-  const loading = swrLoading || anualLoading;
-
-  const supabase = createClient();
 
   const getAllFinances = () => mutate();
-
-  const getAnualFinances = async (year: string) => {
-    try {
-      setAnualLoading(true);
-      const { data: sessionData } = await supabase.auth.getSession();
-      const jwt = sessionData?.session?.access_token;
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-      const response = await fetch(
-        `${API_BASE}/finances/anual_finances/${year}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
-          },
-          credentials: "include",
-        }
-      );
-      if (!response.ok) throw new Error("Failed to fetch annual finances");
-      const data = await response.json();
-      setAnualFinancesData(data);
-      return data;
-    } catch {
-      return null;
-    } finally {
-      setAnualLoading(false);
-    }
-  };
 
   const createFinance = async (
     newFinance: Omit<Finances, "id">
   ): Promise<Finances | null> => {
+    const tempId = -Date.now();
+    const optimisticItem: Finances = { ...newFinance, id: tempId };
     try {
-      const response = await fetch("/api/finances", {
-        method: "POST",
-        body: JSON.stringify(newFinance),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) throw new Error("Failed to create finance");
-      const data = await response.json();
-      await mutate();
-      return data;
+      await mutate(
+        async (current: Finances[] = []) => {
+          const response = await fetch("/api/finances", {
+            method: "POST",
+            body: JSON.stringify(newFinance),
+            headers: { "Content-Type": "application/json" },
+          });
+          if (!response.ok) throw new Error("Failed to create finance");
+          const data = await response.json();
+          return [...current.filter((f) => f.id !== tempId), data];
+        },
+        {
+          optimisticData: (current: Finances[] = []) => [...current, optimisticItem],
+          rollbackOnError: true,
+          revalidate: false,
+        }
+      );
+      return optimisticItem;
     } catch {
       return null;
     }
   };
 
-  const deleteFinance = async (id: number) => {
+  const deleteFinance = async (id: number): Promise<void> => {
     try {
-      const response = await fetch(`/api/finances?id=${id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) throw new Error("Failed to delete finance");
-      await mutate();
-      return response.json();
+      await mutate(
+        async (current: Finances[] = []) => {
+          const response = await fetch(`/api/finances?id=${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+          });
+          if (!response.ok) throw new Error("Failed to delete finance");
+          return current.filter((f) => f.id !== id);
+        },
+        {
+          optimisticData: (current: Finances[] = []) =>
+            current.filter((f) => f.id !== id),
+          rollbackOnError: true,
+          revalidate: false,
+        }
+      );
     } catch {
-      return null;
+      // SWR rollback restores previous state
     }
   };
 
-  const updateFinance = async (finance: Finances) => {
+  const updateFinance = async (finance: Finances): Promise<true | null> => {
+    const { id, ...updateData } = finance;
     try {
-      const { id, ...updateData } = finance;
-      const response = await fetch(`/api/finances?id=${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(updateData),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) throw new Error("Failed to update finance");
-      await mutate();
-      return response.json();
+      await mutate(
+        async (current: Finances[] = []) => {
+          const response = await fetch(`/api/finances?id=${id}`, {
+            method: "PATCH",
+            body: JSON.stringify(updateData),
+            headers: { "Content-Type": "application/json" },
+          });
+          if (!response.ok) throw new Error("Failed to update finance");
+          const updated = await response.json();
+          return current.map((f) => (f.id === id ? updated : f));
+        },
+        {
+          optimisticData: (current: Finances[] = []) =>
+            current.map((f) => (f.id === id ? { ...f, ...updateData, id } : f)),
+          rollbackOnError: true,
+          revalidate: false,
+        }
+      );
+      return true;
     } catch {
       return null;
     }
@@ -108,7 +109,6 @@ export function useFinances() {
     loading,
     error,
     getAllFinances,
-    getAnualFinances,
     createFinance,
     deleteFinance,
     updateFinance,

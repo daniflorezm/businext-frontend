@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useFinances } from "@/hooks/useFinances";
 import { useProduct } from "@/hooks/useProduct";
 import {
@@ -15,7 +15,7 @@ export const CompleteReservationModal = ({
   updateReservation,
 }: CompleteReservationModalProps) => {
   const { createFinance } = useFinances();
-  const { getAllProducts, productData } = useProduct();
+  const { productData } = useProduct();
   const { customerName } = data;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,14 +40,10 @@ export const CompleteReservationModal = ({
         await createFinanceRecord(completedReservation);
       }
       handleOpenCompleteReservationModal();
-      window.location.reload();
     } finally {
       setIsSubmitting(false);
     }
   };
-  useEffect(() => {
-    getAllProducts();
-  }, []);
   return (
     <>
       <Dialog

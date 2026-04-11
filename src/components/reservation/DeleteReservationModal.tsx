@@ -11,7 +11,6 @@ export const DeleteModal = ({
   const handleDelete = async () => {
     await deleteReservation(id);
     handleOpenDeleteModal();
-    window.location.reload();
   };
   return (
     <>
