@@ -20,9 +20,113 @@ import {
   Users
 } from "lucide-react";
 
+// Datos de mockup para productos/servicios
+const mockProducts: Product[] = [
+  { id: 1, name: "Corte de cabello", price: 25000, type: "service", imageUrl: "" },
+  { id: 2, name: "Tinte completo", price: 85000, type: "service", imageUrl: "" },
+  { id: 3, name: "Manicure", price: 20000, type: "service", imageUrl: "" },
+  { id: 4, name: "Pedicure", price: 25000, type: "service", imageUrl: "" },
+  { id: 5, name: "Tratamiento capilar", price: 45000, type: "service", imageUrl: "" },
+  { id: 6, name: "Masaje relajante", price: 60000, type: "service", imageUrl: "" },
+  { id: 7, name: "Shampoo premium", price: 35000, type: "product", imageUrl: "" },
+  { id: 8, name: "Acondicionador", price: 32000, type: "product", imageUrl: "" },
+  { id: 9, name: "Aceite capilar", price: 28000, type: "product", imageUrl: "" },
+];
+
+// Datos de mockup para reservas
+const today = new Date();
+const mockReservations: Reservation[] = [
+  {
+    id: 1,
+    customerName: "Maria Garcia",
+    inCharge: "Carlos Martinez",
+    reservationStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0).toISOString(),
+    reservationEndDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0).toISOString(),
+    timePerReservation: 60,
+    status: "PENDING",
+    service: "Corte de cabello",
+  },
+  {
+    id: 2,
+    customerName: "Juan Rodriguez",
+    inCharge: "Ana Lopez",
+    reservationStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 30).toISOString(),
+    reservationEndDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12, 30).toISOString(),
+    timePerReservation: 120,
+    status: "PENDING",
+    service: "Tinte completo",
+  },
+  {
+    id: 3,
+    customerName: "Laura Sanchez",
+    inCharge: "Carlos Martinez",
+    reservationStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0).toISOString(),
+    reservationEndDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 0).toISOString(),
+    timePerReservation: 60,
+    status: "PENDING",
+    service: "Manicure",
+  },
+  {
+    id: 4,
+    customerName: "Pedro Hernandez",
+    inCharge: "Ana Lopez",
+    reservationStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 0).toISOString(),
+    reservationEndDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 17, 30).toISOString(),
+    timePerReservation: 90,
+    status: "PENDING",
+    service: "Masaje relajante",
+  },
+  {
+    id: 5,
+    customerName: "Sofia Morales",
+    inCharge: "Carlos Martinez",
+    reservationStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 9, 30).toISOString(),
+    reservationEndDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 10, 30).toISOString(),
+    timePerReservation: 60,
+    status: "PENDING",
+    service: "Pedicure",
+  },
+  {
+    id: 6,
+    customerName: "Diego Torres",
+    inCharge: "Ana Lopez",
+    reservationStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 11, 0).toISOString(),
+    reservationEndDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 12, 0).toISOString(),
+    timePerReservation: 60,
+    status: "PENDING",
+    service: "Corte de cabello",
+  },
+  {
+    id: 7,
+    customerName: "Valentina Castro",
+    inCharge: "Carlos Martinez",
+    reservationStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 10, 0).toISOString(),
+    reservationEndDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 11, 0).toISOString(),
+    timePerReservation: 60,
+    status: "PENDING",
+    service: "Tratamiento capilar",
+  },
+  {
+    id: 8,
+    customerName: "Andres Ruiz",
+    inCharge: "Ana Lopez",
+    reservationStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 15, 0).toISOString(),
+    reservationEndDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 16, 0).toISOString(),
+    timePerReservation: 60,
+    status: "PENDING",
+    service: "Corte de cabello",
+  },
+];
+
+const mockEmployees = ["Carlos Martinez", "Ana Lopez", "Roberto Diaz"];
+
 export default function ReservationPage() {
-  const { createReservation, reservationData, loading: reservationLoading } = useReservation();
-  const { productData, loading: productLoading } = useProduct();
+  const { createReservation, reservationData: apiReservationData, loading: reservationLoading } = useReservation();
+  const { productData: apiProductData, loading: productLoading } = useProduct();
+  
+  // Usar datos de mockup si no hay datos de la API
+  const productData = apiProductData.length > 0 ? apiProductData : mockProducts;
+  const reservationData = apiReservationData.length > 0 ? apiReservationData : mockReservations;
   
   // UI State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -150,7 +254,7 @@ export default function ReservationPage() {
               <div className="glass rounded-3xl border border-border p-6">
                 <BookingForm
                   selectedProduct={selectedProduct}
-                  employees={employees.length > 0 ? employees : ["Sin asignar"]}
+                  employees={employees.length > 0 ? employees : mockEmployees}
                   existingReservations={reservationData}
                   onSubmit={handleCreateReservation}
                   onBack={() => setSelectedProduct(null)}
