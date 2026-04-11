@@ -65,14 +65,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es" className="dark">
       <head>
         <meta
           name="google-site-verification"
           content="-6Ifr3rBdu0PZbkiYVIKT03g9hN9bdKczlTyVcaXCVM"
         />
+        <meta name="theme-color" content="#0a0a0f" />
       </head>
-      <body>
+      <body className="bg-background text-foreground antialiased">
         <AppShell>
           <ErrorBoundary>
             {children}

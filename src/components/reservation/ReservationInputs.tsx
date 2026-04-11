@@ -17,7 +17,7 @@ export const ReservationInput = ({
     placeholder={PlaceHoldersReservationMapping[label]}
     disabled={disabled}
     type={type || "text"}
-    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-blue-50 text-gray-800 placeholder-gray-400 transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+    className="w-full px-4 py-3 rounded-xl border border-border bg-secondary text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
   />
 );
 
@@ -31,7 +31,7 @@ export const ReservationInputSelect = ({
   <select
     {...register(label, { required })}
     disabled={disabled}
-    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-blue-50 text-gray-800 transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+    className="w-full px-4 py-3 rounded-xl border border-border bg-secondary text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
   >
     {Object.entries(options ?? {}).map(([key, value]) => (
       <option key={key} value={key}>
@@ -50,7 +50,7 @@ export const ReservationInputError = ({
 }) => {
   if (!error) return null;
   return (
-    <span className="text-sm text-red-600 font-medium mt-1 block">
+    <span className="text-sm text-danger font-medium mt-1.5 block">
       {message}
     </span>
   );

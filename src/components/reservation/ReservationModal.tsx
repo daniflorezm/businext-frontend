@@ -18,6 +18,7 @@ import {
 } from "@/components/reservation/ReservationInputs";
 import { useProduct } from "@/hooks/useProduct";
 import { useFinances } from "@/hooks/useFinances";
+import { X, CalendarDays, ChevronLeft, ChevronRight, Save } from "lucide-react";
 
 export const ReservationModal = ({
   handleOpenModal,
@@ -37,7 +38,7 @@ export const ReservationModal = ({
     control,
     trigger,
   } = useForm<Reservation>();
-  // Step state for wizard
+  
   const DURATION_SUGGESTIONS = [30, 60, 90];
   const [step, setStep] = useState(1);
   const totalSteps = 2;
@@ -59,13 +60,10 @@ export const ReservationModal = ({
       creator: data.inCharge,
       reservation_id: data.id,
     };
-    console.log(financeRecord);
-
     createFinance(financeRecord);
   };
 
   const onSubmit: SubmitHandler<Reservation> = async (data: Reservation) => {
-    // Final submit only on last step
     if (step < totalSteps) return;
     if (!data.reservationStartDate) {
       setValidationError("Debes indicar una fecha y hora para la reserva");
@@ -97,7 +95,6 @@ export const ReservationModal = ({
     handleOpenModal();
   };
 
-  // Step navigation handlers
   const handleNext = async () => {
     let valid = false;
     if (step === 1) {
@@ -114,7 +111,6 @@ export const ReservationModal = ({
   const handleBack = () => setStep((s) => s - 1);
 
   useEffect(() => {
-    // Pre-fill form fields when editing
     if (operation === "Editar reserva" && reservationData) {
       for (const item in reservationData) {
         setValue(item, reservationData[item]);
@@ -130,224 +126,238 @@ export const ReservationModal = ({
           onClose={() => handleOpenModal()}
           className="relative z-50"
         >
-          <div className="fixed inset-0 flex w-screen items-center justify-center p-2 sm:p-4 bg-black/30 z-50">
-            <DialogPanel className="w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 bg-white p-4 sm:p-8 space-y-6">
-              <DialogTitle className="text-2xl font-bold text-purple-700 text-center mb-2">
-                {operation}
-              </DialogTitle>
-              {/* Stepper indicator */}
-              <div className="flex justify-center mb-4">
+          <div className="fixed inset-0 flex w-screen items-center justify-center p-4 bg-black/60 backdrop-blur-sm z-50">
+            <DialogPanel className="w-full max-w-lg rounded-2xl shadow-2xl border border-border bg-card p-6 space-y-5 animate-fade-in-up">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-primary/10">
+                    <CalendarDays className="w-5 h-5 text-primary" />
+                  </div>
+                  <DialogTitle className="text-xl font-bold text-foreground">
+                    {operation}
+                  </DialogTitle>
+                </div>
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="p-2 rounded-xl hover:bg-secondary text-muted-foreground transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Stepper */}
+              <div className="flex gap-2">
                 {Array.from({ length: totalSteps }).map((_, idx) => (
                   <div
                     key={idx}
-                    className={`h-2 w-8 mx-1 rounded-full ${
-                      step === idx + 1 ? "bg-purple-600" : "bg-gray-300"
+                    className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${
+                      step > idx ? "bg-primary" : step === idx + 1 ? "bg-primary/50" : "bg-secondary"
                     }`}
                   />
                 ))}
               </div>
+
               <form
                 onSubmit={handleSubmit(onSubmit)}
                 className="flex flex-col gap-4"
               >
-                {/* Step 1: Nombre y servicio */}
+                {/* Step 1 */}
                 {step === 1 && (
-                  <>
-                    <div className="mb-1 text-xs text-gray-500">
-                      Nombre del cliente
-                    </div>
-                    <ReservationInput
-                      label="customerName"
-                      register={register}
-                      required={true}
-                    />
-                    <ReservationInputError
-                      error={errors.customerName}
-                      message="Indica un nombre de cliente"
-                    />
-                    <div className="mb-1 text-xs text-gray-500">
-                      Servicio a reservar
-                    </div>
-                    <ReservationInputSelect
-                      label="service"
-                      register={register}
-                      required={true}
-                      options={productOptions}
-                    />
-                    <ReservationInputError
-                      error={errors.service}
-                      message="Selecciona un servicio"
-                    />
-                  </>
-                )}
-                {/* Step 2: Encargado, hora, tiempo */}
-                {step === 2 && (
-                  <>
-                    <div className="mb-1 text-xs text-gray-500">
-                      Encargado de la reserva
-                    </div>
-                    <ReservationInput
-                      label="inCharge"
-                      register={register}
-                      required={true}
-                    />
-                    <ReservationInputError
-                      error={errors.inCharge}
-                      message="Indica un encargado"
-                    />
-                    <div className="mb-1 text-xs text-gray-500">
-                      Fecha y hora de la reserva
-                    </div>
-                    <LocalizationProvider
-                      dateAdapter={AdapterDayjs}
-                      adapterLocale="es"
-                    >
-                      <Controller
-                        name="reservationStartDate"
-                        control={control}
-                        render={({ field }) => (
-                          <DateTimePicker
-                            label="Hora de la reserva"
-                            value={field.value ? dayjs(field.value) : null}
-                            onChange={(newValue) => {
-                              field.onChange(
-                                newValue ? newValue.toISOString() : ""
-                              );
-                            }}
-                            slotProps={{
-                              textField: {
-                                fullWidth: true,
-                                size: "small",
-                                className: "bg-blue-50 rounded-lg",
-                              },
-                            }}
-                          />
-                        )}
+                  <div className="space-y-4 animate-fade-in-up">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Nombre del cliente
+                      </label>
+                      <ReservationInput
+                        label="customerName"
+                        register={register}
+                        required={true}
                       />
-                    </LocalizationProvider>
-                    <div className="mb-1 text-xs text-gray-500">
-                      Duración (minutos)
+                      <ReservationInputError
+                        error={errors.customerName}
+                        message="Indica un nombre de cliente"
+                      />
                     </div>
-                    <ReservationInput
-                      label="timePerReservation"
-                      register={register}
-                      required={true}
-                      type="number"
-                    />
-                    {/* Sugerencias de duración */}
-                    <div className="flex gap-2 mt-2">
-                      {DURATION_SUGGESTIONS.map((dur) => (
-                        <button
-                          key={dur}
-                          type="button"
-                          className="px-3 py-1 rounded border text-xs font-medium bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200"
-                          onClick={() => {
-                            // setValue actualiza el valor del campo en react-hook-form
-                            setValue("timePerReservation", dur);
-                          }}
-                        >
-                          {dur == 90
-                            ? "1.5 h"
-                            : dur == 60
-                            ? "1 h"
-                            : dur + " min"}
-                        </button>
-                      ))}
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Servicio a reservar
+                      </label>
+                      <ReservationInputSelect
+                        label="service"
+                        register={register}
+                        required={true}
+                        options={productOptions}
+                      />
+                      <ReservationInputError
+                        error={errors.service}
+                        message="Selecciona un servicio"
+                      />
                     </div>
-                    <ReservationInputError
-                      error={errors.timePerReservation}
-                      message="Indica un tiempo por reserva"
-                    />
-                  </>
+                  </div>
                 )}
-                {/* Step 3: Estado y confirmación */}
-                {/* {step === 3 && (
-                  <>
-                    <div className="mb-1 text-xs text-gray-500">
-                      Estado de la reserva
+
+                {/* Step 2 */}
+                {step === 2 && (
+                  <div className="space-y-4 animate-fade-in-up">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Encargado de la reserva
+                      </label>
+                      <ReservationInput
+                        label="inCharge"
+                        register={register}
+                        required={true}
+                      />
+                      <ReservationInputError
+                        error={errors.inCharge}
+                        message="Indica un encargado"
+                      />
                     </div>
-                    <ReservationInputSelect
-                      label="status"
-                      register={register}
-                      required={true}
-                      options={StatusOptions}
-                    />
-                    <ReservationInputError
-                      error={errors.status}
-                      message="Indica un estado"
-                    />
-                  </>
-                )} */}
-                {/* Step navigation */}
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Fecha y hora de la reserva
+                      </label>
+                      <LocalizationProvider
+                        dateAdapter={AdapterDayjs}
+                        adapterLocale="es"
+                      >
+                        <Controller
+                          name="reservationStartDate"
+                          control={control}
+                          render={({ field }) => (
+                            <DateTimePicker
+                              label="Hora de la reserva"
+                              value={field.value ? dayjs(field.value) : null}
+                              onChange={(newValue) => {
+                                field.onChange(
+                                  newValue ? newValue.toISOString() : ""
+                                );
+                              }}
+                              slotProps={{
+                                textField: {
+                                  fullWidth: true,
+                                  size: "small",
+                                  sx: {
+                                    "& .MuiOutlinedInput-root": {
+                                      backgroundColor: "var(--color-secondary)",
+                                      borderRadius: "0.75rem",
+                                      color: "var(--color-foreground)",
+                                      "& fieldset": {
+                                        borderColor: "var(--color-border)",
+                                      },
+                                      "&:hover fieldset": {
+                                        borderColor: "var(--color-primary)",
+                                      },
+                                      "&.Mui-focused fieldset": {
+                                        borderColor: "var(--color-primary)",
+                                      },
+                                    },
+                                    "& .MuiInputLabel-root": {
+                                      color: "var(--color-muted-foreground)",
+                                    },
+                                    "& .MuiSvgIcon-root": {
+                                      color: "var(--color-primary)",
+                                    },
+                                  },
+                                },
+                              }}
+                            />
+                          )}
+                        />
+                      </LocalizationProvider>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Duración (minutos)
+                      </label>
+                      <ReservationInput
+                        label="timePerReservation"
+                        register={register}
+                        required={true}
+                        type="number"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        {DURATION_SUGGESTIONS.map((dur) => (
+                          <button
+                            key={dur}
+                            type="button"
+                            className="px-3 py-1.5 rounded-xl text-xs font-medium bg-secondary text-foreground border border-border hover:bg-primary hover:text-white hover:border-primary transition-all"
+                            onClick={() => setValue("timePerReservation", dur)}
+                          >
+                            {dur === 90 ? "1.5 h" : dur === 60 ? "1 h" : dur + " min"}
+                          </button>
+                        ))}
+                      </div>
+                      <ReservationInputError
+                        error={errors.timePerReservation}
+                        message="Indica un tiempo por reserva"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Validation error */}
                 {validationError && (
-                  <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  <p className="text-sm text-danger bg-danger/10 border border-danger/20 rounded-xl px-4 py-2.5">
                     {validationError}
                   </p>
                 )}
-                <div className="flex flex-col sm:flex-row justify-between gap-2 mt-4">
+
+                {/* Navigation */}
+                <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => handleOpenModal()}
-                    className="w-full sm:w-auto px-6 py-2  rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-100 transition shadow-sm"
+                    className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-secondary text-foreground font-medium hover:bg-muted transition-colors"
                     disabled={loading}
                   >
                     Cancelar
                   </button>
-                  {step > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="w-full sm:w-auto px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow hover:from-purple-500 hover:to-purple-700 transition"
-                      disabled={loading}
-                    >
-                      Atrás
-                    </button>
-                  )}
-                  {step < totalSteps && (
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="w-full sm:w-auto px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow hover:from-purple-500 hover:to-purple-700 transition"
-                      disabled={loading}
-                    >
-                      Siguiente
-                    </button>
-                  )}
-                  {step === totalSteps && (
-                    <button
-                      type="submit"
-                      className="w-full sm:w-auto px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-green-400 to-green-600 text-white shadow hover:from-green-500 hover:to-green-700 transition flex items-center justify-center"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <span className="flex items-center gap-2">
-                          <svg
-                            className="animate-spin h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8v8z"
-                            ></path>
-                          </svg>
-                          Guardando...
-                        </span>
-                      ) : (
-                        "Guardar"
-                      )}
-                    </button>
-                  )}
+                  
+                  <div className="flex gap-2 flex-1 sm:flex-none">
+                    {step > 1 && (
+                      <button
+                        type="button"
+                        onClick={handleBack}
+                        className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-secondary text-foreground font-medium hover:bg-muted transition-colors flex items-center justify-center gap-2"
+                        disabled={loading}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        Atrás
+                      </button>
+                    )}
+                    
+                    {step < totalSteps ? (
+                      <button
+                        type="button"
+                        onClick={handleNext}
+                        className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                        disabled={loading}
+                      >
+                        Siguiente
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-success text-white font-medium hover:bg-success/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Guardando...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4" />
+                            Guardar
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </form>
             </DialogPanel>

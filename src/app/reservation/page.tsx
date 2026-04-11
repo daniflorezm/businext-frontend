@@ -1,284 +1,420 @@
 "use client";
-import React, { useState } from "react";
-import { BookListItem } from "../../components/reservation/ReservationItem";
+
+import { useState, useMemo } from "react";
 import { useReservation } from "@/hooks/useReservation";
+import { useProduct } from "@/hooks/useProduct";
 import { Reservation } from "@/lib/reservation/types";
-import { ReservationCalendar } from "@/components/reservation/ReservationCalendar";
-import { SectionSkeleton } from "@/components/common/SkeletonLoader";
+import { Product } from "@/lib/product/types";
+import { ServiceCard } from "@/components/reservation/ServiceCard";
+import { BookingForm } from "@/components/reservation/BookingForm";
+import { ReservationCard } from "@/components/reservation/ReservationCard";
+import { 
+  Sparkles, 
+  CalendarDays, 
+  Search, 
+  Filter, 
+  ChevronLeft, 
+  ChevronRight,
+  Package,
+  Clock,
+  Users
+} from "lucide-react";
 
 export default function ReservationPage() {
-  const { createReservation, reservationData, loading } =
-    useReservation();
+  const { createReservation, reservationData, loading: reservationLoading } = useReservation();
+  const { productData, loading: productLoading } = useProduct();
+  
+  // UI State
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState("ALL");
   const [employeeFilter, setEmployeeFilter] = useState("ALL");
   const [customerSearch, setCustomerSearch] = useState("");
+  const [productTypeFilter, setProductTypeFilter] = useState<"all" | "service" | "product">("all");
+  
   const itemsPerPage = 6;
 
-  const getStaffList = (reservations: Reservation[]) => {
+  // Get unique employees from reservations
+  const employees = useMemo(() => {
     const set = new Set<string>();
-    reservations.forEach((r) => {
+    reservationData.forEach((r) => {
       if (r.inCharge && typeof r.inCharge === "string") set.add(r.inCharge);
     });
-    return ["ALL", ...Array.from(set)];
-  };
+    return Array.from(set);
+  }, [reservationData]);
 
-  // Helpers for date filtering
-  const isSameDay = (dateA: Date, dateB: Date) => {
-    return (
-      dateA.getFullYear() === dateB.getFullYear() &&
-      dateA.getMonth() === dateB.getMonth() &&
-      dateA.getDate() === dateB.getDate()
-    );
-  };
+  // Filter products by type
+  const filteredProducts = useMemo(() => {
+    if (productTypeFilter === "all") return productData;
+    return productData.filter(p => p.type === productTypeFilter);
+  }, [productData, productTypeFilter]);
 
-  const isWithinCurrentWeek = (date: Date) => {
-    const now = new Date();
-    // Start of week (Monday)
-    const day = now.getDay();
-    const daysSinceMonday = (day + 6) % 7; // 0->Mon, ...
-    const monday = new Date(now);
-    monday.setHours(0, 0, 0, 0);
-    monday.setDate(now.getDate() - daysSinceMonday);
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
+  // Filter reservations
+  const filteredReservations = useMemo(() => {
+    let filtered = [...reservationData].filter((res) => res.status === "PENDING");
 
-    return date >= monday && date <= sunday;
-  };
+    // Customer search
+    if (customerSearch.trim()) {
+      filtered = filtered.filter((res) =>
+        res.customerName?.toLowerCase().includes(customerSearch.trim().toLowerCase())
+      );
+    }
 
-  let filteredReservations = [...reservationData].filter(
-    (res) => res.status === "PENDING"
-  );
-  // Filtro por nombre de cliente
-  if (customerSearch.trim()) {
-    filteredReservations = filteredReservations.filter((res) =>
-      res.customerName
-        ?.toLowerCase()
-        .includes(customerSearch.trim().toLowerCase())
-    );
-  }
+    // Employee filter
+    if (employeeFilter !== "ALL") {
+      filtered = filtered.filter((res) => res.inCharge === employeeFilter);
+    }
 
-  // Apply employee filter
-  if (employeeFilter !== "ALL") {
-    filteredReservations = filteredReservations.filter(
-      (res) => res.inCharge === employeeFilter
-    );
-  }
-
-  // Apply time filter: TODAY, WEEK, ALL
-  if (filter === "TODAY") {
+    // Time filter
     const today = new Date();
-    filteredReservations = filteredReservations.filter((res) =>
-      isSameDay(new Date(res.reservationStartDate), today)
-    );
-  } else if (filter === "WEEK") {
-    filteredReservations = filteredReservations.filter((res) =>
-      isWithinCurrentWeek(new Date(res.reservationStartDate))
-    );
-  } else if (filter === "ALL") {
-    // no-op, keep all pending
-  }
+    if (filter === "TODAY") {
+      filtered = filtered.filter((res) => {
+        const resDate = new Date(res.reservationStartDate);
+        return (
+          resDate.getFullYear() === today.getFullYear() &&
+          resDate.getMonth() === today.getMonth() &&
+          resDate.getDate() === today.getDate()
+        );
+      });
+    } else if (filter === "WEEK") {
+      const day = today.getDay();
+      const daysSinceMonday = (day + 6) % 7;
+      const monday = new Date(today);
+      monday.setHours(0, 0, 0, 0);
+      monday.setDate(today.getDate() - daysSinceMonday);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23, 59, 59, 999);
 
-  // Always sort by reservationStartDate ascending (oldest first)
-  filteredReservations.sort(
-    (a, b) =>
-      new Date(a.reservationStartDate).getTime() -
-      new Date(b.reservationStartDate).getTime()
-  );
+      filtered = filtered.filter((res) => {
+        const resDate = new Date(res.reservationStartDate);
+        return resDate >= monday && resDate <= sunday;
+      });
+    }
 
-  // Paginación
+    // Sort by date
+    filtered.sort(
+      (a, b) =>
+        new Date(a.reservationStartDate).getTime() -
+        new Date(b.reservationStartDate).getTime()
+    );
+
+    return filtered;
+  }, [reservationData, customerSearch, employeeFilter, filter]);
+
+  // Pagination
   const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
   const paginatedReservations = filteredReservations.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  return (
-    <div className="min-h-screen w-full bg-linear-to-br from-blue-50 via-white to-blue-100 pt-14 md:pt-0">
-      <div className="flex flex-col justify-center items-center p-7 gap-10">
-        <h1 className="text-lg font-semibold text-black pb-2.5">
-          Lista de reservas
-        </h1>
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 mb-3 justify-center items-center w-full max-w-5xl">
-          <span className="text-base font-semibold text-blue-700 mr-2">
-            Filtrar por:
-          </span>
-          <div className="flex flex-row flex-wrap gap-2 w-full sm:w-auto justify-center">
-            {[
-              { label: "Hoy", value: "TODAY" },
-              { label: "Semana", value: "WEEK" },
-              { label: "Todas", value: "ALL" },
-            ].map((btn) => (
-              <button
-                key={btn.value}
-                className={`px-2 py-1 rounded-md font-medium border border-blue-300 shadow-sm transition text-xs sm:text-sm whitespace-nowrap min-w-[90px] sm:min-w-[110px] ${
-                  filter === btn.value
-                    ? "bg-blue-500 text-white border-blue-500"
-                    : "bg-white text-blue-700 hover:bg-blue-100 border-blue-200"
-                }`}
-                onClick={() => {
-                  setFilter(btn.value);
-                  setCurrentPage(1);
-                }}
-              >
-                {btn.label}
-              </button>
-            ))}
-          </div>
-          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-2 sm:mt-0">
-            <label
-              htmlFor="customer-search"
-              className="text-sm text-blue-700 font-medium"
-            >
-              Cliente:
-            </label>
-            <input
-              id="customer-search"
-              type="text"
-              value={customerSearch}
-              onChange={(e) => {
-                setCustomerSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder="Buscar por nombre"
-              className="w-full sm:w-[180px] px-3 py-1.5 rounded-md text-sm font-medium transition border border-blue-200 bg-white text-blue-700 shadow-sm hover:bg-blue-50"
-              aria-label="Filtrar por cliente"
-            />
-          </div>
-          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-2 sm:mt-0">
-            <label
-              htmlFor="employee-select"
-              className="text-sm text-blue-700 font-medium"
-            >
-              Empleado:
-            </label>
+  const handleProductSelect = (product: Product) => {
+    setSelectedProduct(product);
+  };
 
-            <div className="relative w-full sm:inline-flex sm:w-auto">
-              <select
-                id="employee-select"
-                value={employeeFilter}
-                onChange={(e) => {
-                  setEmployeeFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full sm:w-[180px] appearance-none pr-8 pl-3 py-1.5 rounded-md text-sm font-medium transition border border-blue-200 bg-white text-blue-700 shadow-sm hover:bg-blue-50"
-                aria-label="Filtrar por empleado"
-              >
-                {getStaffList(reservationData).map((s) => (
-                  <option key={s} value={s}>
-                    {s === "ALL" ? "Todos" : s}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-700">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M6 9l6 6 6-6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
+  const handleCreateReservation = async (reservation: Omit<Reservation, "id">) => {
+    return createReservation(reservation);
+  };
+
+  const isLoading = reservationLoading || productLoading;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Background gradient effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16 md:pt-8">
+        {/* Header */}
+        <header className="mb-10 animate-fade-in-up">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 rounded-xl bg-primary/10 glow-primary">
+              <CalendarDays className="w-6 h-6 text-primary" />
             </div>
+            <h1 className="text-3xl font-bold text-foreground">Reservas</h1>
           </div>
-        </div>
-        <div className="w-full max-w-3xl mx-auto flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-6 shadow-sm">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 border border-blue-300">
-            <svg
-              width="22"
-              height="22"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="#2563eb"
-              strokeWidth="2"
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                fill="#e0e7ff"
-                stroke="#2563eb"
-                strokeWidth="2"
-              />
-              <rect x="11" y="10" width="2" height="7" rx="1" fill="#2563eb" />
-              <rect x="11" y="7" width="2" height="2" rx="1" fill="#2563eb" />
-            </svg>
-          </span>
-          <span className="text-sm sm:text-base text-blue-900 font-medium">
-            Cada vez que una reserva se marca como{" "}
-            <span className="font-bold text-green-700">completada</span>, se
-            crea automáticamente un registro financiero de tipo{" "}
-            <span className="font-bold text-blue-700">&quot;ingreso&quot;</span>.
-          </span>
-        </div>
-        <div className="w-full max-w-5xl px-2 sm:px-0">
-          {loading ? (
-            <SectionSkeleton />
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {paginatedReservations && paginatedReservations.length > 0 ? (
-                  paginatedReservations.map((reservation: Reservation) => (
-                    <BookListItem key={reservation.id} {...reservation} />
-                  ))
-                ) : (
-                  <p className="text-center col-span-full text-gray-500">
-                    No hay reservas para mostrar.
-                  </p>
-                )}
+          <p className="text-muted-foreground">
+            Selecciona un servicio o producto para crear una nueva reserva
+          </p>
+        </header>
+
+        {/* Main Content */}
+        <div className="grid lg:grid-cols-5 gap-8">
+          {/* Left Column - Services/Products and Booking Form */}
+          <div className="lg:col-span-3 space-y-6">
+            {selectedProduct ? (
+              /* Booking Form */
+              <div className="glass rounded-3xl border border-border p-6">
+                <BookingForm
+                  selectedProduct={selectedProduct}
+                  employees={employees.length > 0 ? employees : ["Sin asignar"]}
+                  existingReservations={reservationData}
+                  onSubmit={handleCreateReservation}
+                  onBack={() => setSelectedProduct(null)}
+                  loading={reservationLoading}
+                />
               </div>
-              {totalPages > 1 && (
-                <div className="flex flex-wrap justify-center mt-8 gap-2">
-                  <button
-                    className="px-3 py-1 rounded-lg border bg-white text-gray-700 font-semibold shadow hover:bg-blue-100 transition"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Anterior
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => (
+            ) : (
+              /* Products/Services Section */
+              <section className="glass rounded-3xl border border-border p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-accent/10">
+                      <Sparkles className="w-5 h-5 text-accent" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Servicios y Productos</h2>
+                      <p className="text-sm text-muted-foreground">{filteredProducts.length} disponibles</p>
+                    </div>
+                  </div>
+
+                  {/* Type filter */}
+                  <div className="flex gap-2">
+                    {[
+                      { label: "Todos", value: "all" },
+                      { label: "Servicios", value: "service" },
+                      { label: "Productos", value: "product" },
+                    ].map((btn) => (
+                      <button
+                        key={btn.value}
+                        onClick={() => setProductTypeFilter(btn.value as "all" | "service" | "product")}
+                        className={`
+                          px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                          ${productTypeFilter === btn.value
+                            ? "bg-primary text-white"
+                            : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-muted"
+                          }
+                        `}
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {isLoading ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="aspect-square rounded-2xl bg-secondary animate-pulse" />
+                    ))}
+                  </div>
+                ) : filteredProducts.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 stagger-children">
+                    {filteredProducts.map((product) => (
+                      <ServiceCard
+                        key={product.id}
+                        product={product}
+                        isSelected={selectedProduct?.id === product.id}
+                        onSelect={() => handleProductSelect(product)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      No hay productos disponibles
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Crea productos o servicios en la sección de configuración
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Quick Stats */}
+            {!selectedProduct && (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="glass rounded-2xl border border-border p-4 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-primary/10">
+                      <CalendarDays className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{filteredReservations.length}</p>
+                      <p className="text-xs text-muted-foreground">Pendientes</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass rounded-2xl border border-border p-4 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-accent/10">
+                      <Clock className="w-5 h-5 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">
+                        {reservationData.filter(r => {
+                          const today = new Date();
+                          const resDate = new Date(r.reservationStartDate);
+                          return resDate.toDateString() === today.toDateString() && r.status === "PENDING";
+                        }).length}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Hoy</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass rounded-2xl border border-border p-4 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-success/10">
+                      <Users className="w-5 h-5 text-success" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{employees.length}</p>
+                      <p className="text-xs text-muted-foreground">Empleados</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Reservations List */}
+          <aside className="lg:col-span-2 space-y-4">
+            <div className="glass rounded-3xl border border-border p-6">
+              {/* Filters header */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-xl bg-primary/10">
+                    <Filter className="w-5 h-5 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground">Mis Reservas</h2>
+                </div>
+
+                {/* Time filters */}
+                <div className="flex gap-2 mb-4">
+                  {[
+                    { label: "Hoy", value: "TODAY" },
+                    { label: "Semana", value: "WEEK" },
+                    { label: "Todas", value: "ALL" },
+                  ].map((btn) => (
                     <button
-                      key={i}
-                      className={`px-3 py-1 rounded-lg font-semibold shadow border transition ${
-                        currentPage === i + 1
-                          ? "bg-blue-500 text-white border-blue-500"
-                          : "bg-white text-gray-700 hover:bg-blue-100 border-gray-300"
-                      }`}
-                      onClick={() => setCurrentPage(i + 1)}
+                      key={btn.value}
+                      onClick={() => { setFilter(btn.value); setCurrentPage(1); }}
+                      className={`
+                        flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-200
+                        ${filter === btn.value
+                          ? "bg-primary text-white"
+                          : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-muted"
+                        }
+                      `}
                     >
-                      {i + 1}
+                      {btn.label}
                     </button>
                   ))}
-                  <button
-                    className="px-3 py-1 rounded-lg border bg-white text-gray-700 font-semibold shadow hover:bg-blue-100 transition"
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
+                </div>
+
+                {/* Search */}
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={customerSearch}
+                    onChange={(e) => { setCustomerSearch(e.target.value); setCurrentPage(1); }}
+                    placeholder="Buscar cliente..."
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all text-sm"
+                  />
+                </div>
+
+                {/* Employee filter */}
+                {employees.length > 0 && (
+                  <select
+                    value={employeeFilter}
+                    onChange={(e) => { setEmployeeFilter(e.target.value); setCurrentPage(1); }}
+                    className="w-full px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground focus:outline-none focus:border-primary transition-all text-sm appearance-none cursor-pointer"
                   >
-                    Siguiente
+                    <option value="ALL">Todos los empleados</option>
+                    {employees.map((emp) => (
+                      <option key={emp} value={emp}>{emp}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Reservations list */}
+              <div className="space-y-3">
+                {isLoading ? (
+                  [...Array(3)].map((_, i) => (
+                    <div key={i} className="h-32 rounded-2xl bg-secondary animate-pulse" />
+                  ))
+                ) : paginatedReservations.length > 0 ? (
+                  paginatedReservations.map((reservation) => (
+                    <ReservationCard key={reservation.id} reservation={reservation} />
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <CalendarDays className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">No hay reservas para mostrar</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-border">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-xl bg-secondary text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`
+                            w-9 h-9 rounded-xl text-sm font-medium transition-all
+                            ${currentPage === pageNum
+                              ? "bg-primary text-white"
+                              : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-muted"
+                            }
+                          `}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-xl bg-secondary text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
               )}
-            </>
-          )}
+            </div>
+
+            {/* Info card */}
+            <div className="glass rounded-2xl border border-accent/20 p-4 flex items-start gap-3 animate-fade-in-up">
+              <div className="p-2 rounded-xl bg-accent/10 flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-accent" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Al completar una reserva, se crea automáticamente un registro financiero de tipo <span className="text-success font-medium">ingreso</span>.
+              </p>
+            </div>
+          </aside>
         </div>
-      </div>
-      <div className="w-full h-auto flex justify-center items-center">
-        <ReservationCalendar
-          reservationData={reservationData}
-          apiCreateEvent={createReservation}
-          loading={loading}
-        />
       </div>
     </div>
   );
