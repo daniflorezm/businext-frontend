@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
+  const next = searchParams.get("next");
 
   if (token_hash && type) {
     const supabase = await createClient();
@@ -18,12 +19,15 @@ export async function GET(request: NextRequest) {
     });
 
     if (!error) {
-      // Redirigir según el tipo de verificación
       if (type === "recovery") {
-        redirect("/resetpassword"); // Reset password
-      } else {
-        redirect("/payment"); // Confirmación de email
+        redirect("/resetpassword");
       }
+
+      if (type === "invite") {
+        redirect(next || "/employee/onboarding");
+      }
+
+      redirect(next || "/payment");
     }
 
     redirect("/error");

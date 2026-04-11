@@ -12,7 +12,6 @@ export const DeleteFinancesRecordModal = ({
   const handleDelete = async () => {
     await deleteFinanceRecord(id);
     handleOpenDeleteModal();
-    window.location.reload();
   };
   return (
     <>

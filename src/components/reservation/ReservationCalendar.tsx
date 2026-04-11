@@ -140,8 +140,7 @@ export const ReservationCalendar = ({
             />
             <circle cx="12" cy="16" r="1" fill="currentColor" />
           </svg>
-          Debes crear al menos un producto y un staff antes de crear una
-          reserva.
+          Debes crear al menos un producto antes de crear una reserva.
         </div>
         {/* Botón */}
         <button

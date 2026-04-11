@@ -4,7 +4,6 @@ import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import {
   Reservation,
   ReservationModalProps,
-  StatusOptions,
 } from "@/lib/reservation/types";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -17,10 +16,8 @@ import {
   ReservationInputSelect,
   ReservationInputError,
 } from "@/components/reservation/ReservationInputs";
-import { useConfiguration } from "@/hooks/useConfiguration";
 import { useProduct } from "@/hooks/useProduct";
 import { useFinances } from "@/hooks/useFinances";
-import { useReservation } from "@/hooks/useReservation";
 
 export const ReservationModal = ({
   handleOpenModal,
@@ -44,14 +41,9 @@ export const ReservationModal = ({
   const DURATION_SUGGESTIONS = [30, 60, 90];
   const [step, setStep] = useState(1);
   const totalSteps = 2;
-  const { getAllConfigurations, configurationData } = useConfiguration();
-  const { getAllProducts, productData } = useProduct();
+  const [validationError, setValidationError] = useState("");
+  const { productData } = useProduct();
   const { createFinance } = useFinances();
-  const staffNames = configurationData[0]?.staff ?? [];
-  const staffOptions = Object.assign(
-    {},
-    ...staffNames.map((key: string) => ({ [key]: key }))
-  );
 
   const productOptions = Object.assign(
     {},
@@ -76,9 +68,10 @@ export const ReservationModal = ({
     // Final submit only on last step
     if (step < totalSteps) return;
     if (!data.reservationStartDate) {
-      alert("Debes indicar una fecha y hora para la reserva");
+      setValidationError("Debes indicar una fecha y hora para la reserva");
       return;
     }
+    setValidationError("");
     const reservationStartDate = moment
       .utc(data.reservationStartDate)
       .tz("Europe/Madrid")
@@ -101,7 +94,7 @@ export const ReservationModal = ({
       data = { ...dataUpdated, id, reservationStartDate, reservationEndDate };
     }
     await executeAction(data);
-    window.location.reload();
+    handleOpenModal();
   };
 
   // Step navigation handlers
@@ -121,19 +114,17 @@ export const ReservationModal = ({
   const handleBack = () => setStep((s) => s - 1);
 
   useEffect(() => {
-    getAllConfigurations();
-    getAllProducts();
-    // In edition I want all the fields pre-filled
+    // Pre-fill form fields when editing
     if (operation === "Editar reserva" && reservationData) {
       for (const item in reservationData) {
         setValue(item, reservationData[item]);
       }
     }
-  }, []);
+  }, [operation, reservationData, setValue]);
 
   return (
     <>
-      {configurationData[0]?.staff.length > 0 && productData.length > 0 && (
+      {productData.length > 0 && (
         <Dialog
           open={isOpen}
           onClose={() => handleOpenModal()}
@@ -195,11 +186,10 @@ export const ReservationModal = ({
                     <div className="mb-1 text-xs text-gray-500">
                       Encargado de la reserva
                     </div>
-                    <ReservationInputSelect
+                    <ReservationInput
                       label="inCharge"
                       register={register}
                       required={true}
-                      options={staffOptions}
                     />
                     <ReservationInputError
                       error={errors.inCharge}
@@ -288,7 +278,12 @@ export const ReservationModal = ({
                     />
                   </>
                 )} */}
-                {/* Navigation buttons */}
+                {/* Step navigation */}
+                {validationError && (
+                  <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    {validationError}
+                  </p>
+                )}
                 <div className="flex flex-col sm:flex-row justify-between gap-2 mt-4">
                   <button
                     type="button"

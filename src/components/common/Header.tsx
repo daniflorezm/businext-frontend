@@ -1,14 +1,12 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { useConfiguration } from "@/hooks/useConfiguration";
+import { useAccessContext } from "@/hooks/useAccessContext";
 import { logout } from "@/app/login/logout";
 export const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { getAllConfigurations, configurationData } = useConfiguration();
-  useEffect(() => {
-    getAllConfigurations();
-  }, []);
+  const { capabilities, context } = useAccessContext();
+  const userName = context?.profile?.displayName || context?.profile?.email || "Usuario";
 
   // Modal de contacto
   const [showContact, setShowContact] = useState(false);
@@ -171,31 +169,28 @@ export const Header = () => {
         >
           Reservas
         </Link>
-        <Link
-          href="/finances"
-          className="px-3 py-1.5 rounded-md font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition w-full sm:w-auto text-center"
-          onClick={() => setMenuOpen(false)}
-        >
-          Finanzas
-        </Link>
-        <Link
-          href="/products"
-          className="px-3 py-1.5 rounded-md font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition w-full sm:w-auto text-center"
-          onClick={() => setMenuOpen(false)}
-        >
-          Productos
-        </Link>
-        <Link
-          href="/configuration"
-          className="px-3 py-1.5 rounded-md font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition w-full sm:w-auto text-center"
-          onClick={() => setMenuOpen(false)}
-        >
-          Configuración
-        </Link>
+        {capabilities.canManageFinances && (
+          <Link
+            href="/finances"
+            className="px-3 py-1.5 rounded-md font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition w-full sm:w-auto text-center"
+            onClick={() => setMenuOpen(false)}
+          >
+            Finanzas
+          </Link>
+        )}
+        {capabilities.canManageConfiguration && (
+          <Link
+            href="/configuration"
+            className="px-3 py-1.5 rounded-md font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition w-full sm:w-auto text-center"
+            onClick={() => setMenuOpen(false)}
+          >
+            Configuración
+          </Link>
+        )}
       </nav>
       <div className="flex items-center gap-2 bg-white/80 rounded-md px-3 py-1.5 shadow-sm mt-2 sm:mt-0">
         <span className="text-base font-semibold text-blue-700 max-w-[120px] sm:max-w-none text-wrap">
-          ¡Hola {configurationData[0]?.businessName || "Usuario"}!
+          ¡Hola {userName}!
         </span>
         <form action={logout}>
           <button

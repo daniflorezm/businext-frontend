@@ -1,10 +1,13 @@
 import "./globals.css";
-import { HeaderWrapper } from "@/components/common/HeaderWrapper";
+import { AppShell } from "@/components/common/AppShell";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+// Note: force-dynamic removed from the root layout.
+// All authenticated pages fetch data client-side via SWR/hooks, so the HTML
+// shell is safe to cache. Add `export const dynamic = "force-dynamic"` only
+// to individual pages that perform server-side data fetching.
 
 export const metadata: Metadata = {
   title: {
@@ -70,10 +73,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <HeaderWrapper />
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
+        <AppShell>
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+        </AppShell>
       </body>
     </html>
   );

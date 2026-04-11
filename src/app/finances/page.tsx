@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useFinances } from "@/hooks/useFinances";
-import SkeletonLoader from "@/components/common/SkeletonLoader";
+import SkeletonLoader, { SectionSkeleton } from "@/components/common/SkeletonLoader";
 import { FinanceRecordItem } from "@/components/finances/FinanceRecordItem";
 import { useReservation } from "@/hooks/useReservation";
 import { FinancesModal } from "@/components/finances/FinancesModal";
@@ -10,16 +10,22 @@ import { FinancesPieChart } from "@/components/finances/FinancesPieChart";
 import { FinancesBarChart } from "@/components/finances/FinancesBarChart";
 import { FinancesLineChart } from "@/components/finances/FinancesLineChart";
 import { monthOptions } from "@/lib/finances/types";
+import { useAccessContext } from "@/hooks/useAccessContext";
 
 export default function FinancesPage() {
+  const { capabilities, loading: contextLoading } = useAccessContext();
+
+  // Must be declared before useFinances so the year is used as SWR key
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+
   const {
-    getAllFinances,
-    getAnualFinances,
     financesData,
     anualFinancesData,
     loading,
-  } = useFinances();
-  const { reservationData, getAllReservations } = useReservation();
+  } = useFinances(selectedYear);
+  const { reservationData } = useReservation();
   const [openModal, setopenModal] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterType, setFilterType] = useState<"ALL" | "INCOME" | "EXPENSE">(
@@ -28,21 +34,11 @@ export default function FinancesPage() {
   const [issuerFilter, setIssuerFilter] = useState<string>("");
   const itemsPerPage = 4;
 
-  useEffect(() => {
-    const currentYear = new Date().getFullYear().toString();
-    getAllFinances();
-    getAnualFinances(currentYear);
-    getAllReservations();
-  }, []);
-
   const handleOpenModal = () => {
     setopenModal(!openModal);
   };
 
-  const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
   const monthName = monthOptions[selectedMonth];
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
   const yearOptions = Array.from(
     { length: 5 },
@@ -117,10 +113,17 @@ export default function FinancesPage() {
   const totalBalance = totalIncome - totalExpense;
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-      {loading ? (
+    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50 pt-14 md:pt-0">
+      {contextLoading ? (
         <div className="flex justify-center items-center min-h-screen">
           <SkeletonLoader rows={6} />
+        </div>
+      ) : !capabilities.canManageFinances ? (
+        <div className="flex justify-center items-center min-h-screen px-4">
+          <div className="max-w-xl rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center shadow-lg">
+            <h2 className="text-2xl font-bold text-amber-700 mb-2">Acceso restringido</h2>
+            <p className="text-gray-700">No tienes permisos para ver las finanzas del negocio.</p>
+          </div>
         </div>
       ) : (
         <>
@@ -238,26 +241,32 @@ export default function FinancesPage() {
           </div>
           <div className="flex flex-col w-full justify-center items-center px-2 sm:px-6 py-7 gap-10">
             <div className="flex flex-col gap-6 justify-center items-center w-full max-w-2xl">
-              {paginatedReservations?.map((finance) => {
-                let customerName = undefined;
-                if (finance.reservation_id) {
-                  const reservation = reservationData.find(
-                    (r) => r.id === finance.reservation_id
-                  );
-                  customerName = reservation?.customerName;
-                }
-                return (
-                  <FinanceRecordItem
-                    key={finance.id ?? finance.concept + finance.amount}
-                    {...finance}
-                    customerName={customerName}
-                  />
-                );
-              })}
-              {paginatedReservations.length === 0 && (
-                <p className="text-center col-span-full text-gray-500">
-                  No hay registros financieros para mostrar.
-                </p>
+              {loading ? (
+                <SectionSkeleton />
+              ) : (
+                <>
+                  {paginatedReservations?.map((finance) => {
+                    let customerName = undefined;
+                    if (finance.reservation_id) {
+                      const reservation = reservationData.find(
+                        (r) => r.id === finance.reservation_id
+                      );
+                      customerName = reservation?.customerName;
+                    }
+                    return (
+                      <FinanceRecordItem
+                        key={finance.id ?? finance.concept + finance.amount}
+                        {...finance}
+                        customerName={customerName}
+                      />
+                    );
+                  })}
+                  {paginatedReservations.length === 0 && (
+                    <p className="text-center col-span-full text-gray-500">
+                      No hay registros financieros para mostrar.
+                    </p>
+                  )}
+                </>
               )}
             </div>
             {totalPages > 1 && (

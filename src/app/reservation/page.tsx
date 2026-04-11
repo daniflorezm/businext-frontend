@@ -1,23 +1,19 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { BookListItem } from "../../components/reservation/ReservationItem";
 import { useReservation } from "@/hooks/useReservation";
 import { Reservation } from "@/lib/reservation/types";
 import { ReservationCalendar } from "@/components/reservation/ReservationCalendar";
-import SkeletonLoader from "@/components/common/SkeletonLoader";
+import { SectionSkeleton } from "@/components/common/SkeletonLoader";
 
 export default function ReservationPage() {
-  const { getAllReservations, createReservation, reservationData, loading } =
+  const { createReservation, reservationData, loading } =
     useReservation();
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState("ALL");
   const [employeeFilter, setEmployeeFilter] = useState("ALL");
   const [customerSearch, setCustomerSearch] = useState("");
   const itemsPerPage = 6;
-
-  useEffect(() => {
-    getAllReservations();
-  }, []);
 
   const getStaffList = (reservations: Reservation[]) => {
     const set = new Set<string>();
@@ -99,7 +95,7 @@ export default function ReservationPage() {
   );
 
   return (
-    <div className="min-h-screen w-full bg-linear-to-br from-blue-50 via-white to-blue-100">
+    <div className="min-h-screen w-full bg-linear-to-br from-blue-50 via-white to-blue-100 pt-14 md:pt-0">
       <div className="flex flex-col justify-center items-center p-7 gap-10">
         <h1 className="text-lg font-semibold text-black pb-2.5">
           Lista de reservas
@@ -226,7 +222,7 @@ export default function ReservationPage() {
         </div>
         <div className="w-full max-w-5xl px-2 sm:px-0">
           {loading ? (
-            <SkeletonLoader />
+            <SectionSkeleton />
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">

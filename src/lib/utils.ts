@@ -28,15 +28,11 @@ export const mapReservationToApi = (reservation: Reservation) => {
 export const mapConfigurationFromApi = (data: Record<string, unknown>): Configuration => ({
   id: data.id as number | undefined,
   businessName: data.business_name as string,
-  staff: ((data.staff as string) || "").split(",").map((s) => s.trim()).filter(Boolean),
 });
 
 export const mapConfigurationToApi = (configuration: Configuration) => ({
   id: configuration.id,
   business_name: configuration.businessName,
-  staff: Array.isArray(configuration.staff)
-    ? configuration.staff.join(",")
-    : configuration.staff,
 });
 
 export const routesWithoutHeader = [
@@ -44,11 +40,16 @@ export const routesWithoutHeader = [
   "/login",
   "/login/verify",
   "/resetpassword",
+  "/employee/onboarding",
   "/payment",
   "/paymentredirection",
 ];
 
-export const authOnlyRoutes = ["/payment", "/paymentredirection"];
+export const authOnlyRoutes = [
+  "/payment",
+  "/paymentredirection",
+  "/employee/onboarding",
+];
 
 export const publicRoutes = [
   "/",
