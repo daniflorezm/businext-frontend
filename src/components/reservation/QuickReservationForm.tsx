@@ -70,7 +70,7 @@ export function QuickReservationForm({
   return (
     <div
       className={cn(
-        "overflow-hidden transition-all duration-200 ease-snappy",
+        "overflow-hidden transition-all duration-150 ease-snappy",
         selectedService
           ? "max-h-[600px] opacity-100 mt-4"
           : "max-h-0 opacity-0"

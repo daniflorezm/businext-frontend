@@ -33,6 +33,13 @@
   --color-input: #4a4aaa;
   --color-ring: #345aad;
 
+  /* ── Chart / Calendar Palette ── */
+  --color-chart-1: #7c3aed;
+  --color-chart-2: #0ea5e9;
+  --color-chart-3: #f59e42;
+  --color-chart-4: #06b6d4;
+  --color-chart-5: #f43f5e;
+
   /* ── Typography ── */
   --font-sans: var(--font-body), system-ui, sans-serif;
   --font-heading: var(--font-heading), system-ui, sans-serif;
@@ -105,4 +112,16 @@ h2,
 h3,
 h4 {
   font-family: var(--font-heading);
+}
+
+/* ── Reduced motion: kill all transitions & animations ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

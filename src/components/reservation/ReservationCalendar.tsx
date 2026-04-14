@@ -55,11 +55,11 @@ export const ReservationCalendar = ({
     "var(--color-accent)",
     "var(--color-success)",
     "var(--color-danger)",
-    "#7c3aed",
-    "#0ea5e9",
-    "#f59e42",
-    "#06b6d4",
-    "#f43f5e",
+    "var(--color-chart-1, #7c3aed)",
+    "var(--color-chart-2, #0ea5e9)",
+    "var(--color-chart-3, #f59e42)",
+    "var(--color-chart-4, #06b6d4)",
+    "var(--color-chart-5, #f43f5e)",
   ];
 
   const loadEvents = async () => {
