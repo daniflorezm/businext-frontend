@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 interface Props {
   children: React.ReactNode;
@@ -29,18 +31,24 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         this.props.fallback ?? (
-          <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-white via-blue-50 to-cyan-50 p-8">
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md w-full text-center shadow">
-              <h2 className="text-xl font-bold text-red-700 mb-2">
+          <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background p-8">
+            <div className="bg-surface border border-danger/30 rounded-xl p-8 max-w-md w-full text-center shadow-lg flex flex-col items-center gap-3">
+              <AlertTriangle className="w-10 h-10 text-danger" />
+              <h2 className="font-heading text-h3 font-bold text-danger">
                 Algo salió mal
               </h2>
-              <p className="text-red-600 text-sm mb-4">{this.state.message}</p>
-              <button
-                onClick={() => this.setState({ hasError: false, message: "" })}
-                className="px-5 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+              <p className="text-body-sm text-foreground-muted">
+                {this.state.message}
+              </p>
+              <Button
+                variant="primary"
+                onClick={() =>
+                  this.setState({ hasError: false, message: "" })
+                }
+                className="mt-2"
               >
                 Reintentar
-              </button>
+              </Button>
             </div>
           </div>
         )
