@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import {
   Reservation,
@@ -8,6 +7,7 @@ import {
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 import moment from "moment-timezone";
@@ -18,6 +18,15 @@ import {
 } from "@/components/reservation/ReservationInputs";
 import { useProduct } from "@/hooks/useProduct";
 import { useFinances } from "@/hooks/useFinances";
+import {
+  Modal,
+  ModalHeader,
+  ModalContent,
+  ModalFooter,
+} from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+
+const muiDarkTheme = createTheme({ palette: { mode: "dark" } });
 
 export const ReservationModal = ({
   handleOpenModal,
@@ -125,79 +134,73 @@ export const ReservationModal = ({
   return (
     <>
       {productData.length > 0 && (
-        <Dialog
-          open={isOpen}
-          onClose={() => handleOpenModal()}
-          className="relative z-50"
-        >
-          <div className="fixed inset-0 flex w-screen items-center justify-center p-2 sm:p-4 bg-black/30 z-50">
-            <DialogPanel className="w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 bg-white p-4 sm:p-8 space-y-6">
-              <DialogTitle className="text-2xl font-bold text-purple-700 text-center mb-2">
-                {operation}
-              </DialogTitle>
-              {/* Stepper indicator */}
-              <div className="flex justify-center mb-4">
-                {Array.from({ length: totalSteps }).map((_, idx) => (
-                  <div
-                    key={idx}
-                    className={`h-2 w-8 mx-1 rounded-full ${
-                      step === idx + 1 ? "bg-purple-600" : "bg-gray-300"
-                    }`}
+        <Modal open={isOpen} onClose={handleOpenModal}>
+          <ModalHeader onClose={handleOpenModal}>{operation}</ModalHeader>
+          <ModalContent>
+            {/* Stepper indicator */}
+            <div className="flex justify-center mb-6">
+              {Array.from({ length: totalSteps }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`h-2 w-8 mx-1 rounded-full transition-colors duration-150 ${
+                    step === idx + 1 ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+              ))}
+            </div>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-4"
+            >
+              {/* Step 1: Nombre y servicio */}
+              {step === 1 && (
+                <>
+                  <div className="mb-1 text-caption text-foreground-muted">
+                    Nombre del cliente
+                  </div>
+                  <ReservationInput
+                    label="customerName"
+                    register={register}
+                    required={true}
                   />
-                ))}
-              </div>
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="flex flex-col gap-4"
-              >
-                {/* Step 1: Nombre y servicio */}
-                {step === 1 && (
-                  <>
-                    <div className="mb-1 text-xs text-gray-500">
-                      Nombre del cliente
-                    </div>
-                    <ReservationInput
-                      label="customerName"
-                      register={register}
-                      required={true}
-                    />
-                    <ReservationInputError
-                      error={errors.customerName}
-                      message="Indica un nombre de cliente"
-                    />
-                    <div className="mb-1 text-xs text-gray-500">
-                      Servicio a reservar
-                    </div>
-                    <ReservationInputSelect
-                      label="service"
-                      register={register}
-                      required={true}
-                      options={productOptions}
-                    />
-                    <ReservationInputError
-                      error={errors.service}
-                      message="Selecciona un servicio"
-                    />
-                  </>
-                )}
-                {/* Step 2: Encargado, hora, tiempo */}
-                {step === 2 && (
-                  <>
-                    <div className="mb-1 text-xs text-gray-500">
-                      Encargado de la reserva
-                    </div>
-                    <ReservationInput
-                      label="inCharge"
-                      register={register}
-                      required={true}
-                    />
-                    <ReservationInputError
-                      error={errors.inCharge}
-                      message="Indica un encargado"
-                    />
-                    <div className="mb-1 text-xs text-gray-500">
-                      Fecha y hora de la reserva
-                    </div>
+                  <ReservationInputError
+                    error={errors.customerName}
+                    message="Indica un nombre de cliente"
+                  />
+                  <div className="mb-1 text-caption text-foreground-muted">
+                    Servicio a reservar
+                  </div>
+                  <ReservationInputSelect
+                    label="service"
+                    register={register}
+                    required={true}
+                    options={productOptions}
+                  />
+                  <ReservationInputError
+                    error={errors.service}
+                    message="Selecciona un servicio"
+                  />
+                </>
+              )}
+              {/* Step 2: Encargado, hora, tiempo */}
+              {step === 2 && (
+                <>
+                  <div className="mb-1 text-caption text-foreground-muted">
+                    Encargado de la reserva
+                  </div>
+                  <ReservationInput
+                    label="inCharge"
+                    register={register}
+                    required={true}
+                  />
+                  <ReservationInputError
+                    error={errors.inCharge}
+                    message="Indica un encargado"
+                  />
+                  <div className="mb-1 text-caption text-foreground-muted">
+                    Fecha y hora de la reserva
+                  </div>
+                  <ThemeProvider theme={muiDarkTheme}>
                     <LocalizationProvider
                       dateAdapter={AdapterDayjs}
                       adapterLocale="es"
@@ -218,141 +221,100 @@ export const ReservationModal = ({
                               textField: {
                                 fullWidth: true,
                                 size: "small",
-                                className: "bg-blue-50 rounded-lg",
                               },
                             }}
                           />
                         )}
                       />
                     </LocalizationProvider>
-                    <div className="mb-1 text-xs text-gray-500">
-                      Duración (minutos)
-                    </div>
-                    <ReservationInput
-                      label="timePerReservation"
-                      register={register}
-                      required={true}
-                      type="number"
-                    />
-                    {/* Sugerencias de duración */}
-                    <div className="flex gap-2 mt-2">
-                      {DURATION_SUGGESTIONS.map((dur) => (
-                        <button
-                          key={dur}
-                          type="button"
-                          className="px-3 py-1 rounded border text-xs font-medium bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200"
-                          onClick={() => {
-                            // setValue actualiza el valor del campo en react-hook-form
-                            setValue("timePerReservation", dur);
-                          }}
-                        >
-                          {dur == 90
-                            ? "1.5 h"
-                            : dur == 60
-                            ? "1 h"
-                            : dur + " min"}
-                        </button>
-                      ))}
-                    </div>
-                    <ReservationInputError
-                      error={errors.timePerReservation}
-                      message="Indica un tiempo por reserva"
-                    />
-                  </>
-                )}
-                {/* Step 3: Estado y confirmación */}
-                {/* {step === 3 && (
-                  <>
-                    <div className="mb-1 text-xs text-gray-500">
-                      Estado de la reserva
-                    </div>
-                    <ReservationInputSelect
-                      label="status"
-                      register={register}
-                      required={true}
-                      options={StatusOptions}
-                    />
-                    <ReservationInputError
-                      error={errors.status}
-                      message="Indica un estado"
-                    />
-                  </>
-                )} */}
-                {/* Step navigation */}
-                {validationError && (
-                  <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                    {validationError}
-                  </p>
-                )}
-                <div className="flex flex-col sm:flex-row justify-between gap-2 mt-4">
-                  <button
+                  </ThemeProvider>
+                  <div className="mb-1 text-caption text-foreground-muted">
+                    Duración (minutos)
+                  </div>
+                  <ReservationInput
+                    label="timePerReservation"
+                    register={register}
+                    required={true}
+                    type="number"
+                  />
+                  {/* Sugerencias de duración */}
+                  <div className="flex gap-2 mt-2">
+                    {DURATION_SUGGESTIONS.map((dur) => (
+                      <Button
+                        key={dur}
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setValue("timePerReservation", dur);
+                        }}
+                      >
+                        {dur === 90
+                          ? "1.5 h"
+                          : dur === 60
+                          ? "1 h"
+                          : dur + " min"}
+                      </Button>
+                    ))}
+                  </div>
+                  <ReservationInputError
+                    error={errors.timePerReservation}
+                    message="Indica un tiempo por reserva"
+                  />
+                </>
+              )}
+              {/* Validation error */}
+              {validationError && (
+                <p
+                  role="alert"
+                  className="text-sm text-danger bg-danger/10 border border-danger/25 rounded-md px-3 py-2"
+                >
+                  {validationError}
+                </p>
+              )}
+              {/* Step navigation */}
+              <ModalFooter className="px-0 pb-0">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => handleOpenModal()}
+                  disabled={loading}
+                >
+                  Cancelar
+                </Button>
+                {step > 1 && (
+                  <Button
                     type="button"
-                    onClick={() => handleOpenModal()}
-                    className="w-full sm:w-auto px-6 py-2  rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-100 transition shadow-sm"
+                    variant="secondary"
+                    onClick={handleBack}
                     disabled={loading}
                   >
-                    Cancelar
-                  </button>
-                  {step > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="w-full sm:w-auto px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow hover:from-purple-500 hover:to-purple-700 transition"
-                      disabled={loading}
-                    >
-                      Atrás
-                    </button>
-                  )}
-                  {step < totalSteps && (
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="w-full sm:w-auto px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow hover:from-purple-500 hover:to-purple-700 transition"
-                      disabled={loading}
-                    >
-                      Siguiente
-                    </button>
-                  )}
-                  {step === totalSteps && (
-                    <button
-                      type="submit"
-                      className="w-full sm:w-auto px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-green-400 to-green-600 text-white shadow hover:from-green-500 hover:to-green-700 transition flex items-center justify-center"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <span className="flex items-center gap-2">
-                          <svg
-                            className="animate-spin h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8v8z"
-                            ></path>
-                          </svg>
-                          Guardando...
-                        </span>
-                      ) : (
-                        "Guardar"
-                      )}
-                    </button>
-                  )}
-                </div>
-              </form>
-            </DialogPanel>
-          </div>
-        </Dialog>
+                    Atrás
+                  </Button>
+                )}
+                {step < totalSteps && (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={handleNext}
+                    disabled={loading}
+                  >
+                    Siguiente
+                  </Button>
+                )}
+                {step === totalSteps && (
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    loading={loading}
+                  >
+                    {loading ? "Guardando..." : "Guardar"}
+                  </Button>
+                )}
+              </ModalFooter>
+            </form>
+          </ModalContent>
+        </Modal>
       )}
     </>
   );
