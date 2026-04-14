@@ -1,4 +1,5 @@
 import "./globals.css";
+import { sora, dmSans } from "./fonts";
 import { AppShell } from "@/components/common/AppShell";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
@@ -65,14 +66,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es" className={`${sora.variable} ${dmSans.variable} antialiased`}>
       <head>
         <meta
           name="google-site-verification"
           content="-6Ifr3rBdu0PZbkiYVIKT03g9hN9bdKczlTyVcaXCVM"
         />
       </head>
-      <body>
+      <body className="bg-background text-foreground">
         <AppShell>
           <ErrorBoundary>
             {children}

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, XCircle, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type ToastType = "success" | "error";
 
@@ -30,24 +31,25 @@ export function Toast({
 
   return (
     <div
-      role="status"
-      aria-live="polite"
-      className={`fixed bottom-4 right-4 z-50 flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium max-w-xs w-full animate-in slide-in-from-bottom-4 duration-300 ${
+      role="alert"
+      aria-live={type === "error" ? "assertive" : "polite"}
+      className={cn(
+        "fixed bottom-4 right-4 z-[60] flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg text-body-sm font-medium max-w-xs w-full animate-in slide-in-from-bottom-4 duration-300 ease-spring bg-surface-raised border-l-4",
         type === "success"
-          ? "bg-green-50 border border-green-200 text-green-800"
-          : "bg-red-50 border border-red-200 text-red-800"
-      }`}
+          ? "border-l-success"
+          : "border-l-danger"
+      )}
     >
       {type === "success" ? (
-        <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+        <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
       ) : (
-        <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+        <XCircle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
       )}
-      <span className="flex-1">{message}</span>
+      <span className="flex-1 text-foreground">{message}</span>
       <button
         type="button"
         onClick={onClose}
-        className="ml-1 p-0.5 rounded hover:opacity-70 flex-shrink-0"
+        className="ml-1 p-0.5 rounded text-foreground-muted transition-colors duration-150 ease-snappy hover:text-foreground flex-shrink-0"
         aria-label="Cerrar notificación"
       >
         <X className="w-4 h-4" />

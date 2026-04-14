@@ -1,5 +1,11 @@
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { Reservation } from "@/lib/reservation/types";
 import { Configuration } from "@/lib/configuration/types";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export const mapReservationFromApi = (data: Record<string, unknown>): Reservation => ({
   id: data.id as number | undefined,
