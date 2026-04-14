@@ -1,10 +1,15 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { PackageSearch, Plus, Pencil, Trash2, X, ImageIcon } from "lucide-react";
+import { PackageSearch, Plus, Pencil, Trash2, ImageIcon } from "lucide-react";
 import { useProduct } from "@/hooks/useProduct";
 import { Product } from "@/lib/product/types";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/modal";
 
 const EMPTY_FORM: Omit<Product, "id"> = {
   name: "",
@@ -116,124 +121,127 @@ export function ProductsSection() {
     }
   };
 
-
   return (
-    <div className="w-full max-w-2xl md:max-w-3xl lg:max-w-4xl p-4 sm:p-6 md:p-8 bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="rounded-xl bg-blue-100 p-3">
-          <PackageSearch className="w-7 h-7 text-blue-600" />
+    <Card className="w-full max-w-2xl md:max-w-3xl lg:max-w-4xl">
+      <CardContent className="p-4 sm:p-6 md:p-8 flex flex-col gap-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-primary/15 p-3">
+            <PackageSearch className="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h2 className="font-heading text-h3 font-bold text-foreground">
+              Productos y Servicios
+            </h2>
+            <p className="text-body-sm text-foreground-muted">
+              Gestiona los productos o servicios de tu negocio.
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Productos y Servicios</h2>
-          <p className="text-gray-600">Gestiona los productos o servicios de tu negocio.</p>
-        </div>
-      </div>
 
-      {/* Grid */}
-      {loading ? (
-        <p className="text-gray-500 text-sm">Cargando productos...</p>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {/* Create button — first item */}
-          <button
-            type="button"
-            onClick={openCreate}
-            className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 transition-all min-h-[140px] cursor-pointer group"
-          >
-            <div className="p-3 rounded-full bg-blue-200 group-hover:bg-blue-300 transition">
-              <Plus className="w-6 h-6 text-blue-700" />
-            </div>
-            <span className="text-sm font-semibold text-blue-700">Nuevo producto</span>
-          </button>
-
-          {/* Product cards */}
-          {productData.map((product) => (
-            <div
-              key={product.id}
-              className="relative flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:shadow-md transition-shadow min-h-[140px]"
+        {/* Grid */}
+        {loading ? (
+          <p className="text-body-sm text-foreground-muted">
+            Cargando productos...
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {/* Create button */}
+            <button
+              type="button"
+              onClick={openCreate}
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary/60 transition-all duration-150 ease-snappy min-h-[140px] cursor-pointer group"
             >
-              {/* Image */}
-              {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-28 object-cover"
-                />
-              ) : (
-                <div className="w-full h-28 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                  <ImageIcon className="w-8 h-8 text-gray-400" />
-                </div>
-              )}
-
-              {/* Info */}
-              <div className="flex flex-col gap-0.5 px-3 py-2 flex-1">
-                <span className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">
-                  {product.name}
-                </span>
-                {product.type && (
-                  <span className="text-xs text-blue-600 font-medium capitalize">
-                    {product.type}
-                  </span>
-                )}
-                <span className="text-sm font-bold text-green-700 mt-auto">
-                  ${Number(product.price).toFixed(2)}
-                </span>
+              <div className="p-3 rounded-full bg-primary/15 group-hover:bg-primary/25 transition-colors duration-150 ease-snappy">
+                <Plus className="w-6 h-6 text-primary" />
               </div>
+              <span className="text-caption font-semibold text-primary">
+                Nuevo producto
+              </span>
+            </button>
 
-              {/* Actions */}
-              <div className="absolute top-2 right-2 flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => openEdit(product)}
-                  className="p-1.5 rounded-lg bg-white/80 hover:bg-white shadow text-blue-600 hover:text-blue-800 transition"
-                  title="Editar"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDeleteId(product.id!)}
-                  className="p-1.5 rounded-lg bg-white/80 hover:bg-white shadow text-red-500 hover:text-red-700 transition"
-                  title="Eliminar"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Edit / Create modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col gap-4 p-6 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">
-                {editing ? "Editar producto" : "Nuevo producto"}
-              </h3>
-              <button
-                type="button"
-                onClick={closeModal}
-                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition"
+            {/* Product cards */}
+            {productData.map((product) => (
+              <div
+                key={product.id}
+                className="relative flex flex-col rounded-lg border border-border-subtle bg-surface overflow-hidden hover:border-primary/40 hover:shadow-glow-primary transition-all duration-150 ease-snappy min-h-[140px]"
               >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+                {/* Image */}
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-28 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-28 bg-surface-raised flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-foreground-subtle" />
+                  </div>
+                )}
 
-            <form onSubmit={handleSave} className="flex flex-col gap-3">
+                {/* Info */}
+                <div className="flex flex-col gap-0.5 px-3 py-2 flex-1">
+                  <span className="font-semibold text-foreground text-body-sm leading-tight line-clamp-2">
+                    {product.name}
+                  </span>
+                  {product.type && (
+                    <span className="text-caption text-primary font-medium capitalize">
+                      {product.type}
+                    </span>
+                  )}
+                  <span className="text-body-sm font-bold text-success mt-auto">
+                    ${Number(product.price).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Actions */}
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(product)}
+                    className="p-1.5 rounded-md bg-surface-overlay hover:bg-surface-raised text-primary hover:text-foreground transition-colors duration-150"
+                    title="Editar"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteId(product.id!)}
+                    className="p-1.5 rounded-md bg-surface-overlay hover:bg-danger/15 text-danger transition-colors duration-150"
+                    title="Eliminar"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Edit / Create modal */}
+        <Modal open={modalOpen} onClose={closeModal}>
+          <ModalHeader onClose={closeModal}>
+            {editing ? "Editar producto" : "Nuevo producto"}
+          </ModalHeader>
+          <ModalContent>
+            <form
+              id="product-form"
+              onSubmit={handleSave}
+              className="flex flex-col gap-3"
+            >
               {/* Name */}
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-semibold text-gray-700">
-                  Nombre <span className="text-red-500">*</span>
+                <label className="text-label font-semibold text-foreground-muted">
+                  Nombre <span className="text-danger">*</span>
                 </label>
-                <input
+                <Input
                   ref={nameRef}
                   value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name: e.target.value }))
+                  }
                   placeholder="Ej: Corte de cabello"
-                  className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+                  state={error && !form.name.trim() ? "error" : "default"}
                   required
                 />
               </div>
@@ -241,38 +249,43 @@ export function ProductsSection() {
               {/* Price + Type row */}
               <div className="flex gap-3">
                 <div className="flex flex-col gap-1 flex-1">
-                  <label className="text-sm font-semibold text-gray-700">
-                    Precio <span className="text-red-500">*</span>
+                  <label className="text-label font-semibold text-foreground-muted">
+                    Precio <span className="text-danger">*</span>
                   </label>
-                  <input
+                  <Input
                     type="number"
-                    min="0"
-                    step="0.01"
+                    min={0}
+                    step={0.01}
                     value={form.price}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, price: parseFloat(e.target.value) || 0 }))
+                      setForm((f) => ({
+                        ...f,
+                        price: parseFloat(e.target.value) || 0,
+                      }))
                     }
                     placeholder="0.00"
-                    className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
                     required
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-semibold text-gray-700">Tipo</label>
-                  <select
+                  <label className="text-label font-semibold text-foreground-muted">
+                    Tipo
+                  </label>
+                  <Select
                     value={form.type ?? "producto"}
-                    onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                    className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, type: e.target.value }))
+                    }
                   >
                     <option value="producto">Producto</option>
                     <option value="servicio">Servicio</option>
-                  </select>
+                  </Select>
                 </div>
               </div>
 
               {/* Image upload */}
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-semibold text-gray-700">
+                <label className="text-label font-semibold text-foreground-muted">
                   Imagen (opcional)
                 </label>
                 <div className="flex items-center gap-3">
@@ -280,14 +293,14 @@ export function ProductsSection() {
                     <img
                       src={imagePreview}
                       alt="preview"
-                      className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                      className="w-16 h-16 rounded-lg object-cover border border-border-subtle"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center border border-dashed border-gray-300">
-                      <ImageIcon className="w-6 h-6 text-gray-400" />
+                    <div className="w-16 h-16 rounded-lg bg-surface-raised flex items-center justify-center border border-dashed border-border">
+                      <ImageIcon className="w-6 h-6 text-foreground-subtle" />
                     </div>
                   )}
-                  <label className="cursor-pointer px-3 py-2 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition">
+                  <label className="cursor-pointer px-3 py-2 rounded-md border border-primary/40 bg-primary/10 text-primary text-caption font-medium hover:bg-primary/20 transition-colors duration-150">
                     Subir imagen
                     <input
                       type="file"
@@ -304,58 +317,55 @@ export function ProductsSection() {
                         setImagePreview(null);
                         setForm((f) => ({ ...f, imageUrl: undefined }));
                       }}
-                      className="text-xs text-red-500 hover:underline"
+                      className="text-caption text-danger hover:underline transition-colors duration-150 ease-snappy"
                     >
                       Quitar
                     </button>
                   )}
                 </div>
-                <p className="text-xs text-gray-400">JPEG, PNG o WEBP · Máx 2MB</p>
+                <p className="text-caption text-foreground-subtle">
+                  JPEG, PNG o WEBP - Max 2MB
+                </p>
               </div>
 
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                <p className="text-caption text-danger bg-danger/10 border border-danger/30 rounded-md px-3 py-2">
                   {error}
                 </p>
               )}
-
-              <div className="flex justify-end gap-2 mt-1">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 text-sm transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold hover:from-blue-600 hover:to-blue-800 text-sm transition disabled:opacity-70"
-                >
-                  {saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear producto"}
-                </button>
-              </div>
             </form>
-          </div>
-        </div>
-      )}
+          </ModalContent>
+          <ModalFooter>
+            <Button variant="ghost" onClick={closeModal}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="product-form"
+              variant="primary"
+              loading={saving}
+            >
+              {editing ? "Guardar cambios" : "Crear producto"}
+            </Button>
+          </ModalFooter>
+        </Modal>
 
-      {/* Delete confirmation dialog */}
-      <ConfirmDialog
-        open={confirmDeleteId !== null}
-        title="¿Eliminar este producto?"
-        description="Esta acción no se puede deshacer."
-        confirmLabel="Eliminar"
-        destructive
-        onConfirm={async () => {
-          if (confirmDeleteId !== null) {
-            await deleteProduct(confirmDeleteId);
-          }
-          setConfirmDeleteId(null);
-        }}
-        onCancel={() => setConfirmDeleteId(null)}
-      />
-    </div>
-
+        {/* Delete confirmation dialog */}
+        <ConfirmDialog
+          open={confirmDeleteId !== null}
+          title="¿Eliminar este producto?"
+          description="Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          destructive
+          onConfirm={async () => {
+            if (confirmDeleteId !== null) {
+              await deleteProduct(confirmDeleteId);
+            }
+            setConfirmDeleteId(null);
+          }}
+          onCancel={() => setConfirmDeleteId(null)}
+        />
+      </CardContent>
+    </Card>
   );
 }
