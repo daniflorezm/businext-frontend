@@ -17,7 +17,7 @@ export const FinancesInput = ({
     placeholder={PlaceHoldersFinancesMapping[label]}
     disabled={disabled}
     type={type || "text"}
-    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-blue-50 text-gray-800 placeholder-gray-400 transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+    className="flex w-full rounded-md bg-surface px-3 py-2 text-body-sm text-foreground placeholder:text-foreground-subtle border border-input transition-colors duration-150 ease-snappy focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50"
   />
 );
 
@@ -31,7 +31,7 @@ export const FinancesInputSelect = ({
   <select
     {...register(label, { required })}
     disabled={disabled}
-    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-blue-50 text-gray-800 transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+    className="flex w-full appearance-none rounded-md bg-surface px-3 py-2 text-body-sm text-foreground border border-input transition-colors duration-150 ease-snappy focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50"
   >
     {Object.entries(options ?? {}).map(([key, value]) => (
       <option key={key} value={key}>
@@ -50,7 +50,7 @@ export const FinancesInputError = ({
 }) => {
   if (!error) return null;
   return (
-    <span className="text-sm text-red-600 font-medium mt-1 block">
+    <span className="text-caption text-danger font-medium mt-1 block">
       {message}
     </span>
   );

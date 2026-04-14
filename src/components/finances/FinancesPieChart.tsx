@@ -1,9 +1,17 @@
 import React, { useEffect } from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from "chart.js";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Title,
+} from "chart.js";
 import { Pie } from "react-chartjs-2";
-import { Finances, ChartsColors } from "@/lib/finances/types";
+import { Finances } from "@/lib/finances/types";
 import { Product } from "@/lib/product/types";
 import { useProduct } from "@/hooks/useProduct";
+import { paletteColor, darkChartOptions } from "@/lib/chartjs-dark-theme";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
@@ -53,65 +61,51 @@ export const FinancesPieChart = ({
   }, []);
 
   return (
-    <div className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto bg-white/90 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 lg:p-10 border border-gray-200 mt-8 flex flex-col">
-      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-gray-800 mb-4 sm:mb-6 tracking-tight">
-        Servicios más vendidos
-      </h2>
-      <div className="relative w-full h-[220px] sm:h-[280px] md:h-[340px] lg:h-[400px]">
-        <Pie
-          data={{
-            labels: dataset.map((data) => data.label),
-            datasets: [
-              {
-                label: "Servicios contratados",
-                data: dataset.map((data) => data.amount),
-                backgroundColor: dataset.map(
-                  (_, i) => ChartsColors[i % ChartsColors.length]
-                ),
-                borderColor: "#fff",
-                borderWidth: 3,
-                hoverOffset: 16,
-              },
-            ],
-          }}
-          options={{
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: true,
-                position: "bottom" as const,
-                labels: {
-                  color: "#6366f1",
-                  font: {
-                    size: 13,
-                    weight: "bold" as const,
-                  },
-                  padding: 10,
+    <Card className="w-full">
+      <CardHeader>
+        <h2 className="font-heading text-h4 font-semibold text-foreground text-center">
+          Servicios más vendidos
+        </h2>
+      </CardHeader>
+      <CardContent>
+        <div className="relative w-full h-[220px] sm:h-[260px] md:h-[300px]">
+          <Pie
+            data={{
+              labels: dataset.map((data) => data.label),
+              datasets: [
+                {
+                  label: "Servicios contratados",
+                  data: dataset.map((data) => data.amount),
+                  backgroundColor: dataset.map((_, i) => paletteColor(i)),
+                  borderColor: "rgba(45, 45, 138, 0.8)",
+                  borderWidth: 2,
+                  hoverOffset: 12,
                 },
+              ],
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: darkChartOptions.animation,
+              plugins: {
+                ...darkChartOptions.plugins,
+                legend: {
+                  display: true,
+                  position: "bottom" as const,
+                  labels: {
+                    color: "#b8b8d4",
+                    font: { size: 12 },
+                    padding: 10,
+                    usePointStyle: true,
+                    pointStyleWidth: 8,
+                  },
+                },
+                title: { display: false },
               },
-              tooltip: {
-                backgroundColor: "#18181b",
-                titleColor: "#fbbf24",
-                bodyColor: "#fff",
-                borderColor: "#6366f1",
-                borderWidth: 1,
-                padding: 12,
-                caretSize: 8,
-                cornerRadius: 8,
-                displayColors: false,
-              },
-              title: {
-                display: false,
-              },
-            },
-            animation: {
-              duration: 1200,
-              easing: "easeOutQuart",
-            },
-          }}
-        />
-      </div>
-    </div>
+            }}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };
