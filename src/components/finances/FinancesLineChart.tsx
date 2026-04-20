@@ -1,8 +1,4 @@
-import {
-  AnualBalances,
-  monthOptions,
-  ChartsColors,
-} from "@/lib/finances/types";
+import { AnualBalances, monthOptions } from "@/lib/finances/types";
 import React from "react";
 import { Line } from "react-chartjs-2";
 import {
@@ -14,7 +10,10 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
+import { CHART_PALETTE, darkChartOptions } from "@/lib/chartjs-dark-theme";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 ChartJS.register(
   CategoryScale,
@@ -23,7 +22,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 export const FinancesLineChart = ({
@@ -39,85 +39,55 @@ export const FinancesLineChart = ({
       {
         label: "Balance por Mes (€)",
         data: financesData.map((item) => item.balance),
-        borderColor: ChartsColors[0],
-        backgroundColor: "rgba(99, 102, 241, 0.15)",
-        pointBackgroundColor: ChartsColors[0],
-        pointBorderColor: "#fff",
-        pointHoverBackgroundColor: "#fff",
-        pointHoverBorderColor: ChartsColors[0],
+        borderColor: CHART_PALETTE[0],
+        backgroundColor: "rgba(91, 156, 246, 0.10)",
+        pointBackgroundColor: CHART_PALETTE[0],
+        pointBorderColor: "#2d2d8a",
+        pointHoverBackgroundColor: "#fbfcff",
+        pointHoverBorderColor: CHART_PALETTE[0],
         tension: 0.4,
         fill: true,
-        borderWidth: 3,
-        pointRadius: 5,
-        pointHoverRadius: 7,
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointHoverRadius: 6,
       },
     ],
   };
 
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        backgroundColor: "#18181b",
-        titleColor: "#fbbf24",
-        bodyColor: "#fff",
-        borderColor: "#6366f1",
-        borderWidth: 1,
-        padding: 12,
-        caretSize: 8,
-        cornerRadius: 8,
-        displayColors: false,
-      },
-      title: {
-        display: false,
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          color: "#6366f1",
-          font: {
-            size: 12,
-            weight: "bold" as const,
-          },
-        },
-      },
-      y: {
-        grid: {
-          color: "#e5e7eb",
-        },
-        ticks: {
-          color: "#64748b",
-          font: {
-            size: 11,
-          },
-          callback: function (value: string | number) {
-            return "€ " + value;
-          },
-        },
-      },
-    },
-    animation: {
-      duration: 1200,
-      easing: "easeOutQuart" as const,
-    },
-  };
-
   return (
-    <div className="w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl mx-auto bg-white/90 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 lg:p-10 border border-gray-200 mt-8 flex flex-col">
-      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-gray-800 mb-4 sm:mb-6 tracking-tight">
-        Balance por Mes ({currentYear})
-      </h2>
-      <div className="relative w-full h-[220px] sm:h-[280px] md:h-[340px] lg:h-[400px]">
-        <Line data={data} options={options} />
-      </div>
-    </div>
+    <Card className="w-full">
+      <CardHeader>
+        <h2 className="font-heading text-h4 font-semibold text-foreground text-center">
+          Balance por Mes ({currentYear})
+        </h2>
+      </CardHeader>
+      <CardContent>
+        <div className="relative w-full h-[220px] sm:h-[260px] md:h-[300px]">
+          <Line
+            data={data}
+            options={{
+              ...darkChartOptions,
+              plugins: {
+                ...darkChartOptions.plugins,
+                legend: { display: false },
+                title: { display: false },
+              },
+              scales: {
+                ...darkChartOptions.scales,
+                y: {
+                  ...darkChartOptions.scales.y,
+                  ticks: {
+                    ...darkChartOptions.scales.y.ticks,
+                    callback: function (value: string | number) {
+                      return "€ " + value;
+                    },
+                  },
+                },
+              },
+            }}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };

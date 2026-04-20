@@ -11,11 +11,18 @@ import { FinancesBarChart } from "@/components/finances/FinancesBarChart";
 import { FinancesLineChart } from "@/components/finances/FinancesLineChart";
 import { monthOptions } from "@/lib/finances/types";
 import { useAccessContext } from "@/hooks/useAccessContext";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TabGroup, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/tabs";
+import { Plus, ShieldAlert, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
+import "@/lib/chartjs-dark-theme";
 
 export default function FinancesPage() {
   const { capabilities, loading: contextLoading } = useAccessContext();
 
-  // Must be declared before useFinances so the year is used as SWR key
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
@@ -32,7 +39,7 @@ export default function FinancesPage() {
     "ALL"
   );
   const [issuerFilter, setIssuerFilter] = useState<string>("");
-  const itemsPerPage = 4;
+  const itemsPerPage = 5;
 
   const handleOpenModal = () => {
     setopenModal(!openModal);
@@ -43,7 +50,7 @@ export default function FinancesPage() {
   const yearOptions = Array.from(
     { length: 5 },
     (_, i) => now.getFullYear() - 2 + i
-  ); // 2 años atras y 2 años adelante
+  );
 
   const filteredFinances = useMemo(
     () =>
@@ -112,114 +119,157 @@ export default function FinancesPage() {
 
   const totalBalance = totalIncome - totalExpense;
 
+  /* ── Loading state ── */
+  if (contextLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen p-6">
+        <SkeletonLoader rows={6} />
+      </div>
+    );
+  }
+
+  /* ── Access denied ── */
+  if (!capabilities.canManageFinances) {
+    return (
+      <div className="flex justify-center items-center min-h-screen px-4">
+        <Card variant="elevated" className="max-w-xl border-warning/40">
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+            <ShieldAlert className="h-10 w-10 text-warning" />
+            <h2 className="font-heading text-h3 font-bold text-warning">
+              Acceso restringido
+            </h2>
+            <p className="text-body-sm text-foreground-muted">
+              No tienes permisos para ver las finanzas del negocio.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50 pt-14 md:pt-0">
-      {contextLoading ? (
-        <div className="flex justify-center items-center min-h-screen">
-          <SkeletonLoader rows={6} />
-        </div>
-      ) : !capabilities.canManageFinances ? (
-        <div className="flex justify-center items-center min-h-screen px-4">
-          <div className="max-w-xl rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center shadow-lg">
-            <h2 className="text-2xl font-bold text-amber-700 mb-2">Acceso restringido</h2>
-            <p className="text-gray-700">No tienes permisos para ver las finanzas del negocio.</p>
+    <div className="min-h-screen w-full pt-14 md:pt-0">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* ── Header + Create button ── */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="font-heading text-h2 font-bold text-foreground">
+              Finanzas
+            </h1>
+            <p className="text-body-sm text-foreground-muted mt-1">
+              Resumen financiero de {monthName} {selectedYear}
+            </p>
           </div>
+          <Button variant="primary" onClick={() => setopenModal(true)}>
+            <Plus className="h-4 w-4" />
+            Agregar Registro
+          </Button>
         </div>
-      ) : (
-        <>
-          <div className="w-full flex flex-col sm:flex-row justify-center items-center px-4 sm:px-8 pt-8 gap-4">
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center bg-white rounded-xl shadow px-4 py-3 border border-gray-200 w-full sm:w-auto">
-              <div className="flex flex-col sm:flex-row gap-2 ml-0 sm:ml-4 w-full sm:w-auto">
-                <button
-                  className={`px-3 py-1 rounded-lg font-semibold border transition text-sm w-full sm:w-auto
-                    ${
-                      filterType === "ALL"
-                        ? "bg-blue-500 text-white border-blue-500"
-                        : "bg-white text-blue-700 border-blue-300 hover:bg-blue-100"
-                    }`}
-                  onClick={() => setFilterType("ALL")}
-                >
-                  Todos
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-lg font-semibold border transition text-sm w-full sm:w-auto
-                    ${
-                      filterType === "INCOME"
-                        ? "bg-green-500 text-white border-green-500"
-                        : "bg-white text-green-700 border-green-300 hover:bg-green-100"
-                    }`}
-                  onClick={() => setFilterType("INCOME")}
-                >
-                  Ingresos
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-lg font-semibold border transition text-sm w-full sm:w-auto
-                    ${
-                      filterType === "EXPENSE"
-                        ? "bg-red-500 text-white border-red-500"
-                        : "bg-white text-red-700 border-red-300 hover:bg-red-100"
-                    }`}
-                  onClick={() => setFilterType("EXPENSE")}
-                >
-                  Gastos
-                </button>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                  <label
-                    htmlFor="month"
-                    className="text-base font-semibold text-blue-700 sm:self-center"
-                  >
-                    Mes
-                  </label>
-                  <select
-                    id="month"
-                    value={selectedMonth}
-                    onChange={(e) => {
-                      setSelectedMonth(Number(e.target.value));
+
+        {/* ── Balance cards row ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <FinancesBalanceCard
+            type="income"
+            amount={totalIncome}
+            monthName={monthName}
+          />
+          <FinancesBalanceCard
+            type="expense"
+            amount={totalExpense}
+            monthName={monthName}
+          />
+          <FinancesBalanceCard
+            type="balance"
+            amount={totalBalance}
+            monthName={monthName}
+          />
+        </div>
+
+        {/* ── Filters bar ── */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row flex-wrap items-start md:items-center gap-3">
+              {/* Type filter buttons */}
+              <div className="flex gap-2">
+                {(
+                  [
+                    { key: "ALL", label: "Todos" },
+                    { key: "INCOME", label: "Ingresos" },
+                    { key: "EXPENSE", label: "Gastos" },
+                  ] as const
+                ).map(({ key, label }) => (
+                  <Button
+                    key={key}
+                    variant={filterType === key ? "primary" : "secondary"}
+                    size="sm"
+                    onClick={() => {
+                      setFilterType(key);
                       setCurrentPage(1);
                     }}
-                    className="px-3 py-2 rounded-lg border-2 border-blue-200 bg-blue-50 text-blue-900 font-semibold text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm hover:border-blue-400 w-full sm:w-auto"
                   >
-                    {monthOptions.map((m, idx) => (
-                      <option key={m} value={idx}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                  <label
-                    htmlFor="year"
-                    className="text-base font-semibold text-blue-700 sm:self-center sm:ml-2"
-                  >
-                    Año
-                  </label>
-                  <select
-                    id="year"
-                    value={selectedYear}
-                    onChange={(e) => {
-                      setSelectedYear(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    className="px-3 py-2 rounded-lg border-2 border-blue-200 bg-blue-50 text-blue-900 font-semibold text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm hover:border-blue-400 w-full sm:w-auto"
-                  >
-                    {yearOptions.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    {label}
+                  </Button>
+                ))}
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+
+              {/* Month / Year selectors */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <label
+                  htmlFor="month"
+                  className="text-label font-semibold text-foreground-muted"
+                >
+                  Mes
+                </label>
+                <Select
+                  id="month"
+                  value={selectedMonth}
+                  onChange={(e) => {
+                    setSelectedMonth(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  {monthOptions.map((m, idx) => (
+                    <option key={m} value={idx}>
+                      {m}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <label
+                  htmlFor="year"
+                  className="text-label font-semibold text-foreground-muted"
+                >
+                  Año
+                </label>
+                <Select
+                  id="year"
+                  value={selectedYear}
+                  onChange={(e) => {
+                    setSelectedYear(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  {yearOptions.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Issuer search */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1 min-w-0">
                 <label
                   htmlFor="issuer"
-                  className="text-base font-semibold text-blue-700 sm:self-center sm:ml-2"
+                  className="text-label font-semibold text-foreground-muted whitespace-nowrap"
                 >
                   Emisor
                 </label>
-                <input
+                <Input
                   id="issuer"
                   type="text"
                   placeholder="Buscar por emisor..."
@@ -228,116 +278,126 @@ export default function FinancesPage() {
                     setIssuerFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="px-3 py-2 rounded-lg border-2 border-blue-200 bg-blue-50 text-blue-900 font-semibold text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm hover:border-blue-400 placeholder:text-blue-400 w-full sm:w-auto"
+                  className="w-full sm:w-auto sm:min-w-[180px]"
                 />
               </div>
             </div>
-            <button
-              onClick={() => setopenModal(true)}
-              className="px-5 py-2 bg-blue-600 text-white rounded-xl font-semibold shadow-lg hover:bg-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              Agregar Registro
-            </button>
-          </div>
-          <div className="flex flex-col w-full justify-center items-center px-2 sm:px-6 py-7 gap-10">
-            <div className="flex flex-col gap-6 justify-center items-center w-full max-w-2xl">
-              {loading ? (
-                <SectionSkeleton />
-              ) : (
-                <>
-                  {paginatedReservations?.map((finance) => {
-                    let customerName = undefined;
-                    if (finance.reservation_id) {
-                      const reservation = reservationData.find(
-                        (r) => r.id === finance.reservation_id
-                      );
-                      customerName = reservation?.customerName;
-                    }
-                    return (
-                      <FinanceRecordItem
-                        key={finance.id ?? finance.concept + finance.amount}
-                        {...finance}
-                        customerName={customerName}
-                      />
-                    );
-                  })}
-                  {paginatedReservations.length === 0 && (
-                    <p className="text-center col-span-full text-gray-500">
-                      No hay registros financieros para mostrar.
-                    </p>
-                  )}
-                </>
-              )}
+          </CardContent>
+        </Card>
+
+        {/* ── Main content: two-column on desktop ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Left column: record list */}
+          <div className="lg:col-span-3 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading text-h4 font-semibold text-foreground">
+                Registros
+              </h2>
+              <span className="text-caption text-foreground-muted">
+                {sortedReservations.length} registro{sortedReservations.length !== 1 && "s"}
+              </span>
             </div>
+
+            {loading ? (
+              <SectionSkeleton />
+            ) : paginatedReservations.length === 0 ? (
+              <EmptyState
+                icon={<Receipt />}
+                title="Sin registros"
+                description="No hay registros financieros para los filtros seleccionados."
+                action={{
+                  label: "Agregar Registro",
+                  onClick: () => setopenModal(true),
+                }}
+              />
+            ) : (
+              <div className="flex flex-col gap-3">
+                {paginatedReservations.map((finance) => {
+                  let customerName = undefined;
+                  if (finance.reservation_id) {
+                    const reservation = reservationData.find(
+                      (r) => r.id === finance.reservation_id
+                    );
+                    customerName = reservation?.customerName;
+                  }
+                  return (
+                    <FinanceRecordItem
+                      key={finance.id ?? finance.concept + finance.amount}
+                      {...finance}
+                      customerName={customerName}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex flex-wrap justify-center mt-8 gap-2">
-                <button
-                  className="px-3 py-1 rounded-lg border bg-white text-gray-700 font-semibold shadow hover:bg-blue-100 transition"
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
+                  <ChevronLeft className="h-4 w-4" />
                   Anterior
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    className={`px-3 py-1 rounded-lg font-semibold shadow border transition ${
-                      currentPage === i + 1
-                        ? "bg-blue-500 text-white border-blue-500 scale-105"
-                        : "bg-white text-gray-700 hover:bg-blue-100 border-gray-300"
-                    }`}
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  className="px-3 py-1 rounded-lg border bg-white text-gray-700 font-semibold shadow hover:bg-blue-100 transition"
+                </Button>
+                <div className="flex gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <Button
+                      key={i}
+                      variant={currentPage === i + 1 ? "primary" : "ghost"}
+                      size="sm"
+                      className="w-8 px-0"
+                      onClick={() => setCurrentPage(i + 1)}
+                    >
+                      {i + 1}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() =>
                     setCurrentPage((p) => Math.min(totalPages, p + 1))
                   }
                   disabled={currentPage === totalPages}
                 >
                   Siguiente
-                </button>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             )}
-            <div className="w-full flex flex-col md:flex-row justify-center items-center gap-6 md:gap-5 lg:gap-6 py-3 md:py-2 lg:py-2">
-              <FinancesBalanceCard
-                type="income"
-                amount={totalIncome}
-                monthName={monthName}
-              />
-              <FinancesBalanceCard
-                type="expense"
-                amount={totalExpense}
-                monthName={monthName}
-              />
-              <FinancesBalanceCard
-                type="balance"
-                amount={totalBalance}
-                monthName={monthName}
-              />
-            </div>
-            <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              <div className="flex items-center justify-center min-w-[220px]">
-                <FinancesPieChart financesData={financesData} />
-              </div>
-              <div className="flex items-center justify-center min-w-[220px]">
-                <FinancesBarChart financesData={financesData} />
-              </div>
-              <div className="flex items-center justify-center min-w-[220px] md:col-span-2 lg:col-span-1">
-                <FinancesLineChart financesData={anualFinancesData} />
-              </div>
-            </div>
           </div>
-          {openModal && (
-            <FinancesModal
-              isOpen={openModal}
-              handleOpenModal={handleOpenModal}
-            />
-          )}
-        </>
+
+          {/* Right column: charts */}
+          <div className="lg:col-span-2">
+            <TabGroup>
+              <TabList>
+                <Tab>Barras</Tab>
+                <Tab>Pastel</Tab>
+                <Tab>Línea</Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel>
+                  <FinancesBarChart financesData={financesData} />
+                </TabPanel>
+                <TabPanel>
+                  <FinancesPieChart financesData={financesData} />
+                </TabPanel>
+                <TabPanel>
+                  <FinancesLineChart financesData={anualFinancesData} />
+                </TabPanel>
+              </TabPanels>
+            </TabGroup>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Create modal ── */}
+      {openModal && (
+        <FinancesModal isOpen={openModal} handleOpenModal={handleOpenModal} />
       )}
     </div>
   );

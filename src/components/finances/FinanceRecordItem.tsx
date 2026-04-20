@@ -1,8 +1,12 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { DeleteFinancesRecordModal } from "@/components/finances/DeleteFinancesRecordModal";
 import { useFinances } from "@/hooks/useFinances";
 import { FinanceRecordItemProps } from "@/lib/finances/types";
+import { Trash2, TrendingUp, TrendingDown, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
 export const FinanceRecordItem = (financeRecord: FinanceRecordItemProps) => {
   const { concept, amount, creator, type, created_at, id, customerName } =
     financeRecord;
@@ -13,64 +17,66 @@ export const FinanceRecordItem = (financeRecord: FinanceRecordItemProps) => {
   const { deleteFinance } = useFinances();
   const dateFormatted = new Date(created_at ? created_at : "");
 
-  const imageSelected = type === "INCOME" ? "/arrow-up.png" : "/arrow-down.png";
+  const isIncome = type === "INCOME";
 
   return (
     <div className="w-full">
       <div
-        className={`w-full max-w-2xl mx-auto flex flex-col md:flex-row justify-between items-center bg-white/95 p-5 md:p-6 rounded-2xl shadow-xl border ${
-          type === "INCOME" ? "border-green-200" : "border-red-200"
-        } transition-all duration-300 mb-4 hover:shadow-2xl hover:scale-[1.012]`}
+        className={`w-full flex flex-col sm:flex-row justify-between items-start sm:items-center bg-surface p-4 sm:p-5 rounded-lg border-l-4 ${
+          isIncome ? "border-success" : "border-danger"
+        } border border-l-4 border-border-subtle transition-all duration-150 ease-snappy hover:bg-surface-raised`}
       >
         {/* Left: Icon and Info */}
-        <div className="flex items-center gap-4 w-full md:w-auto mb-3 md:mb-0">
+        <div className="flex items-center gap-3 w-full sm:w-auto mb-3 sm:mb-0 min-w-0">
           <div
-            className={`flex items-center justify-center w-12 h-12 rounded-full shadow-md border-2 ${
-              type === "INCOME"
-                ? "bg-green-50 border-green-200"
-                : "bg-red-50 border-red-200"
+            className={`flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0 ${
+              isIncome ? "bg-success/15" : "bg-danger/15"
             }`}
           >
-            <img src={imageSelected} alt="Finance Icon" className="w-7 h-7" />
+            {isIncome ? (
+              <TrendingUp className="w-5 h-5 text-success" />
+            ) : (
+              <TrendingDown className="w-5 h-5 text-danger" />
+            )}
           </div>
-          <div className="flex flex-col ml-2">
-            <h2 className="text-base md:text-lg font-semibold text-gray-800 tracking-tight mb-1">
+          <div className="flex flex-col min-w-0">
+            <h2 className="text-body-sm font-semibold text-foreground truncate">
               {concept}
             </h2>
-            <p className="text-xs text-gray-500 font-medium">
+            <p className="text-caption text-foreground-muted">
               Emisor: {creator}
             </p>
             {customerName && (
-              <p className="text-xs text-blue-600 font-medium mt-1">
-                Cliente: {customerName}
+              <p className="text-caption text-primary flex items-center gap-1 mt-0.5">
+                <User className="w-3 h-3" />
+                {customerName}
               </p>
             )}
           </div>
         </div>
         {/* Right: Amount, Date, Delete */}
-        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-5 w-full md:w-auto justify-end">
-          <span
-            className={`$ {
-              type === "INCOME" ? "text-green-600" : "text-red-600"
-            } font-extrabold text-lg md:text-xl drop-shadow-sm`}
-          >
-            {amount}€
-          </span>
-          <span className="text-xs text-gray-400 font-semibold">
-            {dateFormatted.toLocaleDateString("es-ES")}
-          </span>
-          <button
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex items-center gap-3">
+            <span
+              className={`font-bold text-body ${
+                isIncome ? "text-success" : "text-danger"
+              }`}
+            >
+              {amount}&euro;
+            </span>
+            <Badge variant="muted">
+              {dateFormatted.toLocaleDateString("es-ES")}
+            </Badge>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setOpenDeleteModal(true)}
-            type="button"
-            className="ml-2 p-2 rounded-full hover:bg-red-100 transition"
             title="Eliminar registro"
+            className="text-foreground-muted hover:text-danger hover:bg-danger/10"
           >
-            <img
-              src="/delete-icon.png"
-              alt="trash icon"
-              className="h-6 w-6 hover:scale-110 transition-transform"
-            />
-          </button>
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
       {openDeleteModal && (

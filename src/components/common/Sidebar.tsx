@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import { Fragment, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
 import {
   CalendarDays,
   ChartBarBig,
@@ -14,6 +20,10 @@ import {
 } from "lucide-react";
 import { useAccessContext } from "@/hooks/useAccessContext";
 import { logout } from "@/app/login/logout";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/modal";
 
 const NAV_LINKS = [
   {
@@ -76,17 +86,17 @@ export function Sidebar() {
   const navContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-5 py-5 border-b border-gray-100">
-        <span className="text-2xl font-extrabold text-blue-700 tracking-tight select-none">
+      <div className="flex items-center gap-2 px-5 py-5 border-b border-border-subtle">
+        <span className="font-heading text-h4 font-bold text-foreground tracking-tight select-none">
           Businext
         </span>
         <button
           type="button"
           onClick={() => setShowContact(true)}
-          className="ml-1 p-1 rounded-full hover:bg-blue-100 focus:outline-none"
+          className="ml-1 rounded-md p-1 text-foreground-muted transition-colors duration-150 ease-snappy hover:bg-surface-raised hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           title="Enviar dudas o quejas"
         >
-          <MessageCircleQuestion className="h-5 w-5 text-blue-400" />
+          <MessageCircleQuestion className="h-5 w-5" />
         </button>
       </div>
 
@@ -100,11 +110,12 @@ export function Sidebar() {
               key={href}
               href={href}
               onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+              className={cn(
+                "flex items-center gap-3 px-4 py-2.5 rounded-lg text-body-sm font-medium transition-all duration-150 ease-snappy",
                 active
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-600 hover:bg-blue-50 hover:text-blue-700"
-              }`}
+                  ? "bg-primary/15 text-foreground border-l-2 border-accent"
+                  : "text-foreground-muted hover:bg-surface-raised hover:text-foreground"
+              )}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
               {label}
@@ -114,15 +125,17 @@ export function Sidebar() {
       </nav>
 
       {/* User + logout */}
-      <div className="px-3 py-4 border-t border-gray-100 flex flex-col gap-2">
-        <div className="px-4 py-2 rounded-xl bg-gray-50">
-          <p className="text-sm font-semibold text-gray-800 truncate">{displayName}</p>
-          <p className="text-xs text-gray-400">{roleLabel}</p>
+      <div className="px-3 py-4 border-t border-border-subtle flex flex-col gap-2">
+        <div className="px-4 py-2 rounded-lg bg-surface-raised">
+          <p className="text-body-sm font-semibold text-foreground truncate">
+            {displayName}
+          </p>
+          <p className="text-caption text-foreground-muted">{roleLabel}</p>
         </div>
         <form action={logout}>
           <button
             type="submit"
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-body-sm font-medium text-danger transition-colors duration-150 ease-snappy hover:bg-danger/10"
           >
             <LogOut className="w-5 h-5" />
             Cerrar sesión
@@ -135,7 +148,7 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 shadow-sm fixed top-0 left-0 h-full z-30">
+      <aside className="hidden md:flex flex-col w-64 bg-surface border-r border-border-subtle fixed top-0 left-0 h-full z-30">
         {navContent}
       </aside>
 
@@ -143,72 +156,89 @@ export function Sidebar() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-xl bg-white shadow-md border border-gray-200 text-blue-700"
+        className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-surface shadow-md border border-border text-foreground"
         aria-label="Abrir menú"
       >
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* Mobile: overlay */}
-      {open && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/40"
-          onClick={() => setOpen(false)}
-        />
-      )}
+      {/* Mobile: sliding sidebar via Headless UI Dialog */}
+      <Transition show={open} as={Fragment}>
+        <Dialog onClose={() => setOpen(false)} className="relative z-50 md:hidden">
+          {/* Backdrop */}
+          <TransitionChild
+            as={Fragment}
+            enter="ease-fluid duration-200"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-snappy duration-150"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/60" aria-hidden="true" />
+          </TransitionChild>
 
-      {/* Mobile: sliding sidebar */}
-      <aside
-        className={`md:hidden fixed top-0 left-0 h-full w-72 bg-white shadow-xl z-50 flex flex-col transition-transform duration-300 ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
-        >
-          <X className="w-5 h-5" />
-        </button>
-        {navContent}
-      </aside>
+          {/* Sliding panel */}
+          <div className="fixed inset-y-0 left-0 flex">
+            <TransitionChild
+              as={Fragment}
+              enter="ease-fluid duration-250"
+              enterFrom="-translate-x-full"
+              enterTo="translate-x-0"
+              leave="ease-snappy duration-200"
+              leaveFrom="translate-x-0"
+              leaveTo="-translate-x-full"
+            >
+              <DialogPanel className="w-72 bg-surface shadow-lg flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="absolute top-4 right-4 rounded-md p-1.5 text-foreground-muted transition-colors duration-150 ease-snappy hover:bg-surface-raised hover:text-foreground"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                {navContent}
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </Dialog>
+      </Transition>
 
       {/* Contact modal */}
-      {showContact && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full flex flex-col gap-4 mx-4">
-            <h2 className="text-xl font-bold text-blue-700">Enviar dudas o quejas</h2>
-            <p className="text-gray-600 text-sm">
-              ¿Tienes alguna duda, sugerencia o queja? Escríbenos aquí:
-            </p>
-            <textarea
-              className="w-full min-h-[80px] border border-blue-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Escribe tu mensaje..."
-              value={contactMessage}
-              onChange={(e) => setContactMessage(e.target.value)}
-              disabled={sending}
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200"
-                onClick={() => setShowContact(false)}
-                disabled={sending}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
-                onClick={sendContactEmail}
-                disabled={sending || !contactMessage.trim()}
-              >
-                {sending ? "Enviando..." : "Enviar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal open={showContact} onClose={() => setShowContact(false)}>
+        <ModalHeader onClose={() => setShowContact(false)}>
+          Enviar dudas o quejas
+        </ModalHeader>
+        <ModalContent>
+          <p className="text-body-sm text-foreground-muted mb-4">
+            ¿Tienes alguna duda, sugerencia o queja? Escríbenos aquí:
+          </p>
+          <textarea
+            className="flex w-full min-h-[80px] rounded-md border border-input bg-surface px-3 py-2 text-body-sm text-foreground placeholder:text-foreground-subtle transition-colors duration-150 ease-snappy focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50"
+            placeholder="Escribe tu mensaje..."
+            value={contactMessage}
+            onChange={(e) => setContactMessage(e.target.value)}
+            disabled={sending}
+          />
+        </ModalContent>
+        <ModalFooter>
+          <Button
+            variant="ghost"
+            onClick={() => setShowContact(false)}
+            disabled={sending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            onClick={sendContactEmail}
+            disabled={sending || !contactMessage.trim()}
+            loading={sending}
+          >
+            Enviar
+          </Button>
+        </ModalFooter>
+      </Modal>
     </>
   );
 }
