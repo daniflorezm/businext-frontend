@@ -2,13 +2,13 @@ import { forwardRef, type HTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const cardVariants = cva("rounded-lg", {
+const cardVariants = cva("rounded-2xl", {
   variants: {
     variant: {
-      default: "bg-surface border border-border-subtle",
-      elevated: "bg-surface-raised border border-border shadow-md",
+      default: "bg-surface border border-border-subtle shadow-md",
+      elevated: "bg-surface-raised border border-border shadow-lg",
       interactive:
-        "bg-surface border border-border-subtle cursor-pointer transition-all duration-150 ease-snappy hover:border-primary/50 hover:shadow-glow-primary",
+        "bg-surface border border-border-subtle shadow-md cursor-pointer transition-all duration-150 ease-snappy hover:border-primary/50 hover:shadow-glow-primary",
     },
   },
   defaultVariants: {
