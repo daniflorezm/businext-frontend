@@ -12,12 +12,6 @@ export type Reservation = {
   service: string;
 };
 
-export interface CalendarEvents {
-  reservationData: Reservation[];
-  apiCreateEvent: (newEvent: Reservation) => Promise<Reservation | null>;
-  loading?: boolean;
-}
-
 export type DeleteModalProps = {
   id: number;
   customerName: string;

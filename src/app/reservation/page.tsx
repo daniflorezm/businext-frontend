@@ -4,16 +4,16 @@ import { useReservation } from "@/hooks/useReservation";
 import { useProduct } from "@/hooks/useProduct";
 import { Reservation } from "@/lib/reservation/types";
 import { Product } from "@/lib/product/types";
-import { ReservationCalendar } from "@/components/reservation/ReservationCalendar";
 import { ServiceCards } from "@/components/reservation/ServiceCards";
 import { QuickReservationForm } from "@/components/reservation/QuickReservationForm";
 import { ReservationTimeline } from "@/components/reservation/ReservationTimeline";
 import { CompactCalendar } from "@/components/reservation/CompactCalendar";
+import { ReservationKPIs } from "@/components/reservation/ReservationKPIs";
 import { SectionSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { TabGroup, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/tabs";
+
 import { Info, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -133,7 +133,7 @@ export default function ReservationPage() {
     <div className="min-h-screen w-full bg-background pt-14 md:pt-0">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 space-y-6">
         {/* Page header */}
-        <h1 className="font-heading text-h2 font-semibold text-foreground">
+        <h1 className="font-heading text-h2 font-bold text-foreground">
           Reservas
         </h1>
 
@@ -152,6 +152,12 @@ export default function ReservationPage() {
             .
           </span>
         </div>
+
+        {/* ── KPI Cards ── */}
+        <ReservationKPIs
+          reservationData={reservationData}
+          productData={productData}
+        />
 
         {/* ── Service-first creation flow ── */}
         <section className="space-y-2">
@@ -173,71 +179,71 @@ export default function ReservationPage() {
         </section>
 
         {/* ── Filters ── */}
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-center">
-          <span className="text-body-sm font-semibold text-foreground-muted mr-1">
-            Filtrar por:
-          </span>
-          <div className="flex flex-row flex-wrap gap-2">
-            {[
-              { label: "Hoy", value: "TODAY" },
-              { label: "Semana", value: "WEEK" },
-              { label: "Todas", value: "ALL" },
-            ].map((btn) => (
-              <Button
-                key={btn.value}
-                variant={filter === btn.value ? "primary" : "secondary"}
-                size="sm"
-                onClick={() => {
-                  setFilter(btn.value);
+        <div className="bg-surface rounded-xl border border-border-subtle p-4">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-center">
+            <div className="flex items-center rounded-lg bg-surface-raised p-1 gap-0.5">
+              {[
+                { label: "Hoy", value: "TODAY" },
+                { label: "Semana", value: "WEEK" },
+                { label: "Todas", value: "ALL" },
+              ].map((btn) => (
+                <Button
+                  key={btn.value}
+                  variant={filter === btn.value ? "primary" : "ghost"}
+                  size="sm"
+                  onClick={() => {
+                    setFilter(btn.value);
+                    setCurrentPage(1);
+                  }}
+                  className="rounded-md"
+                >
+                  {btn.label}
+                </Button>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+              <label
+                htmlFor="customer-search"
+                className="text-caption text-foreground-muted font-medium flex items-center gap-1"
+              >
+                <Search className="h-3.5 w-3.5" />
+                Cliente:
+              </label>
+              <Input
+                id="customer-search"
+                type="text"
+                value={customerSearch}
+                onChange={(e) => {
+                  setCustomerSearch(e.target.value);
                   setCurrentPage(1);
                 }}
+                placeholder="Buscar por nombre"
+                className="w-full sm:w-[180px] h-8 text-caption"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+              <label
+                htmlFor="employee-select"
+                className="text-caption text-foreground-muted font-medium"
               >
-                {btn.label}
-              </Button>
-            ))}
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-            <label
-              htmlFor="customer-search"
-              className="text-caption text-foreground-muted font-medium flex items-center gap-1"
-            >
-              <Search className="h-3.5 w-3.5" />
-              Cliente:
-            </label>
-            <Input
-              id="customer-search"
-              type="text"
-              value={customerSearch}
-              onChange={(e) => {
-                setCustomerSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder="Buscar por nombre"
-              className="w-full sm:w-[180px] h-8 text-caption"
-            />
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-            <label
-              htmlFor="employee-select"
-              className="text-caption text-foreground-muted font-medium"
-            >
-              Empleado:
-            </label>
-            <Select
-              id="employee-select"
-              value={employeeFilter}
-              onChange={(e) => {
-                setEmployeeFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full sm:w-[180px] h-8 text-caption"
-            >
-              {getStaffList(reservationData).map((s) => (
-                <option key={s} value={s}>
-                  {s === "ALL" ? "Todos" : s}
-                </option>
-              ))}
-            </Select>
+                Empleado:
+              </label>
+              <Select
+                id="employee-select"
+                value={employeeFilter}
+                onChange={(e) => {
+                  setEmployeeFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full sm:w-[180px] h-8 text-caption"
+              >
+                {getStaffList(reservationData).map((s) => (
+                  <option key={s} value={s}>
+                    {s === "ALL" ? "Todos" : s}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -248,67 +254,52 @@ export default function ReservationPage() {
             {loading ? (
               <SectionSkeleton />
             ) : (
-              <TabGroup>
-                <TabList>
-                  <Tab>Lista</Tab>
-                  <Tab>Calendario</Tab>
-                </TabList>
-                <TabPanels>
-                  <TabPanel>
-                    <ReservationTimeline
-                      reservations={paginatedReservations}
-                      loading={loading}
-                    />
+              <>
+                <ReservationTimeline
+                  reservations={paginatedReservations}
+                  loading={loading}
+                />
 
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="flex flex-wrap justify-center mt-6 gap-2">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() =>
-                            setCurrentPage((p) => Math.max(1, p - 1))
-                          }
-                          disabled={currentPage === 1}
-                        >
-                          Anterior
-                        </Button>
-                        {Array.from({ length: totalPages }, (_, i) => (
-                          <Button
-                            key={i}
-                            variant={
-                              currentPage === i + 1 ? "primary" : "secondary"
-                            }
-                            size="sm"
-                            onClick={() => setCurrentPage(i + 1)}
-                          >
-                            {i + 1}
-                          </Button>
-                        ))}
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() =>
-                            setCurrentPage((p) =>
-                              Math.min(totalPages, p + 1)
-                            )
-                          }
-                          disabled={currentPage === totalPages}
-                        >
-                          Siguiente
-                        </Button>
-                      </div>
-                    )}
-                  </TabPanel>
-                  <TabPanel>
-                    <ReservationCalendar
-                      reservationData={reservationData}
-                      apiCreateEvent={createReservation}
-                      loading={loading}
-                    />
-                  </TabPanel>
-                </TabPanels>
-              </TabGroup>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex flex-wrap justify-center mt-6 gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() =>
+                        setCurrentPage((p) => Math.max(1, p - 1))
+                      }
+                      disabled={currentPage === 1}
+                    >
+                      Anterior
+                    </Button>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <Button
+                        key={i}
+                        variant={
+                          currentPage === i + 1 ? "primary" : "secondary"
+                        }
+                        size="sm"
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </Button>
+                    ))}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() =>
+                        setCurrentPage((p) =>
+                          Math.min(totalPages, p + 1)
+                        )
+                      }
+                      disabled={currentPage === totalPages}
+                    >
+                      Siguiente
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
 

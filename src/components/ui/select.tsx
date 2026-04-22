@@ -9,7 +9,7 @@ const selectVariants = cva(
     variants: {
       state: {
         default:
-          "border border-input focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/25",
+          "border border-input focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/25 focus-visible:shadow-glow-primary",
         error:
           "border border-danger focus-visible:border-danger focus-visible:ring-2 focus-visible:ring-danger/25",
       },

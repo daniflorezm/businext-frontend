@@ -15,7 +15,7 @@ export default function ResetPasswordPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-background px-4">
       <Card variant="elevated" className="w-full max-w-md">
         <CardContent className="p-8">
-          <form action={resetPasswordAction} className="flex flex-col gap-5">
+          <form action={resetPasswordAction} className="flex flex-col gap-6">
             <h2 className="font-heading text-h2 font-bold text-foreground text-center mb-2">
               Recuperar contraseña
             </h2>

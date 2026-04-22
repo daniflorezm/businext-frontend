@@ -44,7 +44,7 @@ export default function PaymentPage() {
         <Card variant="elevated" className="max-w-md w-full border-danger/30">
           <CardContent className="p-8 text-center flex flex-col items-center gap-3">
             <AlertTriangle className="w-10 h-10 text-danger" />
-            <h2 className="font-heading text-h3 font-bold text-danger">
+            <h2 className="font-heading text-h2 font-bold text-danger">
               Error en el pago
             </h2>
             <p className="text-body-sm text-foreground-muted">{stripeError}</p>

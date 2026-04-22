@@ -267,7 +267,7 @@ export default function ConfigurationPage() {
   return (
     <div className="flex flex-col w-full min-h-screen pt-16 pb-10 md:pt-10 px-2 sm:px-4 md:px-8 items-center gap-6">
       <div className="text-center">
-        <h1 className="font-heading text-h1 font-bold text-foreground">
+        <h1 className="font-heading text-h2 font-bold text-foreground">
           Configuración de Negocio
         </h1>
         <p className="text-body text-foreground-muted mt-2 max-w-2xl">
@@ -288,7 +288,7 @@ export default function ConfigurationPage() {
                 <UserCircle className="w-7 h-7 text-primary" />
               </div>
               <div>
-                <h2 className="font-heading text-h3 font-bold text-foreground">
+                <h2 className="font-heading text-h4 font-semibold text-foreground">
                   Mi Perfil
                 </h2>
                 <p className="text-body-sm text-foreground-muted">
@@ -356,7 +356,7 @@ export default function ConfigurationPage() {
                   <Building2 className="w-7 h-7 text-primary" />
                 </div>
                 <div>
-                  <h2 className="font-heading text-h3 font-bold text-foreground">
+                  <h2 className="font-heading text-h4 font-semibold text-foreground">
                     Información del negocio
                   </h2>
                   <p className="text-body-sm text-foreground-muted">
@@ -393,7 +393,7 @@ export default function ConfigurationPage() {
                   <Building2 className="w-7 h-7 text-primary" />
                 </div>
                 <div>
-                  <h2 className="font-heading text-h3 font-bold text-foreground">
+                  <h2 className="font-heading text-h4 font-semibold text-foreground">
                     Información del negocio
                   </h2>
                   <p className="text-body-sm text-foreground-muted">
@@ -433,7 +433,7 @@ export default function ConfigurationPage() {
                 <ShieldUser className="w-7 h-7 text-primary" />
               </div>
               <div>
-                <h2 className="font-heading text-h3 font-bold text-foreground">
+                <h2 className="font-heading text-h4 font-semibold text-foreground">
                   Personal Management
                 </h2>
                 <p className="text-body-sm text-foreground-muted">
@@ -535,7 +535,7 @@ export default function ConfigurationPage() {
 
             <div className="flex items-center gap-3 mt-2">
               <Users className="w-6 h-6 text-primary" />
-              <h3 className="font-heading text-h4 font-bold text-foreground">
+              <h3 className="font-heading text-h4 font-semibold text-foreground">
                 Equipo invitado
               </h3>
             </div>

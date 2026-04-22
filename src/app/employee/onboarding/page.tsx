@@ -15,7 +15,7 @@ export default function EmployeeOnboardingPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card variant="elevated" className="w-full max-w-md">
         <CardContent className="p-8">
-          <form action={action} className="flex flex-col gap-5">
+          <form action={action} className="flex flex-col gap-6">
             <h1 className="font-heading text-h2 font-bold text-foreground text-center mb-2">
               Completa tu acceso
             </h1>

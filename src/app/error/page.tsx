@@ -25,9 +25,9 @@ function ErrorContent() {
 
   return (
     <Card variant="elevated" className="max-w-xl border-danger/30">
-      <CardContent className="p-8 text-center flex flex-col items-center gap-4">
+      <CardContent className="p-8 text-center flex flex-col items-center gap-6">
         <AlertTriangle className="w-10 h-10 text-danger" />
-        <h1 className="font-heading text-h3 font-bold text-danger">
+        <h1 className="font-heading text-h2 font-bold text-danger">
           Acceso no disponible
         </h1>
         <p className="text-body-sm text-foreground-muted">{message}</p>
