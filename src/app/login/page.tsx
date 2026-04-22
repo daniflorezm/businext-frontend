@@ -83,7 +83,7 @@ export default function LoginPage() {
           <form className="flex flex-col gap-4" action={handleSubmitAction}>
             {showRecovery && (
               <div className="flex flex-col gap-3 mb-2 p-4 rounded-lg border border-border-subtle bg-surface-raised">
-                <h2 className="text-primary font-bold text-body">
+                <h2 className="font-heading text-h4 font-semibold text-foreground">
                   Recuperar contraseña
                 </h2>
                 {recoveryState.error && (

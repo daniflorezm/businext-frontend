@@ -198,7 +198,7 @@ export default function Home() {
               className="p-6 flex flex-col items-center text-center"
             >
               <div className="text-primary mb-3">{feature.icon}</div>
-              <h4 className="font-heading text-h4 font-bold text-foreground mb-1">
+              <h4 className="font-heading text-h4 font-semibold text-foreground mb-1">
                 {feature.title}
               </h4>
               <p className="text-body-sm text-foreground-muted">

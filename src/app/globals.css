@@ -5,33 +5,33 @@
   --color-*: initial;
 
   /* ── Semantic Colors ── */
-  --color-background: #23237c;
-  --color-surface: #2d2d8a;
-  --color-surface-raised: #37379a;
-  --color-surface-overlay: rgba(35, 35, 124, 0.95);
-  --color-primary: #345aad;
-  --color-primary-hover: #4069bd;
-  --color-primary-foreground: #fbfcff;
-  --color-secondary: #e8c3f6;
-  --color-secondary-hover: #d4a8e8;
-  --color-secondary-foreground: #23237c;
-  --color-accent: #ffc60b;
-  --color-accent-hover: #e6b200;
-  --color-accent-foreground: #23237c;
-  --color-foreground: #fbfcff;
-  --color-foreground-muted: #b8b8d4;
-  --color-foreground-subtle: #8888b0;
-  --color-border: #4a4aaa;
-  --color-border-subtle: #37379a;
-  --color-success: #4dd9a8;
-  --color-success-foreground: #23237c;
-  --color-danger: #ff7e67;
-  --color-danger-foreground: #23237c;
-  --color-warning: #ffc60b;
-  --color-muted: #37379a;
-  --color-muted-foreground: #8888b0;
-  --color-input: #4a4aaa;
-  --color-ring: #345aad;
+  --color-background: #0f172a;
+  --color-surface: #1e1b4b;
+  --color-surface-raised: #312e81;
+  --color-surface-overlay: rgba(15, 23, 42, 0.95);
+  --color-primary: #3b82f6;
+  --color-primary-hover: #60a5fa;
+  --color-primary-foreground: #f8fafc;
+  --color-secondary: #a78bfa;
+  --color-secondary-hover: #c4b5fd;
+  --color-secondary-foreground: #0f172a;
+  --color-accent: #22d3ee;
+  --color-accent-hover: #67e8f9;
+  --color-accent-foreground: #0f172a;
+  --color-foreground: #f8fafc;
+  --color-foreground-muted: #94a3b8;
+  --color-foreground-subtle: #64748b;
+  --color-border: #334155;
+  --color-border-subtle: #1e293b;
+  --color-success: #34d399;
+  --color-success-foreground: #0f172a;
+  --color-danger: #f87171;
+  --color-danger-foreground: #0f172a;
+  --color-warning: #fbbf24;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #64748b;
+  --color-input: #334155;
+  --color-ring: #3b82f6;
 
   /* ── Chart / Calendar Palette ── */
   --color-chart-1: #7c3aed;
@@ -82,8 +82,8 @@
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.4);
   --shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.5);
-  --shadow-glow-primary: 0 0 20px rgba(52, 90, 173, 0.3);
-  --shadow-glow-accent: 0 0 20px rgba(255, 198, 11, 0.2);
+  --shadow-glow-primary: 0 0 20px rgba(59, 130, 246, 0.3);
+  --shadow-glow-accent: 0 0 20px rgba(34, 211, 238, 0.2);
 
   /* ── Easing ── */
   --ease-fluid: cubic-bezier(0.3, 0, 0, 1);

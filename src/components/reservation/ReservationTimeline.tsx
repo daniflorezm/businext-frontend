@@ -103,11 +103,11 @@ export function ReservationTimeline({
           return (
             <div
               key={reservation.id}
-              className="group flex items-start gap-3 rounded-lg border border-border-subtle bg-surface p-3 sm:p-4 transition-all duration-150 ease-snappy hover:border-primary/50 hover:bg-surface-raised"
+              className="group flex items-start gap-4 rounded-xl border border-border-subtle bg-surface p-4 sm:p-5 transition-all duration-150 ease-snappy hover:border-primary/40 hover:shadow-md hover:bg-surface-raised"
             >
               {/* Time column */}
               <div className="flex flex-col items-center flex-shrink-0 w-14 pt-0.5">
-                <span className="text-caption font-semibold text-foreground">
+                <span className="text-body-sm font-bold text-foreground">
                   {formatTime(reservation.reservationStartDate)}
                 </span>
                 <span className="text-caption text-foreground-subtle">
@@ -118,7 +118,7 @@ export function ReservationTimeline({
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-body-sm font-semibold text-foreground truncate">
+                  <span className="text-body font-bold text-foreground truncate">
                     {reservation.customerName}
                   </span>
                   <Badge variant={statusVariant}>
@@ -129,7 +129,7 @@ export function ReservationTimeline({
                     }
                   </Badge>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-caption text-foreground-muted">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-caption text-foreground-muted">
                   <span className="inline-flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     {reservation.service}

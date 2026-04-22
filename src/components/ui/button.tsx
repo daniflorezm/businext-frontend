@@ -18,6 +18,8 @@ export const buttonVariants = cva(
           "text-foreground-muted hover:bg-surface-raised hover:text-foreground",
         accent:
           "bg-accent text-accent-foreground hover:bg-accent-hover active:scale-[0.98]",
+        gradient:
+          "bg-gradient-to-r from-primary to-accent text-white hover:brightness-110 active:scale-[0.98]",
       },
       size: {
         sm: "h-8 rounded-md px-3 text-caption",
