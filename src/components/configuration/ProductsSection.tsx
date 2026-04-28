@@ -122,7 +122,7 @@ export function ProductsSection() {
   };
 
   return (
-    <Card className="w-full max-w-2xl md:max-w-3xl lg:max-w-4xl">
+    <Card className="w-full">
       <CardContent className="p-4 sm:p-6 md:p-8 flex flex-col gap-6">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -190,7 +190,7 @@ export function ProductsSection() {
                     </span>
                   )}
                   <span className="text-body-sm font-bold text-success mt-auto">
-                    ${Number(product.price).toFixed(2)}
+                    {Number(product.price).toFixed(2)}€
                   </span>
                 </div>
 

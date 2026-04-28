@@ -18,6 +18,7 @@ import {
   X,
   MessageCircleQuestion,
   Star,
+  Brain,
 } from "lucide-react";
 import { useAccessContext } from "@/hooks/useAccessContext";
 import { logout } from "@/app/login/logout";
@@ -44,6 +45,12 @@ const NAV_LINKS = [
     label: "Reseñas",
     icon: Star,
     cap: "canManageReservations" as const,
+  },
+  {
+    href: "/intelligence",
+    label: "Inteligencia",
+    icon: Brain,
+    cap: "canManageConfiguration" as const,
   },
   {
     href: "/configuration",

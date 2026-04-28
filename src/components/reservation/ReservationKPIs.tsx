@@ -3,17 +3,24 @@
 import { useMemo } from "react";
 import { Reservation } from "@/lib/reservation/types";
 import { Product } from "@/lib/product/types";
+import { Finances } from "@/lib/finances/types";
 import { Card } from "@/components/ui/card";
-import { CalendarDays, Clock, CheckCircle, DollarSign } from "lucide-react";
+import { CalendarDays, Clock, CheckCircle, Euro } from "lucide-react";
 
 interface ReservationKPIsProps {
   reservationData: Reservation[];
   productData: Product[];
+  financesData?: Finances[];
+  onPendingClick?: () => void;
+  onCompletedClick?: () => void;
 }
 
 export function ReservationKPIs({
   reservationData,
   productData,
+  financesData = [],
+  onPendingClick,
+  onCompletedClick,
 }: ReservationKPIsProps) {
   const kpis = useMemo(() => {
     const today = new Date();
@@ -46,13 +53,24 @@ export function ReservationKPIs({
       return sum + price;
     }, 0);
 
+    // Add today's product sales (finance records with no reservation)
+    const productSalesRevenue = financesData
+      .filter(
+        (f) =>
+          f.reservation_id === null &&
+          f.type === "INCOME" &&
+          f.created_at &&
+          isToday(f.created_at)
+      )
+      .reduce((sum, f) => sum + f.amount, 0);
+
     return {
       total: todayReservations.length,
       pending,
       completed: completed.length,
-      revenue,
+      revenue: revenue + productSalesRevenue,
     };
-  }, [reservationData, productData]);
+  }, [reservationData, productData, financesData]);
 
   const cards = [
     {
@@ -60,24 +78,28 @@ export function ReservationKPIs({
       value: kpis.total,
       icon: CalendarDays,
       color: "text-primary",
+      onClick: undefined as (() => void) | undefined,
     },
     {
       label: "Pendientes",
       value: kpis.pending,
       icon: Clock,
       color: "text-warning",
+      onClick: onPendingClick,
     },
     {
       label: "Completadas",
       value: kpis.completed,
       icon: CheckCircle,
       color: "text-success",
+      onClick: onCompletedClick,
     },
     {
       label: "Ingresos hoy",
-      value: `$${kpis.revenue.toLocaleString()}`,
-      icon: DollarSign,
+      value: `${kpis.revenue.toLocaleString()}€`,
+      icon: Euro,
       color: "text-accent",
+      onClick: undefined as (() => void) | undefined,
     },
   ];
 
@@ -86,7 +108,8 @@ export function ReservationKPIs({
       {cards.map((card) => (
         <Card
           key={card.label}
-          className="p-4 sm:p-6 flex flex-col gap-2 sm:gap-3 border border-border-subtle overflow-hidden"
+          onClick={card.onClick}
+          className={`p-4 sm:p-6 flex flex-col gap-2 sm:gap-3 border border-border-subtle overflow-hidden${card.onClick ? " cursor-pointer hover:border-foreground-subtle/30 transition-colors" : ""}`}
         >
           <div className="flex items-start justify-between gap-2">
             <p className="text-caption sm:text-body-sm font-medium text-foreground-muted leading-tight min-w-0">

@@ -71,12 +71,12 @@ export function BusinessSummary({
   // Need at least 10 reviews
   if (profile.totalReviews < 10) {
     return (
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#2d2d8a] via-[#3b2d8a] to-[#4a2d8a] border border-purple-500/20 shadow-lg p-8 text-center">
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-purple-500/8 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-8 -left-8 w-36 h-36 bg-blue-500/8 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#2d2d8a] via-[#3b2d8a] to-[#4a2d8a] border border-secondary/20 shadow-lg p-8 text-center">
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-secondary/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-8 -left-8 w-36 h-36 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
         <div className="relative">
-          <div className="w-14 h-14 rounded-2xl bg-purple-500/15 flex items-center justify-center mx-auto mb-4">
-            <BrainCircuit className="w-8 h-8 text-purple-300" />
+          <div className="w-14 h-14 rounded-2xl bg-secondary/15 flex items-center justify-center mx-auto mb-4">
+            <BrainCircuit className="w-8 h-8 text-secondary" />
           </div>
           <p className="text-body-sm text-foreground-muted">
             Se necesitan al menos 10 reseñas para un análisis completo.
@@ -90,17 +90,17 @@ export function BusinessSummary({
   // Empty state: no summary generated yet — the main banner
   if (!summary) {
     return (
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1a6e] via-[#2a1a6e] to-[#3d1a7a] border border-purple-500/25 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1a6e] via-[#2a1a6e] to-[#3d1a7a] border border-secondary/25 shadow-xl">
         {/* Decorative glow orbs */}
-        <div className="absolute -top-20 -right-20 w-72 h-72 bg-purple-600/15 rounded-full blur-[80px] pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-blue-600/15 rounded-full blur-[80px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-purple-400/8 rounded-full blur-[60px] pointer-events-none" />
+        <div className="absolute -top-20 -right-20 w-72 h-72 bg-secondary/15 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-primary/15 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-secondary/8 rounded-full blur-[60px] pointer-events-none" />
 
         <div className="relative px-8 py-12 md:px-12 md:py-14">
           {/* Big centered icon */}
           <div className="flex flex-col items-center text-center space-y-6">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500/25 to-blue-500/25 border border-purple-400/20 flex items-center justify-center shadow-lg shadow-purple-900/30">
-              <BrainCircuit className="w-10 h-10 text-purple-300" />
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-secondary/25 to-primary/25 border border-secondary/20 flex items-center justify-center shadow-lg shadow-[#1a1a4e]/30">
+              <BrainCircuit className="w-10 h-10 text-secondary" />
             </div>
 
             <div className="space-y-3 max-w-xl">
@@ -123,11 +123,11 @@ export function BusinessSummary({
                     onClick={() => toggleChip(opt.key)}
                     className={`inline-flex items-center gap-2 px-4 py-2 text-caption font-medium rounded-full border transition-all duration-200 ${
                       isSelected
-                        ? "bg-purple-500/20 border-purple-400/40 text-purple-200 shadow-sm shadow-purple-900/20"
-                        : "bg-white/5 border-white/10 text-foreground-muted hover:border-purple-400/30 hover:text-foreground"
+                        ? "bg-secondary/20 border-secondary/40 text-secondary shadow-sm shadow-[#1a1a4e]/20"
+                        : "bg-[#ffffff0d] border-[#ffffff1a] text-foreground-muted hover:border-secondary/30 hover:text-foreground"
                     }`}
                   >
-                    <opt.icon className={`w-3.5 h-3.5 ${isSelected ? "text-purple-300" : ""}`} />
+                    <opt.icon className={`w-3.5 h-3.5 ${isSelected ? "text-secondary" : ""}`} />
                     {opt.label}
                   </button>
                 );
@@ -139,7 +139,7 @@ export function BusinessSummary({
               variant="primary"
               onClick={onGenerateSummary}
               disabled={generating || selectedChips.size === 0}
-              className="px-10 py-3.5 text-body font-bold shadow-lg shadow-purple-900/40 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 mt-2"
+              className="px-10 py-3.5 text-body font-bold shadow-lg shadow-[#1a1a4e]/40 bg-gradient-to-r from-[#7c3aed] to-[#3b82f6] hover:from-[#8b5cf6] hover:to-[#60a5fa] border-0 mt-2"
             >
               {generating ? (
                 <Loader2 className="w-5 h-5 mr-2.5 animate-spin" />
@@ -167,11 +167,11 @@ export function BusinessSummary({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className={`flex flex-col gap-1.5 p-6 ${collapsed ? "pb-6" : "pb-0"} transition-all duration-300`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-              <BrainCircuit className="w-5 h-5 text-purple-300" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center">
+              <BrainCircuit className="w-5 h-5 text-secondary" />
             </div>
             <h3 className="text-h4 font-heading font-semibold text-foreground">
               Resumen IA
@@ -209,7 +209,13 @@ export function BusinessSummary({
         </div>
       </CardHeader>
 
-      {!collapsed && (
+      <div
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          maxHeight: collapsed ? 0 : 1000,
+          opacity: collapsed ? 0 : 1,
+        }}
+      >
         <CardContent className="space-y-5">
           {/* Positive themes */}
           {summary.positiveThemes.length > 0 && (
@@ -275,7 +281,7 @@ export function BusinessSummary({
               ` · Generado ${new Date(summary.generatedAt).toLocaleDateString("es-ES")}`}
           </p>
         </CardContent>
-      )}
+      </div>
     </Card>
   );
 }

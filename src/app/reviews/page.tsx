@@ -20,6 +20,7 @@ export default function ReviewsPage() {
     submitError,
     syncReviews,
     syncing,
+    syncError,
     reviewsData,
     reviewsLoading,
     ratingFilter,
@@ -84,6 +85,7 @@ export default function ReviewsPage() {
               profile={profile}
               onSync={syncReviews}
               syncing={syncing}
+              syncError={syncError}
             />
 
             {/* Metrics + Charts row */}
