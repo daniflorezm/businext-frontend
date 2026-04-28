@@ -19,6 +19,7 @@ type BusinessProfileCardProps = {
   profile: GoogleBusinessProfile;
   onSync: () => Promise<unknown>;
   syncing: boolean;
+  syncError?: string | null;
 };
 
 const CATEGORY_MAP: Record<string, { icon: typeof Store; label: string; color: string }> = {
@@ -44,6 +45,7 @@ export function BusinessProfileCard({
   profile,
   onSync,
   syncing,
+  syncError,
 }: BusinessProfileCardProps) {
   const cat = getCategoryInfo(profile.category);
   const CategoryIcon = cat.icon;
@@ -102,9 +104,10 @@ export function BusinessProfileCard({
                 </span>
               )}
             </div>
+            {syncError && (
+              <p className="text-caption text-danger">{syncError}</p>
+            )}
           </div>
-
-          {/* Right: Big rating */}
           <div className="col-span-12 md:col-span-5 flex flex-col items-center justify-center md:border-l md:border-border-subtle md:pl-6">
             <div className="flex items-baseline gap-2">
               <span className="text-[3.5rem] font-heading font-bold leading-none text-foreground">

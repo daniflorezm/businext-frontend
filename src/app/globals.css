@@ -19,8 +19,8 @@
   --color-accent-hover: #67e8f9;
   --color-accent-foreground: #0f172a;
   --color-foreground: #f8fafc;
-  --color-foreground-muted: #94a3b8;
-  --color-foreground-subtle: #64748b;
+  --color-foreground-muted: #b0bec5;
+  --color-foreground-subtle: #8494a7;
   --color-border: #334155;
   --color-border-subtle: #1e293b;
   --color-success: #34d399;
@@ -28,6 +28,7 @@
   --color-danger: #f87171;
   --color-danger-foreground: #0f172a;
   --color-warning: #fbbf24;
+  --color-highlight: #f97316;
   --color-muted: #1e293b;
   --color-muted-foreground: #64748b;
   --color-input: #334155;
@@ -56,16 +57,16 @@
   --text-h4: 1.125rem;
   --text-h4--line-height: 1.35;
   --text-h4--letter-spacing: -0.01em;
-  --text-body: 0.9375rem;
+  --text-body: 1rem;
   --text-body--line-height: 1.7;
-  --text-body-sm: 0.875rem;
+  --text-body-sm: 0.9375rem;
   --text-body-sm--line-height: 1.65;
-  --text-caption: 0.75rem;
+  --text-caption: 0.8125rem;
   --text-caption--line-height: 1.5;
-  --text-caption--letter-spacing: 0.02em;
-  --text-label: 0.8125rem;
+  --text-caption--letter-spacing: 0.015em;
+  --text-label: 0.875rem;
   --text-label--line-height: 1.4;
-  --text-label--letter-spacing: 0.025em;
+  --text-label--letter-spacing: 0.02em;
 
   /* ── Spacing ── */
   --spacing: 0.25rem;
@@ -99,6 +100,22 @@
   100% {
     background-position: 200% 0;
   }
+}
+
+/* ── Fade in up animation ── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.3, 0, 0, 1) both;
 }
 
 /* ── Base styles ── */

@@ -100,19 +100,25 @@ export function useGoogleReviews() {
 
   // ── Sync Reviews ────────────────────────────────────────────────────
   const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const syncReviews = useCallback(async (): Promise<SyncResult | null> => {
     setSyncing(true);
+    setSyncError(null);
     try {
       const response = await fetch("/api/google-reviews/sync", {
         method: "POST",
       });
       const data = await response.json();
-      if (!response.ok) return null;
+      if (!response.ok) {
+        setSyncError(data.error || "Error al sincronizar reseñas");
+        return null;
+      }
       await mutateProfile();
       await mutateReviews();
       return mapSyncResult(data);
     } catch {
+      setSyncError("Error al sincronizar reseñas");
       return null;
     } finally {
       setSyncing(false);
@@ -190,6 +196,7 @@ export function useGoogleReviews() {
     submitError,
     syncReviews,
     syncing,
+    syncError,
     generateResponse,
     generatingResponse,
     generateSummary,

@@ -38,7 +38,7 @@ export function ServiceCards({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-      {services.map((product) => {
+      {services.filter((p) => p.type !== "producto").map((product) => {
         const isSelected = selectedId === product.id;
         return (
           <Card
@@ -65,7 +65,7 @@ export function ServiceCards({
               {product.name}
             </span>
             <span className="text-caption text-foreground-muted">
-              ${product.price.toLocaleString("es-ES")}
+              {product.price.toLocaleString("es-ES")}€
             </span>
           </Card>
         );

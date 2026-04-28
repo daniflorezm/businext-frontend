@@ -1,66 +1,107 @@
 "use client";
 
+import { useEffect } from "react";
 import { Product } from "@/lib/product/types";
 import { Reservation } from "@/lib/reservation/types";
+import { Employee } from "@/lib/employee/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useForm, Controller } from "react-hook-form";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import dayjs from "dayjs";
-import "dayjs/locale/es";
+import { useForm } from "react-hook-form";
 import moment from "moment-timezone";
-
-const muiDarkTheme = createTheme({ palette: { mode: "dark" } });
 
 interface QuickReservationFormProps {
   selectedService: Product | null;
   onSubmit: (data: Reservation) => void;
   onCancel: () => void;
   loading: boolean;
+  isOwner: boolean;
+  currentUserName: string;
+  employees: Employee[];
+  prefilledDate?: Date;
+  prefilledSlot?: string;
+  onInChargeChange?: (name: string) => void;
+  /** For owners: the in-charge selected in step 2 */
+  ownerSelectedInCharge?: string;
 }
 
-const DURATION_SUGGESTIONS = [30, 60, 90];
+const FIXED_DURATION = 30;
 
 export function QuickReservationForm({
   selectedService,
   onSubmit,
   onCancel,
   loading,
+  isOwner,
+  currentUserName,
+  employees,
+  prefilledDate,
+  prefilledSlot,
+  onInChargeChange,
+  ownerSelectedInCharge,
 }: QuickReservationFormProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
-    control,
-    setValue,
+    watch,
   } = useForm<{
     customerName: string;
     inCharge: string;
-    reservationStartDate: string;
-    timePerReservation: number;
-  }>();
+  }>({
+    defaultValues: {
+      inCharge: currentUserName,
+    },
+  });
+
+  const watchedInCharge = watch("inCharge");
+
+  // Notify parent when in-charge changes so slots can recompute (non-owner only)
+  useEffect(() => {
+    if (!isOwner) {
+      onInChargeChange?.(watchedInCharge);
+    }
+  }, [watchedInCharge, onInChargeChange, isOwner]);
 
   if (!selectedService) return null;
 
+  const hasSlotSelected = !!prefilledDate && !!prefilledSlot;
+
+  const formattedDate = prefilledDate
+    ? prefilledDate.toLocaleDateString("es-ES", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
   const handleFormSubmit = handleSubmit((data) => {
-    const reservationStartDate = moment
-      .utc(data.reservationStartDate)
-      .tz("Europe/Madrid")
+    if (!prefilledDate || !prefilledSlot) return;
+
+    // For owners, use the in-charge selected in step 2
+    const inCharge = isOwner ? (ownerSelectedInCharge ?? "") : data.inCharge;
+    if (!inCharge) return;
+
+    const year = prefilledDate.getFullYear();
+    const month = String(prefilledDate.getMonth() + 1).padStart(2, "0");
+    const day = String(prefilledDate.getDate()).padStart(2, "0");
+    const dateStr = `${year}-${month}-${day}`;
+    const startDateTimeStr = `${dateStr}T${prefilledSlot}:00`;
+
+    const reservationStartDate = moment(startDateTimeStr)
       .format("YYYY-MM-DDTHH:mm:ss");
     const reservationEndDate = moment(reservationStartDate)
-      .add(data.timePerReservation, "m")
+      .add(FIXED_DURATION, "m")
       .format("YYYY-MM-DDTHH:mm:ss");
 
     const reservation: Reservation = {
       customerName: data.customerName,
-      inCharge: data.inCharge,
+      inCharge,
       reservationStartDate,
       reservationEndDate,
-      timePerReservation: data.timePerReservation,
+      timePerReservation: FIXED_DURATION,
       status: "PENDING",
       service: selectedService.name,
     };
@@ -72,11 +113,11 @@ export function QuickReservationForm({
       className={cn(
         "overflow-hidden transition-all duration-150 ease-snappy",
         selectedService
-          ? "max-h-[600px] opacity-100 mt-4"
+          ? "max-h-[600px] opacity-100"
           : "max-h-0 opacity-0"
       )}
     >
-      <div className="rounded-xl border border-border-subtle bg-surface p-4 sm:p-6 space-y-4">
+      <div className="rounded-xl border border-border-subtle bg-surface-raised/30 p-4 sm:p-6 space-y-4">
         {/* Selected service info */}
         <div className="flex items-center gap-3 pb-3 border-b border-border-subtle">
           <div className="flex-1">
@@ -88,11 +129,12 @@ export function QuickReservationForm({
             </p>
           </div>
           <span className="text-body-sm font-semibold text-accent">
-            ${selectedService.price.toLocaleString("es-ES")}
+            {selectedService.price.toLocaleString("es-ES")}€
           </span>
         </div>
 
         <form onSubmit={handleFormSubmit} className="space-y-4">
+          {/* Row 1: Customer + In-charge */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-caption text-foreground-muted">
@@ -113,11 +155,18 @@ export function QuickReservationForm({
               <label className="text-caption text-foreground-muted">
                 Encargado
               </label>
-              <Input
-                {...register("inCharge", { required: true })}
-                placeholder="Encargado de la reserva"
-                state={errors.inCharge ? "error" : "default"}
-              />
+              {isOwner ? (
+                <div className="flex items-center h-10 px-3 rounded-lg border border-border-subtle bg-surface-raised text-body-sm text-foreground-muted">
+                  {ownerSelectedInCharge || "—"}
+                </div>
+              ) : (
+                <Input
+                  {...register("inCharge", { required: true })}
+                  value={currentUserName}
+                  readOnly
+                  className="bg-surface-raised text-foreground-muted"
+                />
+              )}
               {errors.inCharge && (
                 <span className="text-caption text-danger">
                   Campo requerido
@@ -126,86 +175,61 @@ export function QuickReservationForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Row 2: Date + Slot + Duration (read-only, from step 2) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label className="text-caption text-foreground-muted">
-                Fecha y hora
+                Fecha
               </label>
-              <ThemeProvider theme={muiDarkTheme}>
-                <LocalizationProvider
-                  dateAdapter={AdapterDayjs}
-                  adapterLocale="es"
-                >
-                  <Controller
-                    name="reservationStartDate"
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field }) => (
-                      <DateTimePicker
-                        label="Hora de la reserva"
-                        value={field.value ? dayjs(field.value) : null}
-                        onChange={(newValue) => {
-                          field.onChange(
-                            newValue ? newValue.toISOString() : ""
-                          );
-                        }}
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            size: "small",
-                            error: !!errors.reservationStartDate,
-                          },
-                        }}
-                      />
-                    )}
-                  />
-                </LocalizationProvider>
-              </ThemeProvider>
-              {errors.reservationStartDate && (
-                <span className="text-caption text-danger">
-                  Campo requerido
-                </span>
-              )}
+              <div className={cn(
+                "flex items-center h-10 px-3 rounded-lg border text-body-sm",
+                hasSlotSelected
+                  ? "border-border-subtle bg-surface-raised text-foreground"
+                  : "border-warning/40 bg-warning/5 text-foreground-muted"
+              )}>
+                {formattedDate}
+              </div>
             </div>
             <div className="space-y-1.5">
               <label className="text-caption text-foreground-muted">
-                Duración (minutos)
+                Horario
               </label>
-              <Input
-                type="number"
-                {...register("timePerReservation", {
-                  required: true,
-                  valueAsNumber: true,
-                })}
-                placeholder="Duración"
-                state={errors.timePerReservation ? "error" : "default"}
-              />
-              <div className="flex gap-2 mt-1.5">
-                {DURATION_SUGGESTIONS.map((dur) => (
-                  <Button
-                    key={dur}
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setValue("timePerReservation", dur)}
-                  >
-                    {dur === 90 ? "1.5 h" : dur === 60 ? "1 h" : dur + " min"}
-                  </Button>
-                ))}
+              <div className={cn(
+                "flex items-center h-10 px-3 rounded-lg border text-body-sm",
+                hasSlotSelected
+                  ? "border-border-subtle bg-surface-raised text-foreground font-semibold"
+                  : "border-warning/40 bg-warning/5 text-foreground-muted"
+              )}>
+                {prefilledSlot ?? "Selecciona un horario arriba"}
               </div>
-              {errors.timePerReservation && (
-                <span className="text-caption text-danger">
-                  Campo requerido
-                </span>
-              )}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-caption text-foreground-muted">
+                Duración
+              </label>
+              <div className="flex items-center h-10 px-3 rounded-lg border border-border-subtle bg-surface-raised text-body-sm text-foreground-muted">
+                {FIXED_DURATION} min
+              </div>
             </div>
           </div>
+
+          {/* Hint if no slot selected */}
+          {!hasSlotSelected && (
+            <p className="text-caption text-warning">
+              Selecciona una fecha y horario en el paso 2 de arriba para continuar.
+            </p>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={onCancel}>
               Cancelar
             </Button>
-            <Button type="submit" variant="primary" loading={loading}>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={loading}
+              disabled={!hasSlotSelected}
+            >
               Reservar
             </Button>
           </div>

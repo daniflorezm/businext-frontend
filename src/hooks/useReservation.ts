@@ -26,6 +26,7 @@ export function useReservation() {
   ): Promise<Reservation | null> => {
     const tempId = -Date.now();
     const optimisticItem: Reservation = { ...(newReservation as Reservation), id: tempId };
+    let created: Reservation | null = null;
     try {
       await mutate(
         async (current: Reservation[] = []) => {
@@ -36,7 +37,8 @@ export function useReservation() {
           });
           if (!response.ok) throw new Error("Failed to create reservation");
           const data = await response.json();
-          return [...current.filter((r) => r.id !== tempId), mapReservationFromApi(data)];
+          created = mapReservationFromApi(data);
+          return [...current.filter((r) => r.id !== tempId), created];
         },
         {
           optimisticData: (current: Reservation[] = []) => [...current, optimisticItem],
@@ -44,7 +46,7 @@ export function useReservation() {
           revalidate: false,
         }
       );
-      return newReservation as Reservation;
+      return created;
     } catch {
       return null;
     }

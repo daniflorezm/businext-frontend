@@ -9,6 +9,7 @@ import { FinancesBalanceCard } from "@/components/finances/FinancesBalanceCard";
 import { FinancesPieChart } from "@/components/finances/FinancesPieChart";
 import { FinancesBarChart } from "@/components/finances/FinancesBarChart";
 import { FinancesLineChart } from "@/components/finances/FinancesLineChart";
+import { DailyOverview } from "@/components/finances/DailyOverview";
 import { monthOptions } from "@/lib/finances/types";
 import { useAccessContext } from "@/hooks/useAccessContext";
 import { Button } from "@/components/ui/button";
@@ -184,6 +185,9 @@ export default function FinancesPage() {
             monthName={monthName}
           />
         </div>
+
+        {/* ── Daily overview ── */}
+        <DailyOverview financesData={financesData} reservationData={reservationData} loading={loading} />
 
         {/* ── Filters bar ── */}
         <Card>

@@ -55,7 +55,7 @@ export function useAccessContext() {
   const { data: context = null, isLoading: loading } =
     useSWR<AccessContext | null>(ACCESS_CONTEXT_SWR_KEY, accessFetcher, {
       revalidateOnFocus: false,
-      dedupingInterval: 60_000,
+      dedupingInterval: 3_000,
       shouldRetryOnError: false,
     });
 
