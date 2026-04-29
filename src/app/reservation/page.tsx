@@ -6,6 +6,7 @@ import { useEmployee } from "@/hooks/useEmployee";
 import { useAccessContext } from "@/hooks/useAccessContext";
 import { useWorkingHours } from "@/hooks/useWorkingHours";
 import { useFinances } from "@/hooks/useFinances";
+import { useGlobalToast } from "@/context/ToastContext";
 import { Reservation } from "@/lib/reservation/types";
 import { Product } from "@/lib/product/types";
 import { getAvailableSlots, isDayClosed } from "@/lib/scheduling/availability";
@@ -27,7 +28,7 @@ import { ProductSaleForm } from "@/components/reservation/ProductSaleForm";
 import { TodaySalesList } from "@/components/reservation/TodaySalesList";
 import { WalkInModal } from "@/components/reservation/WalkInModal";
 
-import { Info, CalendarPlus, ClipboardList, CalendarClock, Zap } from "lucide-react";
+import { Info, CalendarPlus, ClipboardList, CalendarClock, Zap, ShieldAlert } from "lucide-react";
 
 export default function ReservationPage() {
   const {
@@ -37,9 +38,10 @@ export default function ReservationPage() {
   } = useReservation();
   const { productData, loading: productLoading } = useProduct();
   const { activeEmployees } = useEmployee();
-  const { context, loading: contextLoading } = useAccessContext();
+  const { context, capabilities, loading: contextLoading } = useAccessContext();
   const { workingHoursData, loading: workingHoursLoading } = useWorkingHours();
   const { financesData, createFinance, loading: financesLoading } = useFinances();
+  const { showToast } = useGlobalToast();
 
   const [selectedService, setSelectedService] = useState<Product | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -105,6 +107,7 @@ export default function ReservationPage() {
 
   const handleQuickReservation = async (data: Reservation) => {
     await createReservation(data);
+    showToast("success", "Reserva creada correctamente.");
     setSelectedService(null);
     setSelectedSlot(null);
   };
@@ -177,6 +180,39 @@ export default function ReservationPage() {
       );
     });
   }, [filteredReservations]);
+
+  /* ── Loading state ── */
+  if (contextLoading) {
+    return (
+      <div className="min-h-screen w-full pt-14 md:pt-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 space-y-6">
+          <SectionSkeleton />
+          <SectionSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Access denied ── */
+  if (!capabilities.canManageReservations) {
+    return (
+      <div className="min-h-screen w-full pt-14 md:pt-0">
+        <div className="flex justify-center items-center min-h-[60vh] px-4">
+          <Card variant="elevated" className="max-w-xl border-warning/40">
+            <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+              <ShieldAlert className="h-10 w-10 text-warning" />
+              <h2 className="font-heading text-h3 font-bold text-warning">
+                Acceso restringido
+              </h2>
+              <p className="text-body-sm text-foreground-muted">
+                No tienes permisos para gestionar las reservas.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-background pt-14 md:pt-0">
@@ -252,6 +288,7 @@ export default function ReservationPage() {
                         selectedId={selectedService?.id ?? null}
                         onSelect={handleServiceSelect}
                         loading={productLoading}
+                        reservations={reservationData}
                       />
                     </div>
 

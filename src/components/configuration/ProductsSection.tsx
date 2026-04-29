@@ -2,7 +2,9 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { PackageSearch, Plus, Pencil, Trash2, ImageIcon } from "lucide-react";
+import { ProductPlaceholder } from "@/components/common/ProductPlaceholder";
 import { useProduct } from "@/hooks/useProduct";
+import { useGlobalToast } from "@/context/ToastContext";
 import { Product } from "@/lib/product/types";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +29,7 @@ export function ProductsSection() {
     deleteProduct,
     uploadProductImage,
   } = useProduct();
+  const { showToast } = useGlobalToast();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -98,7 +101,7 @@ export function ProductsSection() {
       if (imageFile) {
         const uploaded = await uploadProductImage(imageFile);
         if (!uploaded) {
-          setError("No se pudo subir la imagen. Intenta de nuevo.");
+          showToast("error", "No se pudo subir la imagen. Intenta de nuevo.");
           setSaving(false);
           return;
         }
@@ -113,9 +116,10 @@ export function ProductsSection() {
         await createProduct(payload);
       }
 
+      showToast("success", editing ? "Producto actualizado correctamente." : "Producto creado correctamente.");
       closeModal();
     } catch {
-      setError("Error al guardar el producto");
+      showToast("error", "Error al guardar el producto");
     } finally {
       setSaving(false);
     }
@@ -174,9 +178,10 @@ export function ProductsSection() {
                     className="w-full h-28 object-cover"
                   />
                 ) : (
-                  <div className="w-full h-28 bg-surface-raised flex items-center justify-center">
-                    <ImageIcon className="w-8 h-8 text-foreground-subtle" />
-                  </div>
+                  <ProductPlaceholder
+                    type={product.type ?? "producto"}
+                    className="w-full h-28"
+                  />
                 )}
 
                 {/* Info */}
@@ -256,11 +261,11 @@ export function ProductsSection() {
                     type="number"
                     min={0}
                     step={0.01}
-                    value={form.price}
+                    value={form.price || ""}
                     onChange={(e) =>
                       setForm((f) => ({
                         ...f,
-                        price: parseFloat(e.target.value) || 0,
+                        price: e.target.value === "" ? 0 : parseFloat(e.target.value),
                       }))
                     }
                     placeholder="0.00"
@@ -296,9 +301,10 @@ export function ProductsSection() {
                       className="w-16 h-16 rounded-lg object-cover border border-border-subtle"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-lg bg-surface-raised flex items-center justify-center border border-dashed border-border">
-                      <ImageIcon className="w-6 h-6 text-foreground-subtle" />
-                    </div>
+                    <ProductPlaceholder
+                      type={form.type ?? "producto"}
+                      className="w-16 h-16 rounded-lg border border-dashed border-border"
+                    />
                   )}
                   <label className="cursor-pointer px-3 py-2 rounded-md border border-primary/40 bg-primary/10 text-primary text-caption font-medium hover:bg-primary/20 transition-colors duration-150">
                     Subir imagen
@@ -360,6 +366,7 @@ export function ProductsSection() {
           onConfirm={async () => {
             if (confirmDeleteId !== null) {
               await deleteProduct(confirmDeleteId);
+              showToast("success", "Producto eliminado correctamente.");
             }
             setConfirmDeleteId(null);
           }}

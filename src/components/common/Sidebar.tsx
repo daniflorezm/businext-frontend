@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useState } from "react";
+import { useGlobalToast } from "@/context/ToastContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -44,13 +45,13 @@ const NAV_LINKS = [
     href: "/reviews",
     label: "Reseñas",
     icon: Star,
-    cap: "canManageReservations" as const,
+    cap: "canManageFinances" as const,
   },
   {
     href: "/intelligence",
     label: "Inteligencia",
     icon: Brain,
-    cap: "canManageConfiguration" as const,
+    cap: "canManageTeam" as const,
   },
   {
     href: "/configuration",
@@ -63,6 +64,7 @@ const NAV_LINKS = [
 export function Sidebar() {
   const pathname = usePathname();
   const { context, capabilities } = useAccessContext();
+  const { showToast } = useGlobalToast();
   const [open, setOpen] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [contactMessage, setContactMessage] = useState("");
@@ -88,11 +90,11 @@ export function Sidebar() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: contactMessage }),
       });
-      alert("¡Mensaje enviado!");
+      showToast("success", "¡Mensaje enviado!");
       setContactMessage("");
       setShowContact(false);
     } catch {
-      alert("Error al enviar el mensaje. Intenta de nuevo.");
+      showToast("error", "Error al enviar el mensaje. Intenta de nuevo.");
     }
     setSending(false);
   };

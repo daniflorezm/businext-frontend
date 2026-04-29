@@ -1,5 +1,6 @@
 import React from "react";
 import { useFinances } from "@/hooks/useFinances";
+import { useGlobalToast } from "@/context/ToastContext";
 import {
   FinancesModalProps,
   Finances,
@@ -24,10 +25,12 @@ export const FinancesModal = ({
     formState: { errors },
   } = useForm<Finances>();
   const { createFinance, loading } = useFinances();
+  const { showToast } = useGlobalToast();
 
   const onSubmit: SubmitHandler<Finances> = async (data: Finances) => {
     data = { ...data, reservation_id: null };
     await createFinance(data);
+    showToast("success", "Registro financiero creado correctamente.");
     handleOpenModal();
   };
 

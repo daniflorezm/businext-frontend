@@ -1,4 +1,5 @@
 import { DeleteModalProps } from "@/lib/reservation/types";
+import { useGlobalToast } from "@/context/ToastContext";
 import {
   Modal,
   ModalHeader,
@@ -14,8 +15,10 @@ export const DeleteModal = ({
   handleOpenDeleteModal,
   deleteReservation,
 }: DeleteModalProps) => {
+  const { showToast } = useGlobalToast();
   const handleDelete = async () => {
     await deleteReservation(id);
+    showToast("success", "Reserva eliminada correctamente.");
     handleOpenDeleteModal();
   };
   return (

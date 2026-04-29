@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function LoginPage() {
-  const [loginState, loginAction] = useActionState(login, { error: "" });
-  const [signupState, signupAction] = useActionState(signup, { error: "" });
+  const [loginState, loginAction, loginPending] = useActionState(login, { error: "" });
+  const [signupState, signupAction, signupPending] = useActionState(signup, { error: "" });
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryState, setRecoveryState] = useState<{
@@ -18,21 +18,16 @@ export default function LoginPage() {
     success?: string;
   }>({});
   const [recoveryLoading, setRecoveryLoading] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);
   const recoveryEmailRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  const formLoading = mode === "login" ? loginPending : signupPending;
+
   const handleSubmitAction = async (formData: FormData) => {
-    if (formLoading) return;
-    setFormLoading(true);
-    try {
-      if (mode === "login") {
-        await loginAction(formData);
-      } else {
-        await signupAction(formData);
-      }
-    } finally {
-      setFormLoading(false);
+    if (mode === "login") {
+      await loginAction(formData);
+    } else {
+      await signupAction(formData);
     }
   };
 

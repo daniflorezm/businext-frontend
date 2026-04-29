@@ -337,7 +337,7 @@ export default function FinancesPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-2">
+              <div className="flex items-center justify-center gap-3 pt-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -347,19 +347,9 @@ export default function FinancesPage() {
                   <ChevronLeft className="h-4 w-4" />
                   Anterior
                 </Button>
-                <div className="flex gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <Button
-                      key={i}
-                      variant={currentPage === i + 1 ? "primary" : "ghost"}
-                      size="sm"
-                      className="w-8 px-0"
-                      onClick={() => setCurrentPage(i + 1)}
-                    >
-                      {i + 1}
-                    </Button>
-                  ))}
-                </div>
+                <span className="text-caption text-foreground-muted">
+                  {currentPage} / {totalPages}
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"

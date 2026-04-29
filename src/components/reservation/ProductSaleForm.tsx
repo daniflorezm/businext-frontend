@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Product } from "@/lib/product/types";
 import { Finances } from "@/lib/finances/types";
+import { useGlobalToast } from "@/context/ToastContext";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageIcon, X } from "lucide-react";
+import { ProductPlaceholder } from "@/components/common/ProductPlaceholder";
 
 interface ProductSaleFormProps {
   productData: Product[];
@@ -25,6 +27,7 @@ export function ProductSaleForm({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const { showToast } = useGlobalToast();
 
   const products = productData.filter((p) => p.type === "producto");
 
@@ -40,6 +43,7 @@ export function ProductSaleForm({
         creator: currentUserName,
         reservation_id: null,
       });
+      showToast("success", "Venta registrada correctamente.");
       setSelectedProduct(null);
       setQuantity(1);
     } finally {
@@ -94,9 +98,10 @@ export function ProductSaleForm({
                   className="h-16 w-16 rounded-md object-cover"
                 />
               ) : (
-                <div className="flex items-center justify-center h-16 w-16 rounded-md bg-surface-raised">
-                  <ImageIcon className="h-6 w-6 text-foreground-subtle" />
-                </div>
+                <ProductPlaceholder
+                  type={product.type}
+                  className="h-16 w-16 rounded-md"
+                />
               )}
               <span className="text-body-sm font-semibold text-foreground truncate w-full">
                 {product.name}
@@ -141,9 +146,10 @@ export function ProductSaleForm({
             className="h-10 w-10 rounded-md object-cover"
           />
         ) : (
-          <div className="flex items-center justify-center h-10 w-10 rounded-md bg-surface">
-            <ImageIcon className="h-4 w-4 text-foreground-subtle" />
-          </div>
+          <ProductPlaceholder
+            type={selectedProduct.type}
+            className="h-10 w-10 rounded-md"
+          />
         )}
         <div className="flex-1 min-w-0">
           <p className="text-body-sm font-semibold text-foreground truncate">

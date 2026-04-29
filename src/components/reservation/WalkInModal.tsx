@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useGlobalToast } from "@/context/ToastContext";
 import { Reservation } from "@/lib/reservation/types";
 import { Product } from "@/lib/product/types";
 import { Employee } from "@/lib/employee/types";
@@ -44,6 +45,7 @@ export function WalkInModal({
   onSubmit,
 }: WalkInModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showToast } = useGlobalToast();
 
   const serviceOptions = services.filter(
     (p) => p.type !== "producto"
@@ -80,6 +82,7 @@ export function WalkInModal({
         service: data.service,
       };
       await onSubmit(reservation);
+      showToast("success", "Atención inmediata registrada correctamente.");
       reset();
       onClose();
     } finally {
