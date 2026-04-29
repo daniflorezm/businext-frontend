@@ -1,5 +1,6 @@
 import React from "react";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { useGlobalToast } from "@/context/ToastContext";
 import { FinancesDeleteModalProps } from "@/lib/finances/types";
 
 export const DeleteFinancesRecordModal = ({
@@ -9,8 +10,10 @@ export const DeleteFinancesRecordModal = ({
   id,
   openDeleteModal,
 }: FinancesDeleteModalProps) => {
+  const { showToast } = useGlobalToast();
   const handleDelete = async () => {
     await deleteFinanceRecord(id);
+    showToast("success", "Registro eliminado correctamente.");
     handleOpenDeleteModal();
   };
 

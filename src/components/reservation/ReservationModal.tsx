@@ -18,6 +18,7 @@ import {
 } from "@/components/reservation/ReservationInputs";
 import { useProduct } from "@/hooks/useProduct";
 import { useFinances } from "@/hooks/useFinances";
+import { useGlobalToast } from "@/context/ToastContext";
 import {
   Modal,
   ModalHeader,
@@ -53,6 +54,7 @@ export const ReservationModal = ({
   const [validationError, setValidationError] = useState("");
   const { productData } = useProduct();
   const { createFinance } = useFinances();
+  const { showToast } = useGlobalToast();
 
   const productOptions = Object.assign(
     {},
@@ -103,6 +105,7 @@ export const ReservationModal = ({
       data = { ...dataUpdated, id, reservationStartDate, reservationEndDate };
     }
     await executeAction(data);
+    showToast("success", operation === "Crear reserva" ? "Reserva creada correctamente." : "Reserva actualizada correctamente.");
     handleOpenModal();
   };
 

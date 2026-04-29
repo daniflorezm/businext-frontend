@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useFinances } from "@/hooks/useFinances";
 import { useProduct } from "@/hooks/useProduct";
+import { useGlobalToast } from "@/context/ToastContext";
 import {
   CompleteReservationModalProps,
   Reservation,
@@ -22,6 +23,7 @@ export const CompleteReservationModal = ({
 }: CompleteReservationModalProps) => {
   const { createFinance } = useFinances();
   const { productData } = useProduct();
+  const { showToast } = useGlobalToast();
   const { customerName } = data;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,6 +47,7 @@ export const CompleteReservationModal = ({
       if (updated) {
         await createFinanceRecord(completedReservation);
       }
+      showToast("success", "Reserva completada correctamente.");
       handleOpenCompleteReservationModal();
     } finally {
       setIsSubmitting(false);

@@ -22,7 +22,7 @@ import { Employee, InviteEmployeeInput } from "@/lib/employee/types";
 import { ProductsSection } from "@/components/configuration/ProductsSection";
 import { WorkingHoursEditor } from "@/components/configuration/WorkingHoursEditor";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-import { Toast, useToast } from "@/components/common/Toast";
+import { useGlobalToast } from "@/context/ToastContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,8 +92,7 @@ export default function ConfigurationPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeesLoading, setEmployeesLoading] = useState(true);
   const [employeeForm, setEmployeeForm] = useState<InviteEmployeeInput>(INITIAL_EMPLOYEE_FORM);
-  const [employeeError, setEmployeeError] = useState("");
-  const [employeeSuccess, setEmployeeSuccess] = useState("");
+  // Employee feedback is handled via global toast
   const [sendingInvite, setSendingInvite] = useState(false);
   const [updatingEmployeeId, setUpdatingEmployeeId] = useState<string | null>(null);
 
@@ -102,7 +101,7 @@ export default function ConfigurationPage() {
     title: "",
     onConfirm: () => {},
   });
-  const { toastState, showToast, closeToast } = useToast();
+  const { showToast } = useGlobalToast();
 
   // ── Visible nav items based on role ──
   const visibleNav = useMemo(() => {
@@ -133,7 +132,6 @@ export default function ConfigurationPage() {
   // ── Employee handlers ──
   const loadEmployees = async () => {
     setEmployeesLoading(true);
-    setEmployeeError("");
     try {
       const response = await fetch("/api/personal-management", { cache: "no-store" });
       if (response.status === 403) { setEmployees([]); return; }
@@ -143,7 +141,7 @@ export default function ConfigurationPage() {
       }
       setEmployees((await response.json()) as Employee[]);
     } catch (error) {
-      setEmployeeError(error instanceof Error ? error.message : "No se pudo cargar el personal");
+      showToast("error", error instanceof Error ? error.message : "No se pudo cargar el personal");
     } finally {
       setEmployeesLoading(false);
     }
@@ -189,16 +187,16 @@ export default function ConfigurationPage() {
       onConfirm: async () => {
         setConfirm((p) => ({ ...p, open: false }));
         setEmployees((prev) => prev.filter((e) => e.memberUserId !== memberUserId));
-        setEmployeeError("");
         try {
           const response = await fetch(`/api/personal-management?memberUserId=${memberUserId}`, { method: "DELETE" });
           if (!response.ok) {
             const data = await response.json().catch(() => ({}));
             throw new Error(data?.error || "No se pudo eliminar el empleado");
           }
+          showToast("success", "Empleado eliminado correctamente.");
         } catch (error) {
           setEmployees(snapshot);
-          setEmployeeError(error instanceof Error ? error.message : "No se pudo eliminar el empleado");
+          showToast("error", error instanceof Error ? error.message : "No se pudo eliminar el empleado");
         }
       },
     });
@@ -208,7 +206,6 @@ export default function ConfigurationPage() {
     const snapshot = employees;
     setEmployees((prev) => prev.map((e) => (e.memberUserId === memberUserId ? { ...e, [field]: value } : e)));
     setUpdatingEmployeeId(memberUserId);
-    setEmployeeError("");
     try {
       const response = await fetch(`/api/personal-management?memberUserId=${memberUserId}`, {
         method: "PATCH",
@@ -221,9 +218,10 @@ export default function ConfigurationPage() {
       }
       const updated = (await response.json()) as Employee;
       setEmployees((prev) => prev.map((e) => (e.memberUserId === memberUserId ? updated : e)));
+      showToast("success", "Empleado actualizado correctamente.");
     } catch (error) {
       setEmployees(snapshot);
-      setEmployeeError(error instanceof Error ? error.message : "No se pudo actualizar el empleado");
+      showToast("error", error instanceof Error ? error.message : "No se pudo actualizar el empleado");
     } finally {
       setUpdatingEmployeeId(null);
     }
@@ -232,8 +230,6 @@ export default function ConfigurationPage() {
   const handleInviteEmployee = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSendingInvite(true);
-    setEmployeeError("");
-    setEmployeeSuccess("");
     try {
       const response = await fetch("/api/personal-management", {
         method: "POST",
@@ -244,9 +240,9 @@ export default function ConfigurationPage() {
       if (!response.ok) throw new Error(data.error || "No se pudo enviar la invitación");
       setEmployees(data.employees ?? []);
       setEmployeeForm(INITIAL_EMPLOYEE_FORM);
-      setEmployeeSuccess("Invitación enviada correctamente.");
+      showToast("success", "Invitación enviada correctamente.");
     } catch (error) {
-      setEmployeeError(error instanceof Error ? error.message : "No se pudo enviar la invitación");
+      showToast("error", error instanceof Error ? error.message : "No se pudo enviar la invitación");
     } finally {
       setSendingInvite(false);
     }
@@ -267,6 +263,26 @@ export default function ConfigurationPage() {
   /* ──────────────────────────────────────────────── */
   /*  Render                                          */
   /* ──────────────────────────────────────────────── */
+
+  if (!contextLoading && !capabilities.canManageConfiguration) {
+    return (
+      <div className="min-h-screen w-full pt-14 md:pt-0">
+        <div className="flex justify-center items-center min-h-[60vh] px-4">
+          <Card variant="elevated" className="max-w-xl border-warning/40">
+            <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+              <ShieldUser className="h-10 w-10 text-warning" />
+              <h2 className="font-heading text-h3 font-bold text-warning">
+                Acceso restringido
+              </h2>
+              <p className="text-body-sm text-foreground-muted">
+                No tienes permisos para acceder a la configuración.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-background pt-14 md:pt-0">
@@ -474,16 +490,6 @@ export default function ConfigurationPage() {
                         </Select>
                       </div>
                       <div className="md:col-span-2 space-y-3">
-                        {employeeError && (
-                          <div className="bg-danger/10 border border-danger/30 text-danger rounded-md px-3 py-2 text-body-sm">
-                            {employeeError}
-                          </div>
-                        )}
-                        {employeeSuccess && (
-                          <div className="bg-success/10 border border-success/30 text-success rounded-md px-3 py-2 text-body-sm">
-                            {employeeSuccess}
-                          </div>
-                        )}
                         <Button type="submit" variant="primary" loading={sendingInvite} className="w-full">
                           Enviar invitación
                         </Button>
@@ -589,7 +595,6 @@ export default function ConfigurationPage() {
           onConfirm={confirm.onConfirm}
           onCancel={() => setConfirm((p) => ({ ...p, open: false }))}
         />
-        <Toast open={toastState.open} type={toastState.type} message={toastState.message} onClose={closeToast} />
       </div>
     </div>
   );

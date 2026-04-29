@@ -16,7 +16,7 @@ import { SectionSkeleton } from "@/components/ui/skeleton";
 import { ShieldAlert, Brain } from "lucide-react";
 
 export default function IntelligencePage() {
-  const { context, loading: authLoading } = useAccessContext();
+  const { capabilities, loading: authLoading } = useAccessContext();
   const {
     summary,
     kpis,
@@ -28,45 +28,53 @@ export default function IntelligencePage() {
 
   if (authLoading) {
     return (
-      <div className="space-y-6 p-4 md:p-8 max-w-6xl mx-auto">
-        <SectionSkeleton />
-        <SectionSkeleton />
+      <div className="min-h-screen w-full pt-14 md:pt-0">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <SectionSkeleton />
+          <SectionSkeleton />
+        </div>
       </div>
     );
   }
 
-  if (context?.role !== "owner") {
+  if (!capabilities.canManageTeam) {
     return (
-      <div className="p-4 md:p-8">
-        <EmptyState
-          icon={<ShieldAlert />}
-          title="Acceso restringido"
-          description="Solo el propietario del negocio puede acceder a la inteligencia de negocio."
-        />
+      <div className="min-h-screen w-full pt-14 md:pt-0">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+          <EmptyState
+            icon={<ShieldAlert />}
+            title="Acceso restringido"
+            description="Solo el propietario del negocio puede acceder a la inteligencia de negocio."
+          />
+        </div>
       </div>
     );
   }
 
   if (summaryLoading) {
     return (
-      <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
-        <PageHeader />
-        <SummaryLoading />
+      <div className="min-h-screen w-full pt-14 md:pt-0">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <PageHeader />
+          <SummaryLoading />
+        </div>
       </div>
     );
   }
 
   if (!summary || !kpis) {
     return (
-      <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
-        <PageHeader />
-        <SummaryEmpty
-          generating={generating}
-          genError={genError}
-          onGenerate={handleGenerate}
-        />
-        <div className="border-t border-border-subtle/40" />
-        <ClientAnalysis />
+      <div className="min-h-screen w-full pt-14 md:pt-0">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <PageHeader />
+          <SummaryEmpty
+            generating={generating}
+            genError={genError}
+            onGenerate={handleGenerate}
+          />
+          <div className="border-t border-border-subtle/40" />
+          <ClientAnalysis />
+        </div>
       </div>
     );
   }
@@ -75,29 +83,31 @@ export default function IntelligencePage() {
   const hasOpportunities = (kpis.opportunities?.length ?? 0) > 0;
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
-      {/* Page header */}
-      <PageHeader />
+    <div className="min-h-screen w-full pt-14 md:pt-0">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Page header */}
+        <PageHeader />
 
-      {/* Row 1: KPIs — full width */}
-      <SummaryPulse
-        summary={summary}
-        kpis={kpis}
-        onRegenerate={handleGenerate}
-        generating={generating}
-        genError={genError}
-      />
+        {/* Row 1: KPIs — full width */}
+        <SummaryPulse
+          summary={summary}
+          kpis={kpis}
+          onRegenerate={handleGenerate}
+          generating={generating}
+          genError={genError}
+        />
 
-      {/* Row 2: Narrative (left) + Team (right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: "250ms" }}>
-        <SummaryNarrative summary={summary} />
-        {hasTeam && <TeamAnalysis kpis={kpis} />}
-      </div>
+        {/* Row 2: Narrative (left) + Team (right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: "250ms" }}>
+          <SummaryNarrative summary={summary} />
+          {hasTeam && <TeamAnalysis kpis={kpis} />}
+        </div>
 
-      {/* Row 3: Opportunities (left) + Clients (right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: "350ms" }}>
-        {hasOpportunities && <SummaryOpportunities kpis={kpis} />}
-        <ClientAnalysis />
+        {/* Row 3: Opportunities (left) + Clients (right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: "350ms" }}>
+          {hasOpportunities && <SummaryOpportunities kpis={kpis} />}
+          <ClientAnalysis />
+        </div>
       </div>
     </div>
   );
