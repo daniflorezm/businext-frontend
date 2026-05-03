@@ -33,6 +33,9 @@ export type ReservationModalProps = {
   executeAction: (data: Reservation) => Promise<Reservation | null>;
   reservationData?: Reservation;
   loading?: boolean;
+  isOwner?: boolean;
+  currentUserName?: string;
+  employees?: { memberUserId: string; displayName?: string | null; email?: string | null }[];
 };
 
 export const PlaceHoldersReservationMapping = {

@@ -317,18 +317,11 @@ export default function FinancesPage() {
             ) : (
               <div className="flex flex-col gap-3">
                 {paginatedReservations.map((finance) => {
-                  let customerName = undefined;
-                  if (finance.reservation_id) {
-                    const reservation = reservationData.find(
-                      (r) => r.id === finance.reservation_id
-                    );
-                    customerName = reservation?.customerName;
-                  }
                   return (
                     <FinanceRecordItem
                       key={finance.id ?? finance.concept + finance.amount}
                       {...finance}
-                      customerName={customerName}
+                      customerName={finance?.customer_name ?? ""}
                     />
                   );
                 })}

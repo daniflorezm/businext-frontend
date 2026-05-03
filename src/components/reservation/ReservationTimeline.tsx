@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Reservation } from "@/lib/reservation/types";
 import { useReservation } from "@/hooks/useReservation";
 import { useProduct } from "@/hooks/useProduct";
+import { useAccessContext } from "@/hooks/useAccessContext";
+import { useEmployee } from "@/hooks/useEmployee";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -296,14 +298,22 @@ function PendingActions({
   onComplete: (r: Reservation) => void;
   onDelete: (r: Reservation) => void;
 }) {
+  const isToday = (() => {
+    const now = new Date();
+    const d = new Date(reservation.reservationStartDate);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  })();
+
   return (
     <>
       <Button variant="ghost" size="icon" onClick={() => onEdit(reservation)} title="Editar">
         <Edit3 className="h-3.5 w-3.5" />
       </Button>
-      <Button variant="ghost" size="icon" onClick={() => onComplete(reservation)} title="Completar">
-        <CheckCircle className="h-3.5 w-3.5" />
-      </Button>
+      {isToday && (
+        <Button variant="ghost" size="icon" onClick={() => onComplete(reservation)} title="Completar">
+          <CheckCircle className="h-3.5 w-3.5" />
+        </Button>
+      )}
       <Button variant="ghost" size="icon" onClick={() => onDelete(reservation)} title="Eliminar">
         <Trash2 className="h-3.5 w-3.5 text-danger" />
       </Button>
@@ -732,6 +742,10 @@ function Modals({
   deleteReservation: (id: number) => Promise<void>;
   actionLoading: boolean;
 }) {
+  const { context } = useAccessContext();
+  const { activeEmployees } = useEmployee();
+  const isOwner = context?.role === "owner";
+  const currentUserName = context?.profile?.displayName ?? context?.profile?.email ?? "";
   return (
     <>
       {editTarget && (
@@ -742,6 +756,9 @@ function Modals({
           operation="Editar reserva"
           reservationData={editTarget}
           loading={actionLoading}
+          isOwner={isOwner}
+          currentUserName={currentUserName}
+          employees={activeEmployees}
         />
       )}
       {completeTarget && (

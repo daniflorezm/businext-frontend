@@ -3,6 +3,7 @@ import { updateSession } from "@/utils/supabase/middleware";
 import { publicRoutes } from "@/lib/utils";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const ACCESS_CACHE_MAX_AGE_MS = 300_000; // 5 minutes
 
 /**
  * Fetches the access context from the backend using the provided JWT.
@@ -44,7 +45,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Fetch access context from the backend — single source of truth
     const jwt = session?.access_token;
     if (!jwt) {
       url.pathname = "/login";
@@ -52,7 +52,35 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const access = await fetchAccessContext(jwt);
+    // Try to use cached access context from cookie to avoid backend call on every navigation
+    let access: Record<string, unknown> | null = null;
+    const cachedCookie = request.cookies.get("x-access-context");
+    if (cachedCookie) {
+      try {
+        const cached = JSON.parse(cachedCookie.value);
+        if (cached.ts && Date.now() - cached.ts < ACCESS_CACHE_MAX_AGE_MS) {
+          access = cached.data;
+        }
+      } catch {
+        // Invalid cookie, will refetch
+      }
+    }
+
+    // Fetch from backend if no valid cache
+    if (!access) {
+      access = await fetchAccessContext(jwt);
+      // Cache the result in a cookie on the response
+      if (access) {
+        const cacheValue = JSON.stringify({ data: access, ts: Date.now() });
+        response.cookies.set("x-access-context", cacheValue, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 300,
+          path: "/",
+        });
+      }
+    }
 
     if (!access) {
       // Backend unreachable or token invalid — pass through and let pages handle it
@@ -75,7 +103,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
       }
 
-      if (!access.capabilities.canAccessApp) {
+      if (!(access.capabilities as Record<string, boolean>)?.canAccessApp) {
         url.pathname = "/error";
         url.searchParams.set("message", "subscription-required");
         return NextResponse.redirect(url);
@@ -95,7 +123,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Owner subscription check — redirect to payment if no active subscription
-    if (!access.capabilities.canAccessApp && pathname !== "/payment") {
+    if (!(access.capabilities as Record<string, boolean>)?.canAccessApp && pathname !== "/payment") {
       if (pathname === "/paymentredirection") {
         return response;
       }
@@ -104,7 +132,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (access.capabilities.canAccessApp && (pathname === "/payment" || pathname === "/paymentredirection")) {
+    if ((access.capabilities as Record<string, boolean>)?.canAccessApp && (pathname === "/payment" || pathname === "/paymentredirection")) {
       url.pathname = "/reservation";
       return NextResponse.redirect(url);
     }

@@ -7,6 +7,7 @@ export type Finances = {
   creator: string;
   created_at?: string;
   reservation_id?: number | null;
+  customer_name?: string | null;
 };
 
 export type FinancesModalProps = {

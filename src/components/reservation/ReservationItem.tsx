@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Reservation, StatusOptions } from "@/lib/reservation/types";
 import { useReservation } from "@/hooks/useReservation";
+import { useAccessContext } from "@/hooks/useAccessContext";
+import { useEmployee } from "@/hooks/useEmployee";
 import { ReservationModal } from "@/components/reservation/ReservationModal";
 import { DeleteModal } from "@/components/reservation/DeleteReservationModal";
 import { CompleteReservationModal } from "@/components/reservation/CompleteReservationModal";
@@ -20,6 +22,10 @@ export const BookListItem = (reservation: Reservation) => {
   } = reservation;
 
   const { deleteReservation, updateReservation, loading } = useReservation();
+  const { context } = useAccessContext();
+  const { activeEmployees } = useEmployee();
+  const isOwner = context?.role === "owner";
+  const currentUserName = context?.profile?.displayName ?? context?.profile?.email ?? "";
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openCompleteModal, setOpenCompleteModal] = useState(false);
@@ -41,6 +47,12 @@ export const BookListItem = (reservation: Reservation) => {
     });
     return localedateformat;
   };
+
+  const isToday = (() => {
+    const now = new Date();
+    const d = new Date(reservationStartDate);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  })();
 
   const statusBadgeVariant =
     status === "PENDING"
@@ -88,6 +100,7 @@ export const BookListItem = (reservation: Reservation) => {
       <div className="mt-2 w-full">
         <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
           <div className="w-full sm:w-auto">
+            {isToday && (
             <Button
               variant="primary"
               size="sm"
@@ -96,6 +109,7 @@ export const BookListItem = (reservation: Reservation) => {
             >
               Completar
             </Button>
+            )}
           </div>
 
           <div className="flex w-full sm:w-auto flex-col sm:flex-row sm:items-center gap-2">
@@ -145,6 +159,9 @@ export const BookListItem = (reservation: Reservation) => {
           operation="Editar reserva"
           reservationData={reservation}
           loading={loading}
+          isOwner={isOwner}
+          currentUserName={currentUserName}
+          employees={activeEmployees}
         />
       )}
     </div>

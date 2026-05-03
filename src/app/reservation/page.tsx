@@ -126,6 +126,7 @@ export default function ReservationPage() {
         type: "INCOME",
         creator: data.inCharge,
         reservation_id: created.id,
+        customer_name: data.customerName,
       });
     }
   };

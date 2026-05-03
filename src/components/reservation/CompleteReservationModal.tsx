@@ -35,6 +35,7 @@ export const CompleteReservationModal = ({
       type: "INCOME",
       creator: data.inCharge,
       reservation_id: data.id,
+      customer_name: data.customerName,
     };
     await createFinance(financeRecord);
   };
