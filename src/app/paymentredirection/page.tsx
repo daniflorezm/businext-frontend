@@ -1,5 +1,6 @@
 import { stripe } from "@/lib/stripe/types";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 interface PageParams {
@@ -35,6 +36,8 @@ export default async function PaymentRedirectionPage({ searchParams }: Props) {
   const status = session.status;
 
   if (status === "complete") {
+    const cookieStore = await cookies();
+    cookieStore.delete("x-access-context");
     redirect("/reservation");
   }
 
