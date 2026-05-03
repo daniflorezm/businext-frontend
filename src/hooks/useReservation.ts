@@ -4,7 +4,7 @@ import { Reservation } from "@/lib/reservation/types";
 import { fetcher } from "@/lib/fetcher";
 import { mapReservationFromApi, mapReservationToApi } from "@/lib/utils";
 
-const SWR_KEY = "/api/reservations?offset=0&limit=100";
+const SWR_KEY = "/api/reservations";
 
 const reservationFetcher = (url: string) =>
   fetcher<Record<string, unknown>[]>(url).then((data) =>

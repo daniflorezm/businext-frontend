@@ -38,11 +38,13 @@ const DEFAULT_CAPABILITIES: Capabilities = {
 
 export const ACCESS_CONTEXT_SWR_KEY = "/api/auth/me";
 
-/** Never throws — returns null on auth errors so the app degrades gracefully */
-const accessFetcher = (url: string): Promise<AccessContext | null> =>
-  fetch(url)
-    .then((res) => (res.ok ? (res.json() as Promise<AccessContext>) : null))
-    .catch(() => null);
+/** Throws on network/server errors so SWR can retry */
+const accessFetcher = async (url: string): Promise<AccessContext | null> => {
+  const res = await fetch(url);
+  if (res.status === 401) return null; // genuinely unauthenticated
+  if (!res.ok) throw new Error(`Auth fetch failed: ${res.status}`);
+  return res.json() as Promise<AccessContext>;
+};
 
 /**
  * Returns the current user's access context.
@@ -52,14 +54,18 @@ const accessFetcher = (url: string): Promise<AccessContext | null> =>
  * AppShell + Sidebar + any page component → still only 1 call to /api/auth/me.
  */
 export function useAccessContext() {
-  const { data: context = null, isLoading: loading } =
+  const { data: context = null, isLoading: loading, error } =
     useSWR<AccessContext | null>(ACCESS_CONTEXT_SWR_KEY, accessFetcher, {
       revalidateOnFocus: false,
-      dedupingInterval: 3_000,
-      shouldRetryOnError: false,
+      dedupingInterval: 60_000,
+      shouldRetryOnError: true,
+      errorRetryCount: 3,
     });
 
   const capabilities = context?.capabilities ?? DEFAULT_CAPABILITIES;
 
-  return { context, capabilities, loading };
+  // Treat transient errors as still loading (SWR is retrying)
+  const isLoading = loading || (!context && !!error);
+
+  return { context, capabilities, loading: isLoading };
 }

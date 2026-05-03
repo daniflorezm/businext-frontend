@@ -187,16 +187,16 @@ export function ReviewCharts({ reviews }: ReviewChartsProps) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <h3 className="text-h4 font-heading font-semibold text-foreground">
             Tendencias
           </h3>
-          <div className="flex gap-1 bg-surface-raised rounded-full p-1">
+          <div className="flex flex-wrap justify-center gap-1 bg-surface-raised rounded-full p-1 max-w-full overflow-hidden">
             {TIME_RANGES.map((tr) => (
               <button
                 key={tr.value}
                 onClick={() => setRange(tr.value)}
-                className={`px-3 py-1.5 text-caption font-medium rounded-full transition-all duration-200 ${
+                className={`px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-caption font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
                   range === tr.value
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-foreground-muted hover:text-foreground"

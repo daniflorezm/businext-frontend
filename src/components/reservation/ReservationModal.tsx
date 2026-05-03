@@ -36,6 +36,9 @@ export const ReservationModal = ({
   executeAction,
   reservationData,
   loading,
+  isOwner = false,
+  currentUserName = "",
+  employees = [],
 }: ReservationModalProps) => {
   const { id } = reservationData || {};
   const {
@@ -48,7 +51,6 @@ export const ReservationModal = ({
     trigger,
   } = useForm<Reservation>();
   // Step state for wizard
-  const DURATION_SUGGESTIONS = [30, 60, 90];
   const [step, setStep] = useState(1);
   const totalSteps = 2;
   const [validationError, setValidationError] = useState("");
@@ -69,9 +71,8 @@ export const ReservationModal = ({
       type: "INCOME",
       creator: data.inCharge,
       reservation_id: data.id,
+      customer_name: data.customerName,
     };
-    console.log(financeRecord);
-
     createFinance(financeRecord);
   };
 
@@ -118,7 +119,6 @@ export const ReservationModal = ({
       valid = await trigger([
         "inCharge",
         "reservationStartDate",
-        "timePerReservation",
       ]);
     }
     if (valid) setStep((s) => s + 1);
@@ -191,11 +191,32 @@ export const ReservationModal = ({
                   <div className="mb-1 text-caption text-foreground-muted">
                     Encargado de la reserva
                   </div>
-                  <ReservationInput
-                    label="inCharge"
-                    register={register}
-                    required={true}
-                  />
+                  {operation === "Editar reserva" && isOwner ? (
+                    <select
+                      className="w-full rounded-md border border-border-subtle bg-surface-raised px-3 py-2 text-body-sm text-foreground"
+                      {...register("inCharge", { required: true })}
+                    >
+                      <option value={currentUserName}>{currentUserName} (Tú)</option>
+                      {employees.map((emp) => (
+                        <option key={emp.memberUserId} value={emp.displayName ?? ""}>
+                          {emp.displayName ?? emp.email}
+                        </option>
+                      ))}
+                    </select>
+                  ) : operation === "Editar reserva" && !isOwner ? (
+                    <ReservationInput
+                      label="inCharge"
+                      register={register}
+                      required={true}
+                      disabled={true}
+                    />
+                  ) : (
+                    <ReservationInput
+                      label="inCharge"
+                      register={register}
+                      required={true}
+                    />
+                  )}
                   <ReservationInputError
                     error={errors.inCharge}
                     message="Indica un encargado"
@@ -220,6 +241,7 @@ export const ReservationModal = ({
                                 newValue ? newValue.toISOString() : ""
                               );
                             }}
+                            disabled={operation === "Editar reserva"}
                             slotProps={{
                               textField: {
                                 fullWidth: true,
@@ -231,39 +253,6 @@ export const ReservationModal = ({
                       />
                     </LocalizationProvider>
                   </ThemeProvider>
-                  <div className="mb-1 text-caption text-foreground-muted">
-                    Duración (minutos)
-                  </div>
-                  <ReservationInput
-                    label="timePerReservation"
-                    register={register}
-                    required={true}
-                    type="number"
-                  />
-                  {/* Sugerencias de duración */}
-                  <div className="flex gap-2 mt-2">
-                    {DURATION_SUGGESTIONS.map((dur) => (
-                      <Button
-                        key={dur}
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          setValue("timePerReservation", dur);
-                        }}
-                      >
-                        {dur === 90
-                          ? "1.5 h"
-                          : dur === 60
-                          ? "1 h"
-                          : dur + " min"}
-                      </Button>
-                    ))}
-                  </div>
-                  <ReservationInputError
-                    error={errors.timePerReservation}
-                    message="Indica un tiempo por reserva"
-                  />
                 </>
               )}
               {/* Validation error */}
