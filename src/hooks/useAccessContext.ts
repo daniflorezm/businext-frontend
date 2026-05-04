@@ -54,7 +54,7 @@ const accessFetcher = async (url: string): Promise<AccessContext | null> => {
  * AppShell + Sidebar + any page component → still only 1 call to /api/auth/me.
  */
 export function useAccessContext() {
-  const { data: context = null, isLoading: loading, error } =
+  const { data, isLoading, isValidating } =
     useSWR<AccessContext | null>(ACCESS_CONTEXT_SWR_KEY, accessFetcher, {
       revalidateOnFocus: false,
       dedupingInterval: 60_000,
@@ -62,10 +62,12 @@ export function useAccessContext() {
       errorRetryCount: 3,
     });
 
+  const context = data ?? null;
   const capabilities = context?.capabilities ?? DEFAULT_CAPABILITIES;
 
-  // Treat transient errors as still loading (SWR is retrying)
-  const isLoading = loading || (!context && !!error);
+  // Loading = true until we have a valid context.
+  // Covers: first fetch, stale null cache being revalidated after login, retries.
+  const loading = isLoading || (!context && isValidating);
 
-  return { context, capabilities, loading: isLoading };
+  return { context, capabilities, loading };
 }
