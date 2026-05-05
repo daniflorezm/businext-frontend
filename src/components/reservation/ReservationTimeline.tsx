@@ -261,7 +261,7 @@ function ReservationCard({
             </span>
           )}
           {actions && (
-            <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-150">
+            <div className="flex items-center gap-0.5">
               {actions}
             </div>
           )}
