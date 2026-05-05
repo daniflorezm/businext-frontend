@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { PackageSearch, Plus, Pencil, Trash2, ImageIcon } from "lucide-react";
-import { compressImage } from "@/lib/image-compress";
 import { ProductPlaceholder } from "@/components/common/ProductPlaceholder";
 import { useProduct } from "@/hooks/useProduct";
 import { useGlobalToast } from "@/context/ToastContext";
@@ -79,16 +78,11 @@ export function ProductsSection() {
     setError("");
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.files?.[0] ?? null;
-    if (!raw) return;
-    try {
-      const compressed = await compressImage(raw);
-      setImageFile(compressed);
-      setImagePreview(URL.createObjectURL(compressed));
-    } catch {
-      setImageFile(raw);
-      setImagePreview(URL.createObjectURL(raw));
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImageFile(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
