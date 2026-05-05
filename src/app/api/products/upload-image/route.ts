@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getVerifiedServerAccessToken } from "@/lib/auth/server-session";
+import sharp from "sharp";
 
 const BUCKET = "product-images";
-const MAX_SIZE = 2 * 1024 * 1024; // 2MB
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_INPUT_SIZE = 10 * 1024 * 1024; // 10MB raw input limit
 
 function getAdminClient() {
   return createClient(
@@ -19,8 +19,7 @@ async function ensureBucketExists(supabase: ReturnType<typeof getAdminClient>) {
   if (!exists) {
     await supabase.storage.createBucket(BUCKET, {
       public: true,
-      fileSizeLimit: MAX_SIZE,
-      allowedMimeTypes: ALLOWED_TYPES,
+      fileSizeLimit: 5 * 1024 * 1024,
     });
   }
 }
@@ -37,33 +36,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No se proporcionó archivo" }, { status: 400 });
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (file.size > MAX_INPUT_SIZE) {
       return NextResponse.json(
-        { error: "Tipo de archivo no permitido. Usa JPEG, PNG o WEBP." },
+        { error: "El archivo supera el límite de 10MB." },
         { status: 400 }
       );
     }
 
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json(
-        { error: "El archivo supera el límite de 2MB." },
-        { status: 400 }
-      );
-    }
+    // Convert any image format to JPEG using sharp (supports HEIC, PNG, WEBP, etc.)
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const compressed = await sharp(buffer)
+      .rotate() // auto-rotate based on EXIF
+      .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
 
     const supabase = getAdminClient();
     await ensureBucketExists(supabase);
 
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `${Date.now()}.${ext}`;
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
+    const path = `${Date.now()}.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
-      .upload(path, buffer, {
-        contentType: file.type,
+      .upload(path, compressed, {
+        contentType: "image/jpeg",
         upsert: false,
       });
 
