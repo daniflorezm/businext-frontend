@@ -2,6 +2,7 @@
 import useSWR from "swr";
 import { Product } from "@/lib/product/types";
 import { fetcher } from "@/lib/fetcher";
+import { convertToJpeg } from "@/lib/image-to-jpeg";
 
 const SWR_KEY = "/api/products";
 
@@ -123,8 +124,9 @@ export function useProduct() {
 
   const uploadProductImage = async (file: File): Promise<string | null> => {
     try {
+      const jpeg = await convertToJpeg(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", jpeg);
       const response = await fetch("/api/products/upload-image", {
         method: "POST",
         body: formData,
