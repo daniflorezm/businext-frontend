@@ -54,26 +54,25 @@ export function useFinances(year?: number) {
   };
 
   const deleteFinance = async (id: number): Promise<void> => {
-    try {
-      await mutate(
-        async (current: Finances[] = []) => {
-          const response = await fetch(`/api/finances?id=${id}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-          });
-          if (!response.ok) throw new Error("Failed to delete finance");
-          return current.filter((f) => f.id !== id);
-        },
-        {
-          optimisticData: (current: Finances[] = []) =>
-            current.filter((f) => f.id !== id),
-          rollbackOnError: true,
-          revalidate: false,
+    await mutate(
+      async (current: Finances[] = []) => {
+        const response = await fetch(`/api/finances?id=${id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.status === 409) {
+          throw new Error("LINKED_TO_RESERVATION");
         }
-      );
-    } catch {
-      // SWR rollback restores previous state
-    }
+        if (!response.ok) throw new Error("Failed to delete finance");
+        return current.filter((f) => f.id !== id);
+      },
+      {
+        optimisticData: (current: Finances[] = []) =>
+          current.filter((f) => f.id !== id),
+        rollbackOnError: true,
+        revalidate: false,
+      }
+    );
   };
 
   const updateFinance = async (finance: Finances): Promise<true | null> => {

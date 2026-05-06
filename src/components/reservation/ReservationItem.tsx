@@ -8,7 +8,7 @@ import { DeleteModal } from "@/components/reservation/DeleteReservationModal";
 import { CompleteReservationModal } from "@/components/reservation/CompleteReservationModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, User } from "lucide-react";
+import { Calendar, Clock, User, Undo2 } from "lucide-react";
 
 export const BookListItem = (reservation: Reservation) => {
   const {
@@ -21,7 +21,7 @@ export const BookListItem = (reservation: Reservation) => {
     service,
   } = reservation;
 
-  const { deleteReservation, updateReservation, loading } = useReservation();
+  const { deleteReservation, updateReservation, revertReservation, loading } = useReservation();
   const { context } = useAccessContext();
   const { activeEmployees } = useEmployee();
   const isOwner = context?.role === "owner";
@@ -100,7 +100,7 @@ export const BookListItem = (reservation: Reservation) => {
       <div className="mt-2 w-full">
         <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
           <div className="w-full sm:w-auto">
-            {isToday && (
+            {status === "PENDING" && isToday && (
             <Button
               variant="primary"
               size="sm"
@@ -110,8 +110,20 @@ export const BookListItem = (reservation: Reservation) => {
               Completar
             </Button>
             )}
+            {status === "COMPLETED" && isOwner && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => reservation.id && revertReservation(reservation.id)}
+            >
+              <Undo2 className="h-3.5 w-3.5 mr-1" />
+              Revertir
+            </Button>
+            )}
           </div>
 
+          {status !== "COMPLETED" && (
           <div className="flex w-full sm:w-auto flex-col sm:flex-row sm:items-center gap-2">
             <Button
               variant="ghost"
@@ -130,6 +142,7 @@ export const BookListItem = (reservation: Reservation) => {
               Eliminar
             </Button>
           </div>
+          )}
         </div>
       </div>
       {openDeleteModal && (

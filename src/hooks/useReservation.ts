@@ -1,5 +1,5 @@
 "use client";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 import { Reservation } from "@/lib/reservation/types";
 import { fetcher } from "@/lib/fetcher";
 import { mapReservationFromApi, mapReservationToApi } from "@/lib/utils";
@@ -12,6 +12,7 @@ const reservationFetcher = (url: string) =>
   );
 
 export function useReservation() {
+  const { mutate: globalMutate } = useSWRConfig();
   const {
     data: reservationData = [],
     isLoading: loading,
@@ -104,6 +105,32 @@ export function useReservation() {
     }
   };
 
+  const revertReservation = async (id: number): Promise<boolean> => {
+    try {
+      await mutate(
+        async (current: Reservation[] = []) => {
+          const response = await fetch(`/api/reservations/${id}/revert`, {
+            method: "POST",
+          });
+          if (!response.ok) throw new Error("Failed to revert reservation");
+          const data = await response.json();
+          return current.map((r) => (r.id === id ? mapReservationFromApi(data) : r));
+        },
+        {
+          optimisticData: (current: Reservation[] = []) =>
+            current.map((r) => (r.id === id ? { ...r, status: "PENDING" } : r)),
+          rollbackOnError: true,
+          revalidate: false,
+        }
+      );
+      // Revalidate finances since revert deletes the linked finance record
+      globalMutate("/api/finances");
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return {
     reservationData,
     loading,
@@ -112,5 +139,6 @@ export function useReservation() {
     createReservation,
     deleteReservation,
     updateReservation,
+    revertReservation,
   };
 }
