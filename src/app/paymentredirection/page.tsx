@@ -32,8 +32,13 @@ export default async function PaymentRedirectionPage({ searchParams }: Props) {
       </div>
     );
 
-  const session = await stripe.checkout.sessions.retrieve(session_id);
-  const status = session.status;
+  let status: string | null = null;
+  try {
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    status = session.status;
+  } catch (e) {
+    console.error("Stripe session retrieve error:", e);
+  }
 
   if (status === "complete") {
     const cookieStore = await cookies();
@@ -44,7 +49,9 @@ export default async function PaymentRedirectionPage({ searchParams }: Props) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
       <div className="mb-4 p-4 bg-danger/10 text-danger rounded-lg text-center font-semibold shadow-sm border border-danger/30">
-        El pago no pudo ser procesado correctamente.
+        {status === null
+          ? "Hubo un error al verificar el pago. Intenta de nuevo o contacta soporte."
+          : "El pago no pudo ser procesado correctamente."}
       </div>
       <Link
         href="/"
