@@ -1,5 +1,6 @@
 import { WorkingHours } from "@/lib/working-hours/types";
 import { Reservation } from "@/lib/reservation/types";
+import { BookingRequest } from "@/lib/booking-request/types";
 
 /**
  * Convert JS Date.getDay() (0=Sun..6=Sat) to our WorkingHours dayOfWeek (0=Mon..6=Sun).
@@ -44,13 +45,15 @@ function isSameDate(dateStr: string, date: Date): boolean {
  * @param workingHours - Array of working hours for all days
  * @param reservations - All existing reservations
  * @param inCharge - The in-charge person to filter reservations by
+ * @param bookingRequests - Pending booking requests to treat as occupied
  * @returns Sorted array of available time strings (e.g., ["09:00", "09:30", "10:00"])
  */
 export function getAvailableSlots(
   date: Date,
   workingHours: WorkingHours[],
   reservations: Reservation[],
-  inCharge: string
+  inCharge: string,
+  bookingRequests: BookingRequest[] = []
 ): string[] {
   const SLOT_DURATION = 30;
 
@@ -93,6 +96,20 @@ export function getAvailableSlots(
           occupiedSlots.add(t);
         }
       }
+    });
+
+  // Also mark slots occupied by pending booking requests for this employee/date
+  bookingRequests
+    .filter(
+      (br) =>
+        br.status === "REQUESTED" &&
+        (br.employeeName === inCharge || !br.employeeName) &&
+        isSameDate(br.requestedDate, date)
+    )
+    .forEach((br) => {
+      const brStart = new Date(br.requestedDate);
+      const brStartMin = brStart.getHours() * 60 + brStart.getMinutes();
+      occupiedSlots.add(brStartMin);
     });
 
   // Filter out past slots if date is today
