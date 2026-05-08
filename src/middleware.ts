@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
   const pathname = url.pathname;
 
   // Allow free access to public routes
-  if (publicRoutes.includes(pathname)) {
+  if (publicRoutes.includes(pathname) || pathname.startsWith("/book/")) {
     return NextResponse.next();
   }
 

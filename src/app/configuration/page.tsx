@@ -10,6 +10,7 @@ import {
   PackageSearch,
   Clock,
   Settings,
+  Link2,
 } from "lucide-react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { SectionSkeleton } from "@/components/common/SkeletonLoader";
@@ -41,7 +42,7 @@ const INITIAL_EMPLOYEE_FORM: InviteEmployeeInput = {
   role: "employee",
 };
 
-type SectionId = "profile" | "business" | "products" | "hours" | "team";
+type SectionId = "profile" | "business" | "products" | "hours" | "team" | "booking";
 
 type NavItem = {
   id: SectionId;
@@ -57,6 +58,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "products", label: "Productos", icon: PackageSearch, cap: "canManageProducts" },
   { id: "hours", label: "Horario", icon: Clock, ownerOnly: true },
   { id: "team", label: "Equipo", icon: ShieldUser, cap: "canManageTeam" },
+  { id: "booking", label: "Reserva online", icon: Link2, ownerOnly: true },
 ];
 
 type ConfirmState = {
@@ -582,6 +584,11 @@ export default function ConfigurationPage() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* ═══ Booking Online ═══ */}
+              {activeSection === "booking" && (
+                <BookingLinkSection businessId={context?.businessId ?? ""} />
+              )}
             </div>
           </div>
         )}
@@ -648,5 +655,98 @@ function ProfileField({
         {value || <span className="text-foreground-subtle italic">{fallback}</span>}
       </span>
     </div>
+  );
+}
+
+/* ────────────────────────────────────────────────── */
+/*  Booking Link + QR Section                         */
+/* ────────────────────────────────────────────────── */
+
+function BookingLinkSection({ businessId }: { businessId: string }) {
+  const { showToast } = useGlobalToast();
+  const [qrDataUrl, setQrDataUrl] = React.useState<string | null>(null);
+
+  const bookingUrl = businessId
+    ? `${window.location.origin}/book/${businessId}`
+    : "";
+
+  // Generate QR code on mount
+  React.useEffect(() => {
+    if (!bookingUrl) return;
+    import("qrcode").then((QRCode) => {
+      QRCode.toDataURL(bookingUrl, {
+        width: 300,
+        margin: 2,
+        color: { dark: "#000000", light: "#ffffff" },
+      }).then((url: string) => setQrDataUrl(url));
+    });
+  }, [bookingUrl]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(bookingUrl);
+      showToast("success", "Link copiado al portapapeles");
+    } catch {
+      showToast("error", "No se pudo copiar el link");
+    }
+  };
+
+  const handleDownloadQR = () => {
+    if (!qrDataUrl) return;
+    const link = document.createElement("a");
+    link.download = "reserva-qr.png";
+    link.href = qrDataUrl;
+    link.click();
+  };
+
+  if (!businessId) return null;
+
+  return (
+    <Card>
+      <CardContent className="p-5 sm:p-6 md:p-8 space-y-6">
+        <SectionHeader
+          icon={Link2}
+          title="Reserva online"
+          description="Comparte este enlace o código QR con tus clientes para que puedan solicitar citas."
+        />
+
+        {/* Link + copy */}
+        <div className="space-y-2">
+          <label className="text-label font-semibold text-foreground-muted">
+            Link de reserva
+          </label>
+          <div className="flex items-center gap-2">
+            <Input value={bookingUrl} readOnly className="flex-1 font-mono text-xs" />
+            <Button variant="primary" size="sm" onClick={handleCopy}>
+              Copiar
+            </Button>
+          </div>
+        </div>
+
+        {/* QR Code */}
+        <div className="space-y-3">
+          <label className="text-label font-semibold text-foreground-muted">
+            Código QR
+          </label>
+          <div className="flex flex-col items-center gap-4 p-6 rounded-lg border border-border-subtle bg-white">
+            {qrDataUrl ? (
+              <img
+                src={qrDataUrl}
+                alt="QR de reserva online"
+                className="w-[200px] h-[200px]"
+              />
+            ) : (
+              <div className="w-[200px] h-[200px] bg-gray-100 animate-pulse rounded" />
+            )}
+            <Button variant="secondary" size="sm" onClick={handleDownloadQR} disabled={!qrDataUrl}>
+              Descargar QR
+            </Button>
+          </div>
+          <p className="text-caption text-foreground-subtle">
+            Imprime este QR y colócalo en tu negocio para que los clientes escaneen y reserven directamente.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -26,7 +26,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     prevPathname.current = pathname;
   }, [pathname, mutate]);
 
-  const isPublicRoute = routesWithoutHeader.includes(pathname);
+  const isPublicRoute =
+    routesWithoutHeader.includes(pathname) || pathname.startsWith("/book/");
   const showSidebar = !isPublicRoute && (context !== null || loading);
 
   return (

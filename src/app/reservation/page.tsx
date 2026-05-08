@@ -6,6 +6,7 @@ import { useEmployee } from "@/hooks/useEmployee";
 import { useAccessContext } from "@/hooks/useAccessContext";
 import { useWorkingHours } from "@/hooks/useWorkingHours";
 import { useFinances } from "@/hooks/useFinances";
+import { useBookingRequests } from "@/hooks/useBookingRequests";
 import { useGlobalToast } from "@/context/ToastContext";
 import { Reservation } from "@/lib/reservation/types";
 import { Product } from "@/lib/product/types";
@@ -41,6 +42,7 @@ export default function ReservationPage() {
   const { context, capabilities, loading: contextLoading } = useAccessContext();
   const { workingHoursData, loading: workingHoursLoading } = useWorkingHours();
   const { financesData, createFinance, loading: financesLoading } = useFinances();
+  const { bookingRequests } = useBookingRequests();
   const { showToast } = useGlobalToast();
 
   const [selectedService, setSelectedService] = useState<Product | null>(null);
@@ -85,9 +87,10 @@ export default function ReservationPage() {
       selectedDate,
       workingHoursData,
       reservationData, // all reservations for slot availability
-      slotInCharge
+      slotInCharge,
+      bookingRequests
     );
-  }, [selectedDate, workingHoursData, reservationData, slotInCharge, dayClosed]);
+  }, [selectedDate, workingHoursData, reservationData, slotInCharge, dayClosed, bookingRequests]);
 
   const handleServiceSelect = (product: Product) => {
     setSelectedService(
@@ -434,6 +437,7 @@ export default function ReservationPage() {
             />
           )}
         </section>
+
 
         {/* ═══════════════════════════════════════════
             SECTION 4 — Reservas pendientes (otros días) — only if they exist
