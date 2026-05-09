@@ -1,57 +1,62 @@
-import { stripe } from "@/lib/stripe/types";
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-interface PageParams {
-  session_id?: string;
-  [key: string]: string | string[] | undefined;
-}
+export default function PaymentRedirectionPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("session_id") ?? "";
 
-interface Props {
-  searchParams: Promise<PageParams>;
-}
+  const [status, setStatus] = useState<"loading" | "error" | "no-session">(
+    sessionId ? "loading" : "no-session"
+  );
+  const [errorMsg, setErrorMsg] = useState("");
 
-export default async function PaymentRedirectionPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const session_id =
-    typeof params.session_id === "string" ? params.session_id : "";
+  useEffect(() => {
+    if (!sessionId) return;
 
-  if (!session_id)
+    fetch(`/api/stripe/session-status?session_id=${encodeURIComponent(sessionId)}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Error al verificar la sesión de pago");
+        return r.json();
+      })
+      .then((data) => {
+        if (data.status === "complete") {
+          router.replace("/reservation");
+        } else {
+          setErrorMsg("El pago no pudo ser procesado correctamente.");
+          setStatus("error");
+        }
+      })
+      .catch((e) => {
+        setErrorMsg(
+          e instanceof Error
+            ? e.message
+            : "Hubo un error al verificar el pago."
+        );
+        setStatus("error");
+      });
+  }, [sessionId, router]);
+
+  if (status === "loading") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
-        <div className="mb-4 p-4 bg-danger/10 text-danger rounded-lg text-center font-semibold shadow-sm border border-danger/30">
-          No se recibió el identificador de sesión. Intenta de nuevo.
-        </div>
-        <Link
-          href="/"
-          className="px-5 py-2 bg-primary text-primary-foreground rounded-lg font-semibold shadow-md hover:bg-primary-hover transition-colors duration-150"
-        >
-          Volver al dashboard
-        </Link>
+        <div className="h-8 w-8 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
+        <p className="mt-4 text-sm text-foreground-muted">
+          Verificando tu pago...
+        </p>
       </div>
     );
-
-  let status: string | null = null;
-  try {
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-    status = session.status;
-  } catch (e) {
-    console.error("Stripe session retrieve error:", e);
-  }
-
-  if (status === "complete") {
-    const cookieStore = await cookies();
-    cookieStore.delete("x-access-context");
-    redirect("/reservation");
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
       <div className="mb-4 p-4 bg-danger/10 text-danger rounded-lg text-center font-semibold shadow-sm border border-danger/30">
-        {status === null
-          ? "Hubo un error al verificar el pago. Intenta de nuevo o contacta soporte."
-          : "El pago no pudo ser procesado correctamente."}
+        {status === "no-session"
+          ? "No se recibió el identificador de sesión. Intenta de nuevo."
+          : errorMsg}
       </div>
       <Link
         href="/"
