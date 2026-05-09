@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function PaymentRedirectionPage() {
+function PaymentRedirectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id") ?? "";
@@ -65,5 +65,22 @@ export default function PaymentRedirectionPage() {
         Volver al dashboard
       </Link>
     </div>
+  );
+}
+
+export default function PaymentRedirectionPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
+          <div className="h-8 w-8 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
+          <p className="mt-4 text-sm text-foreground-muted">
+            Verificando tu pago...
+          </p>
+        </div>
+      }
+    >
+      <PaymentRedirectionContent />
+    </Suspense>
   );
 }
