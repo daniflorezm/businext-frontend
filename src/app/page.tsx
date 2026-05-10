@@ -1,99 +1,22 @@
 "use client";
-import { ReservationItemSection1 } from "@/components/landingpage/ReservationItemSection1";
+import { VideoScrollHero } from "@/components/landingpage/VideoScrollHero";
+import { BusinextSection } from "@/components/landingpage/BusinextSection";
 import Link from "next/link";
 import React from "react";
-import { Lock, Smartphone, Zap, ArrowRight } from "lucide-react";
+import { Lock, Smartphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 export default function Home() {
-  const handleDiscoverClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    const section = document.getElementById("seccion2");
-    if (section) {
-      section.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   return (
-    <main className="min-h-screen w-full bg-background flex flex-col items-center px-2 sm:px-0 py-0">
-      {/* Section 1: Hero */}
-      <section className="container mx-auto px-2 sm:px-4 py-12 sm:py-20 md:py-32">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-          <div>
-            <div className="inline-block mb-4 px-4 py-2 bg-accent/15 text-accent rounded-full text-caption font-semibold">
-              La mejor solucion de reservas
-            </div>
-            <h1 className="font-heading text-h1 md:text-[3.5rem] font-bold text-foreground mb-6 leading-tight">
-              Gestiona tus reservas de forma{" "}
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                simple y rapida
-              </span>
-            </h1>
-            <p className="text-body text-foreground-muted mb-8 leading-relaxed">
-              La plataforma definitiva para gestionar reservas, productos y
-              finanzas de tu negocio. Centraliza la administracion de tus
-              servicios y lleva el control total desde cualquier lugar,
-              haciendolo todo mucho mas simple.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <a
-                href="#seccion2"
-                onClick={handleDiscoverClick}
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground text-body px-8 py-4 rounded-lg font-bold shadow-md hover:bg-primary-hover transition-colors duration-150 ease-snappy"
-              >
-                Descubre mas
-              </a>
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center gap-2 text-body px-8 py-4 bg-transparent border border-primary rounded-lg font-bold text-primary hover:bg-primary/10 transition-colors duration-150 ease-snappy"
-              >
-                Comienza ahora
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </div>
-            <div className="mt-8 flex items-center space-x-6 text-caption text-foreground-muted">
-              <div className="flex items-center space-x-2">
-                <svg
-                  className="w-5 h-5 text-success"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span>Interfaz intuitiva</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <svg
-                  className="w-5 h-5 text-success"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span>Configuracion en 5 minutos</span>
-              </div>
-            </div>
-          </div>
-          <div className="relative">
-            <ReservationItemSection1 />
-          </div>
-        </div>
-      </section>
+    <main className="w-full bg-background flex flex-col px-0 py-0">
+      {/* Section 1: Hero — Video Scroll Experience */}
+      <VideoScrollHero />
 
-      {/* Section 2: Calendar */}
+      {/* Section 2: Businext scroll animation */}
+      <BusinextSection />
+
+      {/* Section 3: Calendar */}
       <section
         id="seccion2"
         className="w-full bg-surface py-12 sm:py-20 md:py-32"
@@ -215,7 +138,7 @@ export default function Home() {
           ¿Listo para transformar tu negocio?
         </h2>
         <Link href="/login">
-          <Button variant="accent" size="lg">
+          <Button variant="accent" size="lg" style={{ background: "linear-gradient(to right, #3b82f6, #a78bfa)", boxShadow: "0 4px 24px rgba(99,102,241,0.35)" }}>
             Comienza ahora
           </Button>
         </Link>
