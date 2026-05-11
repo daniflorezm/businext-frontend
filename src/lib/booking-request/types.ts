@@ -25,6 +25,7 @@ export interface BookingRequestCreate {
   employee_name?: string | null;
   service: string;
   requested_date: string;
+  location_id?: number | null;
 }
 
 export interface AvailabilitySlot {
@@ -44,9 +45,29 @@ export interface BookingServicesResponse {
   business_name: string;
   services: BookingService[];
   employees: { name: string; available: boolean }[];
+  location?: {
+    id: number;
+    name: string;
+    address: string | null;
+    phone: string | null;
+    maps_link: string | null;
+  } | null;
 }
 
 export interface AvailabilityResponse {
   date: string;
   slots: AvailabilitySlot[];
+}
+
+export interface BookingLocation {
+  id: number;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  maps_link: string | null;
+}
+
+export interface BookingLocationsResponse {
+  business_name: string;
+  locations: BookingLocation[];
 }
