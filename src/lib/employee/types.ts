@@ -9,8 +9,9 @@ export type Employee = {
   displayName: string | null;
   email: string | null;
   phone: string | null;
-  role: EmployeeRole;
+  role: AccessRole;
   status: string;
+  locationId?: number | null;
   createdAt?: string;
 };
 
