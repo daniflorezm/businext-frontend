@@ -134,13 +134,14 @@ export async function PATCH(request: NextRequest) {
       );
     }
     const configuration: Configuration = await request.json();
+    const mappedBody = mapConfigurationToApi(configuration);
     const response = await fetch(`${API_BASE}/configuration/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
       },
-      body: JSON.stringify(configuration),
+      body: JSON.stringify(mappedBody),
     });
     let data;
     if (response.headers.get("content-type")?.includes("application/json")) {

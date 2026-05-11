@@ -85,7 +85,7 @@ export default function ConfigurationPage() {
     useWorkingHours();
 
   const { register, handleSubmit, setValue } = useForm<Configuration>({
-    defaultValues: { businessName: "" },
+    defaultValues: { businessName: "", businessPhone: "", businessEmail: "" },
   });
 
   const [activeSection, setActiveSection] = useState<SectionId>("profile");
@@ -121,8 +121,14 @@ export default function ConfigurationPage() {
         ? await updateConfiguration({
             id: configurationData[0].id,
             businessName: data.businessName,
+            businessPhone: data.businessPhone,
+            businessEmail: data.businessEmail,
           })
-        : await createConfiguration({ businessName: data.businessName });
+        : await createConfiguration({
+            businessName: data.businessName,
+            businessPhone: data.businessPhone,
+            businessEmail: data.businessEmail,
+          });
 
     if (result !== null) {
       showToast("success", "Configuración guardada correctamente.");
@@ -152,6 +158,8 @@ export default function ConfigurationPage() {
   useEffect(() => {
     if (configurationData.length > 0) {
       setValue("businessName", configurationData[0].businessName || "");
+      setValue("businessPhone", configurationData[0].businessPhone || "");
+      setValue("businessEmail", configurationData[0].businessEmail || "");
     }
   }, [configurationData, setValue]);
 
@@ -388,6 +396,28 @@ export default function ConfigurationPage() {
                             {...register("businessName")}
                             placeholder="Nombre de tu negocio"
                           />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-label font-semibold text-foreground-muted">
+                              Teléfono de contacto
+                            </label>
+                            <Input
+                              {...register("businessPhone")}
+                              type="tel"
+                              placeholder="+34 612 345 678"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-label font-semibold text-foreground-muted">
+                              Email de contacto
+                            </label>
+                            <Input
+                              {...register("businessEmail")}
+                              type="email"
+                              placeholder="contacto@tunegocio.com"
+                            />
+                          </div>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                           <Button type="submit" variant="primary">
