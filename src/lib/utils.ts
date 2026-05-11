@@ -34,11 +34,15 @@ export const mapReservationToApi = (reservation: Reservation) => {
 export const mapConfigurationFromApi = (data: Record<string, unknown>): Configuration => ({
   id: data.id as number | undefined,
   businessName: data.business_name as string,
+  businessPhone: (data.business_phone as string) || undefined,
+  businessEmail: (data.business_email as string) || undefined,
 });
 
 export const mapConfigurationToApi = (configuration: Configuration) => ({
   id: configuration.id,
   business_name: configuration.businessName,
+  business_phone: configuration.businessPhone ?? null,
+  business_email: configuration.businessEmail ?? null,
 });
 
 export const routesWithoutHeader = [

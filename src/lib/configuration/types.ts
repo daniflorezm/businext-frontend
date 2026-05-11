@@ -2,6 +2,8 @@ import { Control, UseFormRegister } from "react-hook-form";
 export type Configuration = {
   id?: number;
   businessName: string;
+  businessPhone?: string;
+  businessEmail?: string;
 };
 
 export type InputConfig = {
