@@ -11,17 +11,20 @@ import {
   Clock,
   Settings,
   Link2,
+  MapPin,
 } from "lucide-react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { SectionSkeleton } from "@/components/common/SkeletonLoader";
 import { useConfiguration } from "@/hooks/useConfiguration";
 import { useAccessContext } from "@/hooks/useAccessContext";
 import { useWorkingHours } from "@/hooks/useWorkingHours";
+import { useLocations } from "@/hooks/useLocations";
 import { cancelUserSubscription } from "@/app/actions/cancelSubscription";
 import { Configuration } from "@/lib/configuration/types";
 import { Employee, InviteEmployeeInput } from "@/lib/employee/types";
 import { ProductsSection } from "@/components/configuration/ProductsSection";
 import { WorkingHoursEditor } from "@/components/configuration/WorkingHoursEditor";
+import { LocationsSection } from "@/components/configuration/LocationsSection";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { useGlobalToast } from "@/context/ToastContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,7 +45,7 @@ const INITIAL_EMPLOYEE_FORM: InviteEmployeeInput = {
   role: "employee",
 };
 
-type SectionId = "profile" | "business" | "products" | "hours" | "team" | "booking";
+type SectionId = "profile" | "business" | "products" | "hours" | "team" | "locations" | "booking";
 
 type NavItem = {
   id: SectionId;
@@ -55,6 +58,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { id: "profile", label: "Mi perfil", icon: UserCircle },
   { id: "business", label: "Negocio", icon: Building2 },
+  { id: "locations", label: "Locales", icon: MapPin, ownerOnly: true },
   { id: "products", label: "Productos", icon: PackageSearch, cap: "canManageProducts" },
   { id: "hours", label: "Horario", icon: Clock, ownerOnly: true },
   { id: "team", label: "Equipo", icon: ShieldUser, cap: "canManageTeam" },
@@ -83,6 +87,7 @@ export default function ConfigurationPage() {
     useConfiguration();
   const { workingHoursData, loading: workingHoursLoading, updateWorkingHours } =
     useWorkingHours();
+  const { locations } = useLocations();
 
   const { register, handleSubmit, setValue } = useForm<Configuration>({
     defaultValues: { businessName: "", businessPhone: "", businessEmail: "" },
@@ -212,15 +217,16 @@ export default function ConfigurationPage() {
     });
   };
 
-  const handleUpdateEmployee = async (memberUserId: string, field: "role" | "status", value: string) => {
+  const handleUpdateEmployee = async (memberUserId: string, field: "role" | "status" | "locationId", value: string) => {
     const snapshot = employees;
-    setEmployees((prev) => prev.map((e) => (e.memberUserId === memberUserId ? { ...e, [field]: value } : e)));
+    const parsedValue = field === "locationId" ? (value ? Number(value) : null) : value;
+    setEmployees((prev) => prev.map((e) => (e.memberUserId === memberUserId ? { ...e, [field]: parsedValue } : e)));
     setUpdatingEmployeeId(memberUserId);
     try {
       const response = await fetch(`/api/personal-management?memberUserId=${memberUserId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify({ [field]: parsedValue }),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -451,6 +457,15 @@ export default function ConfigurationPage() {
               {/* ═══ Products ═══ */}
               {activeSection === "products" && <ProductsSection />}
 
+              {/* ═══ Locations ═══ */}
+              {activeSection === "locations" && (
+                <Card>
+                  <CardContent className="p-5 sm:p-6 md:p-8">
+                    <LocationsSection />
+                  </CardContent>
+                </Card>
+              )}
+
               {/* ═══ Working Hours ═══ */}
               {activeSection === "hours" && (
                 <WorkingHoursEditor
@@ -578,16 +593,17 @@ export default function ConfigurationPage() {
                               <div className="flex flex-wrap items-center gap-2 text-body-sm">
                                 <Select
                                   value={employee.role}
-                                  disabled={updatingEmployeeId === employee.memberUserId}
+                                  disabled={updatingEmployeeId === employee.memberUserId || employee.role === "owner"}
                                   onChange={(e) => handleUpdateEmployee(employee.memberUserId, "role", e.target.value)}
                                   className="w-auto"
                                 >
+                                  {employee.role === "owner" && <option value="owner">Owner</option>}
                                   <option value="employee">Empleado</option>
                                   <option value="manager">Manager</option>
                                 </Select>
                                 <Select
                                   value={employee.status}
-                                  disabled={updatingEmployeeId === employee.memberUserId || employee.status === "pending"}
+                                  disabled={updatingEmployeeId === employee.memberUserId || employee.status === "pending" || employee.role === "owner"}
                                   onChange={(e) => handleUpdateEmployee(employee.memberUserId, "status", e.target.value)}
                                   className="w-auto"
                                   state={employee.status === "inactive" ? "error" : "default"}
@@ -596,6 +612,20 @@ export default function ConfigurationPage() {
                                   <option value="active">Activo</option>
                                   <option value="inactive">Inactivo</option>
                                 </Select>
+                                <Select
+                                  value={String(employee.locationId ?? "")}
+                                  disabled={updatingEmployeeId === employee.memberUserId}
+                                  onChange={(e) => handleUpdateEmployee(employee.memberUserId, "locationId", e.target.value)}
+                                  className="w-auto"
+                                >
+                                  <option value="">Sin local</option>
+                                  {locations.map((loc) => (
+                                    <option key={loc.id} value={String(loc.id)}>
+                                      {loc.name}
+                                    </option>
+                                  ))}
+                                </Select>
+                                {employee.role !== "owner" && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -605,6 +635,7 @@ export default function ConfigurationPage() {
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
+                                )}
                               </div>
                             </div>
                           ))}

@@ -6,12 +6,15 @@ import {
   BookingService,
   AvailabilitySlot,
   BookingRequestCreate,
+  BookingLocation,
+  BookingLocationsResponse,
 } from "@/lib/booking-request/types";
 import { ProductPlaceholder } from "@/components/common/ProductPlaceholder";
 
-type Step = "service" | "employee" | "date" | "details" | "confirmation";
+type Step = "location" | "service" | "employee" | "date" | "details" | "confirmation";
 
-const STEPS = ["Servicio", "Profesional", "Fecha y hora", "Datos"] as const;
+const STEPS_WITH_LOCATION = ["Local", "Servicio", "Profesional", "Fecha y hora", "Datos"] as const;
+const STEPS_WITHOUT_LOCATION = ["Servicio", "Profesional", "Fecha y hora", "Datos"] as const;
 
 export default function PublicBookingPage({
   params,
@@ -19,18 +22,21 @@ export default function PublicBookingPage({
   params: Promise<{ businessId: string }>;
 }) {
   const [businessId, setBusinessId] = useState<string>("");
-  const [step, setStep] = useState<Step>("service");
+  const [step, setStep] = useState<Step>("location");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Data
+  const [businessName, setBusinessName] = useState<string>("");
+  const [bookingLocations, setBookingLocations] = useState<BookingLocation[]>([]);
   const [servicesData, setServicesData] =
     useState<BookingServicesResponse | null>(null);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
   // Selections
+  const [selectedLocation, setSelectedLocation] = useState<BookingLocation | null>(null);
   const [selectedService, setSelectedService] = useState<BookingService | null>(
     null
   );
@@ -48,17 +54,25 @@ export default function PublicBookingPage({
     params.then((p) => setBusinessId(p.businessId));
   }, [params]);
 
-  // Fetch services
+  // Fetch locations first
   useEffect(() => {
     if (!businessId) return;
     setLoading(true);
-    fetch(`/api/public-book/${businessId}/services`)
+    fetch(`/api/public-book/${businessId}/locations`)
       .then((r) => {
         if (!r.ok) throw new Error("Business not found");
         return r.json();
       })
-      .then((data) => {
-        setServicesData(data);
+      .then((data: BookingLocationsResponse) => {
+        setBusinessName(data.business_name);
+        setBookingLocations(data.locations);
+        // If only 1 location, auto-select and skip to services
+        if (data.locations.length === 1) {
+          setSelectedLocation(data.locations[0]);
+          setStep("service");
+        } else {
+          setStep("location");
+        }
         setLoading(false);
       })
       .catch((e) => {
@@ -66,6 +80,22 @@ export default function PublicBookingPage({
         setLoading(false);
       });
   }, [businessId]);
+
+  // Fetch services when location is selected
+  useEffect(() => {
+    if (!businessId || !selectedLocation) return;
+    fetch(`/api/public-book/${businessId}/services?location_id=${selectedLocation.id}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Error loading services");
+        return r.json();
+      })
+      .then((data) => {
+        setServicesData(data);
+      })
+      .catch((e) => {
+        setError(e.message);
+      });
+  }, [businessId, selectedLocation]);
 
   // Fetch availability when date changes
   useEffect(() => {
@@ -97,6 +127,7 @@ export default function PublicBookingPage({
       employee_name: selectedEmployee,
       service: selectedService.name,
       requested_date: requestedDate,
+      location_id: selectedLocation?.id ?? null,
     };
 
     try {
@@ -129,9 +160,12 @@ export default function PublicBookingPage({
     return days;
   }, []);
 
-  const stepIndex = (["service", "employee", "date", "details"] as const).indexOf(
-    step as "service" | "employee" | "date" | "details"
-  );
+  const hasMultipleLocations = bookingLocations.length > 1;
+  const STEPS = hasMultipleLocations ? STEPS_WITH_LOCATION : STEPS_WITHOUT_LOCATION;
+  const stepOrder: string[] = hasMultipleLocations
+    ? ["location", "service", "employee", "date", "details"]
+    : ["service", "employee", "date", "details"];
+  const stepIndex = stepOrder.indexOf(step);
 
   // ─── Loading ───
   if (loading) {
@@ -211,6 +245,12 @@ export default function PublicBookingPage({
             {selectedEmployee && (
               <DetailRow label="Profesional" value={selectedEmployee} />
             )}
+            {selectedLocation && (
+              <DetailRow label="Local" value={selectedLocation.name} />
+            )}
+            {selectedLocation?.address && (
+              <DetailRow label="Dirección" value={selectedLocation.address} />
+            )}
           </div>
         </div>
       </Shell>
@@ -223,9 +263,15 @@ export default function PublicBookingPage({
       {/* Header */}
       <div className="text-center pt-2 pb-6">
         <h1 className="text-xl font-bold text-foreground tracking-tight">
-          {servicesData?.business_name}
+          {businessName || servicesData?.business_name}
         </h1>
         <p className="text-sm text-foreground-subtle mt-1">Solicita tu cita</p>
+        {selectedLocation && hasMultipleLocations && (
+          <p className="text-xs text-foreground-muted mt-1">
+            {selectedLocation.name}
+            {selectedLocation.address && ` · ${selectedLocation.address}`}
+          </p>
+        )}
       </div>
 
       {/* Stepper */}
@@ -289,6 +335,81 @@ export default function PublicBookingPage({
         })}
       </div>
 
+      {/* ─── Step 0: Location ─── */}
+      {step === "location" && (
+        <div>
+          <StepTitle>¿En qué local?</StepTitle>
+          <div className="space-y-2.5">
+            {bookingLocations.map((loc) => (
+              <button
+                key={loc.id}
+                onClick={() => {
+                  setSelectedLocation(loc);
+                  setStep("service");
+                }}
+                className={`w-full flex items-start gap-3.5 px-3.5 py-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                  selectedLocation?.id === loc.id
+                    ? "border-secondary bg-secondary/10"
+                    : "border-border bg-surface hover:border-secondary/40"
+                }`}
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-secondary/15 flex items-center justify-center mt-0.5">
+                  <svg
+                    className="w-5 h-5 text-secondary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold truncate ${
+                    selectedLocation?.id === loc.id ? "text-secondary" : "text-foreground"
+                  }`}>
+                    {loc.name}
+                  </p>
+                  {loc.address && (
+                    <p className="text-xs text-foreground-subtle mt-0.5">
+                      {loc.address}
+                    </p>
+                  )}
+                  {loc.phone && (
+                    <p className="text-xs text-foreground-subtle">
+                      {loc.phone}
+                    </p>
+                  )}
+                </div>
+                {loc.maps_link && (
+                  <a
+                    href={loc.maps_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-shrink-0 text-foreground-subtle hover:text-secondary transition-colors mt-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ─── Step 1: Service ─── */}
       {step === "service" && (
         <div>
@@ -347,6 +468,13 @@ export default function PublicBookingPage({
               );
             })}
           </div>
+          {hasMultipleLocations && (
+            <BackButton onClick={() => {
+              setStep("location");
+              setServicesData(null);
+              setSelectedService(null);
+            }} />
+          )}
         </div>
       )}
 
@@ -584,6 +712,12 @@ export default function PublicBookingPage({
             />
             {selectedEmployee && (
               <DetailRow label="Profesional" value={selectedEmployee} />
+            )}
+            {selectedLocation && (
+              <DetailRow label="Local" value={selectedLocation.name} />
+            )}
+            {selectedLocation?.address && (
+              <DetailRow label="Dirección" value={selectedLocation.address} />
             )}
           </div>
 
