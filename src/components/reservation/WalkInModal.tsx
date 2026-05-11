@@ -156,7 +156,9 @@ export function WalkInModal({
                 <option value={currentUserName}>
                   {currentUserName} (Tú)
                 </option>
-                {employees.map((emp) => (
+                {employees
+                  .filter((emp) => emp.displayName !== currentUserName)
+                  .map((emp) => (
                   <option
                     key={emp.memberUserId}
                     value={emp.displayName ?? ""}

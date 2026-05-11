@@ -12,6 +12,7 @@ import {
   Settings,
   Link2,
   MapPin,
+  CalendarClock,
 } from "lucide-react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { SectionSkeleton } from "@/components/common/SkeletonLoader";
@@ -25,6 +26,7 @@ import { Employee, InviteEmployeeInput } from "@/lib/employee/types";
 import { ProductsSection } from "@/components/configuration/ProductsSection";
 import { WorkingHoursEditor } from "@/components/configuration/WorkingHoursEditor";
 import { LocationsSection } from "@/components/configuration/LocationsSection";
+import { Modal, ModalHeader, ModalContent } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { useGlobalToast } from "@/context/ToastContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -102,6 +104,13 @@ export default function ConfigurationPage() {
   // Employee feedback is handled via global toast
   const [sendingInvite, setSendingInvite] = useState(false);
   const [updatingEmployeeId, setUpdatingEmployeeId] = useState<string | null>(null);
+  const [scheduleEmployee, setScheduleEmployee] = useState<Employee | null>(null);
+
+  const {
+    workingHoursData: empWorkingHoursData,
+    loading: empWorkingHoursLoading,
+    updateWorkingHours: updateEmpWorkingHours,
+  } = useWorkingHours(scheduleEmployee?.memberUserId ?? undefined, !!scheduleEmployee);
 
   const [confirm, setConfirm] = useState<ConfirmState>({
     open: false,
@@ -625,6 +634,16 @@ export default function ConfigurationPage() {
                                     </option>
                                   ))}
                                 </Select>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setScheduleEmployee(employee)}
+                                  disabled={updatingEmployeeId === employee.memberUserId}
+                                  className="text-primary hover:text-primary hover:bg-primary/10"
+                                  title="Configurar horario"
+                                >
+                                  <CalendarClock className="w-4 h-4" />
+                                </Button>
                                 {employee.role !== "owner" && (
                                 <Button
                                   variant="ghost"
@@ -663,6 +682,22 @@ export default function ConfigurationPage() {
           onConfirm={confirm.onConfirm}
           onCancel={() => setConfirm((p) => ({ ...p, open: false }))}
         />
+
+        {/* Employee schedule modal */}
+        <Modal open={!!scheduleEmployee} onClose={() => setScheduleEmployee(null)}>
+          <ModalHeader onClose={() => setScheduleEmployee(null)}>
+            Horario de {scheduleEmployee?.displayName || scheduleEmployee?.email}
+          </ModalHeader>
+          <ModalContent>
+            <WorkingHoursEditor
+              workingHoursData={empWorkingHoursData}
+              loading={empWorkingHoursLoading}
+              onSave={updateEmpWorkingHours}
+              title="Horario personalizado"
+              description="Si no se configura, se usará el horario general del negocio."
+            />
+          </ModalContent>
+        </Modal>
       </div>
     </div>
   );

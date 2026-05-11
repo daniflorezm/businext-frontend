@@ -2,62 +2,136 @@
 
 import { useState, useEffect } from "react";
 import {
-  WorkingHours,
+  WorkingHoursBlock,
   DAY_LABELS,
+  DaySchedule,
+  blocksToDaySchedules,
+  daySchedulesToBlocks,
   DEFAULT_WORKING_HOURS,
 } from "@/lib/working-hours/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Clock } from "lucide-react";
+import { Clock, Plus, Trash2 } from "lucide-react";
 import { Toast, useToast } from "@/components/common/Toast";
 
 interface WorkingHoursEditorProps {
-  workingHoursData: WorkingHours[];
-  onSave: (hours: WorkingHours[]) => Promise<WorkingHours[] | null>;
+  workingHoursData: WorkingHoursBlock[];
+  onSave: (hours: WorkingHoursBlock[]) => Promise<WorkingHoursBlock[] | null>;
   loading: boolean;
+  title?: string;
+  description?: string;
 }
 
 export function WorkingHoursEditor({
   workingHoursData,
   onSave,
   loading,
+  title = "Horario de Trabajo",
+  description = "Configura los horarios de apertura y cierre de tu negocio",
 }: WorkingHoursEditorProps) {
-  const [hours, setHours] = useState<WorkingHours[]>(DEFAULT_WORKING_HOURS);
+  const [schedules, setSchedules] = useState<DaySchedule[]>(() =>
+    blocksToDaySchedules(DEFAULT_WORKING_HOURS)
+  );
   const [saving, setSaving] = useState(false);
   const { toastState, showToast, closeToast } = useToast();
 
   useEffect(() => {
     if (workingHoursData.length > 0) {
-      // Merge saved data with defaults for any missing days
-      const merged = DEFAULT_WORKING_HOURS.map((def) => {
-        const saved = workingHoursData.find(
-          (wh) => wh.dayOfWeek === def.dayOfWeek
-        );
-        return saved ?? def;
-      });
-      setHours(merged);
+      setSchedules(blocksToDaySchedules(workingHoursData));
     }
   }, [workingHoursData]);
 
-  const updateDay = (
-    dayOfWeek: number,
-    field: keyof WorkingHours,
-    value: string | boolean
-  ) => {
-    setHours((prev) =>
-      prev.map((h) =>
-        h.dayOfWeek === dayOfWeek ? { ...h, [field]: value } : h
-      )
+  const toggleDay = (dayOfWeek: number, enabled: boolean) => {
+    setSchedules((prev) =>
+      prev.map((d) => (d.dayOfWeek === dayOfWeek ? { ...d, enabled } : d))
     );
   };
 
+  const updateBlock = (
+    dayOfWeek: number,
+    blockIndex: number,
+    field: "startTime" | "endTime",
+    value: string
+  ) => {
+    setSchedules((prev) =>
+      prev.map((d) => {
+        if (d.dayOfWeek !== dayOfWeek) return d;
+        const blocks = [...d.blocks];
+        blocks[blockIndex] = { ...blocks[blockIndex], [field]: value };
+        return { ...d, blocks };
+      })
+    );
+  };
+
+  const addBlock = (dayOfWeek: number) => {
+    setSchedules((prev) =>
+      prev.map((d) => {
+        if (d.dayOfWeek !== dayOfWeek) return d;
+        const lastBlock = d.blocks[d.blocks.length - 1];
+        const newStart = lastBlock?.endTime ?? "14:00";
+        // Add 2 hours for the new block end, capped at 23:59
+        const [h, m] = newStart.split(":").map(Number);
+        const endMin = Math.min(h * 60 + m + 120, 23 * 60 + 59);
+        const endH = Math.floor(endMin / 60);
+        const endM = endMin % 60;
+        const newEnd = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+        return {
+          ...d,
+          blocks: [
+            ...d.blocks,
+            { startTime: newStart, endTime: newEnd },
+          ],
+        };
+      })
+    );
+  };
+
+  const removeBlock = (dayOfWeek: number, blockIndex: number) => {
+    setSchedules((prev) =>
+      prev.map((d) => {
+        if (d.dayOfWeek !== dayOfWeek || d.blocks.length <= 1) return d;
+        return {
+          ...d,
+          blocks: d.blocks.filter((_, i) => i !== blockIndex),
+        };
+      })
+    );
+  };
+
+  const validateSchedules = (): string | null => {
+    for (const day of schedules) {
+      if (!day.enabled) continue;
+      // Check start < end for each block
+      for (let i = 0; i < day.blocks.length; i++) {
+        const b = day.blocks[i];
+        if (b.startTime >= b.endTime) {
+          return `${DAY_LABELS[day.dayOfWeek]}: la hora de inicio debe ser anterior a la de fin (bloque ${i + 1}).`;
+        }
+      }
+      // Check overlaps between blocks
+      const sorted = [...day.blocks].sort((a, b) => a.startTime.localeCompare(b.startTime));
+      for (let i = 0; i < sorted.length - 1; i++) {
+        if (sorted[i].endTime > sorted[i + 1].startTime) {
+          return `${DAY_LABELS[day.dayOfWeek]}: los bloques de horario se solapan.`;
+        }
+      }
+    }
+    return null;
+  };
+
   const handleSave = async () => {
+    const error = validateSchedules();
+    if (error) {
+      showToast("error", error);
+      return;
+    }
     setSaving(true);
-    const result = await onSave(hours);
+    const blocks = daySchedulesToBlocks(schedules);
+    const result = await onSave(blocks);
     setSaving(false);
     if (result) {
-      showToast("success", "Horario de trabajo guardado correctamente.");
+      showToast("success", "Horario guardado correctamente.");
     } else {
       showToast("error", "No se pudo guardar el horario. Intenta de nuevo.");
     }
@@ -73,58 +147,84 @@ export function WorkingHoursEditor({
             </div>
             <div>
               <h2 className="font-heading text-h4 font-semibold text-foreground">
-                Horario de Trabajo
+                {title}
               </h2>
               <p className="text-body-sm text-foreground-muted">
-                Configura los horarios de apertura y cierre de tu negocio
+                {description}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-3">
-            {hours.map((day) => (
+            {schedules.map((day) => (
               <div
                 key={day.dayOfWeek}
-                className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3 rounded-lg border transition-colors duration-150 ${
+                className={`flex flex-col gap-2 p-3 rounded-lg border transition-colors duration-150 ${
                   day.enabled
                     ? "border-border-subtle bg-surface"
                     : "border-border-subtle/50 bg-surface-raised/30 opacity-60"
                 }`}
               >
-                <div className="flex items-center gap-3 w-full sm:w-28 shrink-0">
+                {/* Day header */}
+                <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     checked={day.enabled}
-                    onChange={(e) =>
-                      updateDay(day.dayOfWeek, "enabled", e.target.checked)
-                    }
+                    onChange={(e) => toggleDay(day.dayOfWeek, e.target.checked)}
                     className="w-4 h-4 rounded accent-primary"
                   />
-                  <span className="text-body-sm font-medium text-foreground">
+                  <span className="text-body-sm font-medium text-foreground w-24">
                     {DAY_LABELS[day.dayOfWeek]}
                   </span>
+                  {day.enabled && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => addBlock(day.dayOfWeek)}
+                      className="ml-auto text-primary hover:text-primary"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      <span className="text-caption">Bloque</span>
+                    </Button>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Input
-                    type="time"
-                    value={day.startTime}
-                    onChange={(e) =>
-                      updateDay(day.dayOfWeek, "startTime", e.target.value)
-                    }
-                    disabled={!day.enabled}
-                    className="w-full sm:w-32 h-9 text-caption"
-                  />
-                  <span className="text-foreground-muted text-caption">a</span>
-                  <Input
-                    type="time"
-                    value={day.endTime}
-                    onChange={(e) =>
-                      updateDay(day.dayOfWeek, "endTime", e.target.value)
-                    }
-                    disabled={!day.enabled}
-                    className="w-full sm:w-32 h-9 text-caption"
-                  />
-                </div>
+
+                {/* Time blocks */}
+                {day.enabled && (
+                  <div className="flex flex-col gap-2 pl-7">
+                    {day.blocks.map((block, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <Input
+                          type="time"
+                          value={block.startTime}
+                          onChange={(e) =>
+                            updateBlock(day.dayOfWeek, idx, "startTime", e.target.value)
+                          }
+                          className="w-full sm:w-32 h-9 text-caption"
+                        />
+                        <span className="text-foreground-muted text-caption">a</span>
+                        <Input
+                          type="time"
+                          value={block.endTime}
+                          onChange={(e) =>
+                            updateBlock(day.dayOfWeek, idx, "endTime", e.target.value)
+                          }
+                          className="w-full sm:w-32 h-9 text-caption"
+                        />
+                        {day.blocks.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeBlock(day.dayOfWeek, idx)}
+                            className="text-danger hover:text-danger hover:bg-danger/10 p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
