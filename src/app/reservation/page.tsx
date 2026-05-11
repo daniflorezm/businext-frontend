@@ -40,7 +40,7 @@ export default function ReservationPage() {
   const { productData, loading: productLoading } = useProduct();
   const { activeEmployees } = useEmployee();
   const { context, capabilities, loading: contextLoading } = useAccessContext();
-  const { workingHoursData, loading: workingHoursLoading } = useWorkingHours();
+  const { workingHoursData: generalWorkingHours, loading: workingHoursLoading } = useWorkingHours();
   const { financesData, createFinance, loading: financesLoading } = useFinances();
   const { bookingRequests } = useBookingRequests();
   const { showToast } = useGlobalToast();
@@ -56,6 +56,25 @@ export default function ReservationPage() {
     context?.profile?.displayName ?? context?.profile?.email ?? "";
 
   const [slotInCharge, setSlotInCharge] = useState("");
+
+  // Resolve slotInCharge name → memberUserId for employee-specific hours
+  const slotInChargeMemberId = useMemo(() => {
+    if (!slotInCharge) return undefined;
+    if (slotInCharge === currentUserName && context?.userId) return context.userId;
+    const emp = activeEmployees.find((e) => e.displayName === slotInCharge);
+    return emp?.memberUserId ?? undefined;
+  }, [slotInCharge, currentUserName, context?.userId, activeEmployees]);
+
+  const {
+    workingHoursData: empWorkingHours,
+    loading: empWorkingHoursLoading,
+  } = useWorkingHours(slotInChargeMemberId, !!slotInChargeMemberId);
+
+  // Use employee hours if they exist, otherwise fall back to general
+  const effectiveWorkingHours = useMemo(() => {
+    if (empWorkingHours.length > 0) return empWorkingHours;
+    return generalWorkingHours;
+  }, [empWorkingHours, generalWorkingHours]);
 
   useEffect(() => {
     if (!isOwner && !slotInCharge && currentUserName) {
@@ -77,20 +96,20 @@ export default function ReservationPage() {
   );
 
   const dayClosed = useMemo(
-    () => isDayClosed(selectedDate, workingHoursData),
-    [selectedDate, workingHoursData]
+    () => isDayClosed(selectedDate, effectiveWorkingHours),
+    [selectedDate, effectiveWorkingHours]
   );
 
   const availableSlots = useMemo(() => {
     if (dayClosed || !slotInCharge) return [];
     return getAvailableSlots(
       selectedDate,
-      workingHoursData,
+      effectiveWorkingHours,
       reservationData, // all reservations for slot availability
       slotInCharge,
       bookingRequests
     );
-  }, [selectedDate, workingHoursData, reservationData, slotInCharge, dayClosed, bookingRequests]);
+  }, [selectedDate, effectiveWorkingHours, reservationData, slotInCharge, dayClosed, bookingRequests]);
 
   const handleServiceSelect = (product: Product) => {
     setSelectedService(
@@ -319,7 +338,9 @@ export default function ReservationPage() {
                             >
                               <option value="">Seleccionar encargado</option>
                               <option value={currentUserName}>{currentUserName} (Tú)</option>
-                              {activeEmployees.map((emp) => (
+                              {activeEmployees
+                                .filter((emp) => emp.displayName !== currentUserName)
+                                .map((emp) => (
                                 <option key={emp.memberUserId} value={emp.displayName ?? ""}>
                                   {emp.displayName ?? emp.email}
                                 </option>
@@ -363,7 +384,7 @@ export default function ReservationPage() {
                             <AvailableSlots
                               slots={availableSlots}
                               onSlotSelect={(slot) => setSelectedSlot(slot)}
-                              loading={workingHoursLoading}
+                              loading={workingHoursLoading || empWorkingHoursLoading}
                               closedMessage={
                                 dayClosed
                                   ? "Este día el negocio está cerrado."

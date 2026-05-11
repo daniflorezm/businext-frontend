@@ -1,13 +1,18 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getVerifiedServerAccessToken } from "@/lib/auth/server-session";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
     const auth = await getVerifiedServerAccessToken();
     if ("error" in auth) return auth.error;
     const jwt = auth.jwt;
-    const response = await fetch(`${API_BASE}/working-hours/`, {
+
+    // Forward query params (e.g. member_user_id)
+    const searchParams = request.nextUrl.searchParams.toString();
+    const qs = searchParams ? `?${searchParams}` : "";
+
+    const response = await fetch(`${API_BASE}/working-hours/${qs}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +48,12 @@ export async function PUT(request: NextRequest) {
     if ("error" in auth) return auth.error;
     const jwt = auth.jwt;
     const body = await request.json();
-    const response = await fetch(`${API_BASE}/working-hours/`, {
+
+    // Forward query params (e.g. member_user_id)
+    const searchParams = request.nextUrl.searchParams.toString();
+    const qs = searchParams ? `?${searchParams}` : "";
+
+    const response = await fetch(`${API_BASE}/working-hours/${qs}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

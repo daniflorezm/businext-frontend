@@ -1,35 +1,42 @@
 "use client";
 import useSWR from "swr";
 import {
-  WorkingHours,
+  WorkingHoursBlock,
   mapWorkingHoursFromApi,
   mapWorkingHoursToApi,
 } from "@/lib/working-hours/types";
 import { fetcher } from "@/lib/fetcher";
 
-const SWR_KEY = "/api/working-hours";
+function buildKey(memberUserId?: string | null) {
+  if (memberUserId) return `/api/working-hours?member_user_id=${memberUserId}`;
+  return "/api/working-hours";
+}
 
 const workingHoursFetcher = (url: string) =>
   fetcher<Record<string, unknown>[]>(url).then((data) =>
     data.map(mapWorkingHoursFromApi)
   );
 
-export function useWorkingHours() {
+export function useWorkingHours(memberUserId?: string | null, enabled = true) {
+  const key = enabled ? buildKey(memberUserId) : null;
   const {
     data: workingHoursData = [],
     isLoading: loading,
     error,
     mutate,
-  } = useSWR<WorkingHours[]>(SWR_KEY, workingHoursFetcher);
+  } = useSWR<WorkingHoursBlock[]>(key, workingHoursFetcher);
 
   const updateWorkingHours = async (
-    hours: WorkingHours[]
-  ): Promise<WorkingHours[] | null> => {
+    hours: WorkingHoursBlock[]
+  ): Promise<WorkingHoursBlock[] | null> => {
     const apiData = hours.map(mapWorkingHoursToApi);
+    const url = memberUserId
+      ? `/api/working-hours?member_user_id=${memberUserId}`
+      : "/api/working-hours";
     try {
       await mutate(
         async () => {
-          const response = await fetch("/api/working-hours", {
+          const response = await fetch(url, {
             method: "PUT",
             body: JSON.stringify(apiData),
             headers: { "Content-Type": "application/json" },
