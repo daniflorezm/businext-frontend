@@ -12,17 +12,19 @@ import { FinancesLineChart } from "@/components/finances/FinancesLineChart";
 import { DailyOverview } from "@/components/finances/DailyOverview";
 import { monthOptions } from "@/lib/finances/types";
 import { useAccessContext } from "@/hooks/useAccessContext";
+import { useEmployee } from "@/hooks/useEmployee";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/tabs";
-import { Plus, ShieldAlert, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
 import "@/lib/chartjs-dark-theme";
 
 export default function FinancesPage() {
-  const { capabilities, loading: contextLoading } = useAccessContext();
+  const { context, capabilities, loading: contextLoading } = useAccessContext();
+  const { activeEmployees } = useEmployee();
 
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -129,24 +131,7 @@ export default function FinancesPage() {
     );
   }
 
-  /* ── Access denied ── */
-  if (!capabilities.canManageFinances) {
-    return (
-      <div className="flex justify-center items-center min-h-screen px-4">
-        <Card variant="elevated" className="max-w-xl border-warning/40">
-          <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
-            <ShieldAlert className="h-10 w-10 text-warning" />
-            <h2 className="font-heading text-h3 font-bold text-warning">
-              Acceso restringido
-            </h2>
-            <p className="text-body-sm text-foreground-muted">
-              No tienes permisos para ver las finanzas del negocio.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const isEmployee = context?.role === "employee";
 
   return (
     <div className="min-h-screen w-full pt-14 md:pt-0">
@@ -161,10 +146,12 @@ export default function FinancesPage() {
               Resumen financiero de {monthName} {selectedYear}
             </p>
           </div>
-          <Button variant="primary" onClick={() => setopenModal(true)}>
-            <Plus className="h-4 w-4" />
-            Agregar Registro
-          </Button>
+          {!isEmployee && (
+            <Button variant="primary" onClick={() => setopenModal(true)}>
+              <Plus className="h-4 w-4" />
+              Agregar Registro
+            </Button>
+          )}
         </div>
 
         {/* ── Balance cards row ── */}
@@ -265,26 +252,28 @@ export default function FinancesPage() {
                 </Select>
               </div>
 
-              {/* Issuer search */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1 min-w-0">
-                <label
-                  htmlFor="issuer"
-                  className="text-label font-semibold text-foreground-muted whitespace-nowrap"
-                >
-                  Emisor
-                </label>
-                <Input
-                  id="issuer"
-                  type="text"
-                  placeholder="Buscar por emisor..."
-                  value={issuerFilter}
-                  onChange={(e) => {
-                    setIssuerFilter(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full sm:w-auto sm:min-w-[180px]"
-                />
-              </div>
+              {/* Issuer search — only for managers/owners */}
+              {!isEmployee && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1 min-w-0">
+                  <label
+                    htmlFor="issuer"
+                    className="text-label font-semibold text-foreground-muted whitespace-nowrap"
+                  >
+                    Emisor
+                  </label>
+                  <Input
+                    id="issuer"
+                    type="text"
+                    placeholder="Buscar por emisor..."
+                    value={issuerFilter}
+                    onChange={(e) => {
+                      setIssuerFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full sm:w-auto sm:min-w-[180px]"
+                  />
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -309,10 +298,10 @@ export default function FinancesPage() {
                 icon={<Receipt />}
                 title="Sin registros"
                 description="No hay registros financieros para los filtros seleccionados."
-                action={{
+                action={!isEmployee ? {
                   label: "Agregar Registro",
                   onClick: () => setopenModal(true),
-                }}
+                } : undefined}
               />
             ) : (
               <div className="flex flex-col gap-3">
@@ -322,6 +311,7 @@ export default function FinancesPage() {
                       key={finance.id ?? finance.concept + finance.amount}
                       {...finance}
                       customerName={finance?.customer_name ?? ""}
+                      isEmployee={isEmployee}
                     />
                   );
                 })}
@@ -384,7 +374,14 @@ export default function FinancesPage() {
 
       {/* ── Create modal ── */}
       {openModal && (
-        <FinancesModal isOpen={openModal} handleOpenModal={handleOpenModal} />
+        <FinancesModal
+          isOpen={openModal}
+          handleOpenModal={handleOpenModal}
+          isEmployee={isEmployee}
+          employeeName={context?.profile?.displayName ?? ""}
+          employees={activeEmployees}
+          currentUserName={context?.profile?.displayName ?? ""}
+        />
       )}
     </div>
   );

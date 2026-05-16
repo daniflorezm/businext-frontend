@@ -13,6 +13,7 @@ function mapProduct(data: Record<string, unknown>): Product {
     price: data.price as number,
     type: data.type as string | undefined,
     imageUrl: data.image_url as string | undefined,
+    seller: data.seller as string | undefined,
   };
 }
 
@@ -22,6 +23,7 @@ function toApiBody(product: Omit<Product, "id">) {
     price: product.price,
     type: product.type ?? null,
     image_url: product.imageUrl ?? null,
+    seller: product.seller ?? null,
   };
 }
 

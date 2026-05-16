@@ -47,7 +47,7 @@ const NAV_LINKS = [
     href: "/reviews",
     label: "Reseñas",
     icon: Star,
-    cap: "canManageFinances" as const,
+    cap: "canManageReviews" as const,
   },
   {
     href: "/intelligence",

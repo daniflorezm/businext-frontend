@@ -18,12 +18,20 @@ import { Button } from "@/components/ui/button";
 export const FinancesModal = ({
   isOpen,
   handleOpenModal,
+  isEmployee = false,
+  employeeName = "",
+  employees = [],
+  currentUserName = "",
 }: FinancesModalProps) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<Finances>();
+  } = useForm<Finances>({
+    defaultValues: {
+      creator: employeeName,
+    },
+  });
   const { createFinance, loading } = useFinances();
   const { showToast } = useGlobalToast();
 
@@ -33,6 +41,11 @@ export const FinancesModal = ({
     showToast("success", "Registro financiero creado correctamente.");
     handleOpenModal();
   };
+
+  const ownerDisplayName = currentUserName;
+  const otherEmployees = employees.filter(
+    (emp) => emp.displayName !== ownerDisplayName
+  );
 
   return (
     <Modal open={isOpen} onClose={handleOpenModal}>
@@ -74,15 +87,36 @@ export const FinancesModal = ({
             error={errors.type}
             message="Indica tipo de registro financiero"
           />
-          <FinancesInput
-            label="creator"
-            register={register}
-            required={true}
-          />
-          <FinancesInputError
-            error={errors.creator}
-            message="Indica el emisor del registro"
-          />
+          {isEmployee ? (
+            <input type="hidden" {...register("creator")} />
+          ) : (
+            <div className="flex flex-col gap-1">
+              <label className="text-label font-semibold text-foreground-muted">
+                Emisor <span className="text-danger">*</span>
+              </label>
+              <select
+                {...register("creator", { required: true })}
+                className="flex w-full appearance-none rounded-md bg-surface px-3 py-2 pr-10 text-body-sm text-foreground border border-input transition-colors duration-150 ease-snappy focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/25"
+              >
+                <option value="">Seleccionar emisor</option>
+                {ownerDisplayName && (
+                  <option value={ownerDisplayName}>
+                    {ownerDisplayName} (Tú)
+                  </option>
+                )}
+                {otherEmployees.map((emp) => (
+                  <option key={emp.memberUserId} value={emp.displayName ?? ""}>
+                    {emp.displayName ?? emp.email}
+                  </option>
+                ))}
+              </select>
+              {errors.creator && (
+                <span className="text-caption text-danger font-medium mt-1">
+                  Indica el emisor del registro
+                </span>
+              )}
+            </div>
+          )}
         </form>
       </ModalContent>
       <ModalFooter>
