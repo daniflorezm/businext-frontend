@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 // ── Easing ─────────────────────────────────────────────────────────────────────
 const clamp       = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -49,7 +49,10 @@ const FEATURE_ICONS = [
 export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame = 14 }: Props) {
   const [isDesktop, setIsDesktop] = useState(false);
 
-  useEffect(() => {
+  // useLayoutEffect runs synchronously after DOM mutations but BEFORE passive
+  // useEffects — this guarantees the canvas mounts/unmounts before the animation
+  // effect tries to capture canvasRef.current, preventing a null-ref on mobile.
+  useLayoutEffect(() => {
     const check = () => setIsDesktop(window.innerWidth > 1024);
     check();
     window.addEventListener("resize", check, { passive: true });
