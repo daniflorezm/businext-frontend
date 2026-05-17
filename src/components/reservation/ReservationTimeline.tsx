@@ -20,6 +20,7 @@ import {
   CheckCircle,
   Trash2,
   CalendarClock,
+  Undo2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -287,6 +288,35 @@ function ReservationCard({
 
 /* ── Action buttons ── */
 
+function RevertAction({
+  reservation,
+  onRevert,
+}: {
+  reservation: Reservation;
+  onRevert: (id: number) => Promise<boolean>;
+}) {
+  const [reverting, setReverting] = useState(false);
+
+  const handleRevert = async () => {
+    if (!reservation.id || reverting) return;
+    setReverting(true);
+    await onRevert(reservation.id);
+    setReverting(false);
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={handleRevert}
+      disabled={reverting}
+      title="Revertir a pendiente"
+    >
+      <Undo2 className="h-3.5 w-3.5 text-warning" />
+    </Button>
+  );
+}
+
 function PendingActions({
   reservation,
   onEdit,
@@ -338,8 +368,10 @@ export function TodayTimeline({
   onViewChange?: (view: "timeline" | "completed") => void;
   highlightPending?: boolean;
 }) {
-  const { deleteReservation, updateReservation, loading: actionLoading } =
+  const { deleteReservation, updateReservation, revertReservation, loading: actionLoading } =
     useReservation();
+  const { context } = useAccessContext();
+  const isOwner = context?.role === "owner";
   const { productData } = useProduct();
   const now = useNow();
 
@@ -471,6 +503,14 @@ export function TodayTimeline({
                   reservation={reservation}
                   price={price}
                   compact
+                  actions={
+                    isOwner ? (
+                      <RevertAction
+                        reservation={reservation}
+                        onRevert={revertReservation}
+                      />
+                    ) : undefined
+                  }
                 />
               );
             })}
@@ -528,6 +568,11 @@ export function TodayTimeline({
                             onEdit={setEditTarget}
                             onComplete={setCompleteTarget}
                             onDelete={setDeleteTarget}
+                          />
+                        ) : isOwner ? (
+                          <RevertAction
+                            reservation={reservation}
+                            onRevert={revertReservation}
                           />
                         ) : undefined
                       }

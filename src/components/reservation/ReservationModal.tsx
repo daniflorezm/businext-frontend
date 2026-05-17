@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import {
   Reservation,
@@ -18,6 +18,7 @@ import {
 } from "@/components/reservation/ReservationInputs";
 import { useProduct } from "@/hooks/useProduct";
 import { useFinances } from "@/hooks/useFinances";
+import { useReservation } from "@/hooks/useReservation";
 import { useGlobalToast } from "@/context/ToastContext";
 import {
   Modal,
@@ -26,6 +27,7 @@ import {
   ModalFooter,
 } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 const muiDarkTheme = createTheme({ palette: { mode: "dark" } });
 
@@ -49,19 +51,61 @@ export const ReservationModal = ({
     getValues,
     control,
     trigger,
+    watch,
   } = useForm<Reservation>();
   // Step state for wizard
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 2;
   const [validationError, setValidationError] = useState("");
   const { productData } = useProduct();
   const { createFinance } = useFinances();
+  const { reservationData: allReservations } = useReservation();
   const { showToast } = useGlobalToast();
 
   const productOptions = Object.assign(
     {},
     ...productData?.map((product) => ({ [product.name]: product.name }))
   );
+
+  // Watch date and inCharge for conflict detection
+  const watchedDate = watch("reservationStartDate");
+  const watchedInCharge = watch("inCharge");
+
+  // Detect conflicts with existing reservations
+  const conflict = useMemo(() => {
+    if (!watchedDate || !watchedInCharge) return null;
+
+    const newStart = moment(watchedDate);
+    if (!newStart.isValid()) return null;
+    const newEnd = moment(newStart).add(30, "minutes");
+
+    const conflicting = allReservations.filter((r) => {
+      // Skip the reservation being edited
+      if (id && r.id === id) return false;
+      // Only check same employee
+      if (r.inCharge !== watchedInCharge) return false;
+      // Only check active reservations
+      if (r.status !== "PENDING" && r.status !== "COMPLETED") return false;
+
+      const rStart = moment(r.reservationStartDate);
+      const rEnd = moment(r.reservationEndDate);
+
+      // Overlap check: newStart < rEnd && newEnd > rStart
+      return newStart.isBefore(rEnd) && newEnd.isAfter(rStart);
+    });
+
+    if (conflicting.length === 0) return null;
+
+    const c = conflicting[0];
+    const startStr = moment(c.reservationStartDate).format("HH:mm");
+    const endStr = moment(c.reservationEndDate).format("HH:mm");
+    return {
+      customerName: c.customerName,
+      time: `${startStr} - ${endStr}`,
+      service: c.service,
+    };
+  }, [watchedDate, watchedInCharge, allReservations, id]);
 
   const createFinanceRecord = (data: Reservation) => {
     const getService = productData.filter((p) => p.name === data.service);
@@ -79,35 +123,41 @@ export const ReservationModal = ({
   const onSubmit: SubmitHandler<Reservation> = async (data: Reservation) => {
     // Final submit only on last step
     if (step < totalSteps) return;
+    if (isSubmitting) return;
     if (!data.reservationStartDate) {
       setValidationError("Debes indicar una fecha y hora para la reserva");
       return;
     }
+    setIsSubmitting(true);
     setValidationError("");
-    const reservationStartDate = moment
-      .utc(data.reservationStartDate)
-      .tz("Europe/Madrid")
-      .format("YYYY-MM-DDTHH:mm:ss");
-    const reservationEndDate = moment(reservationStartDate)
-      .add(data.timePerReservation, "m")
-      .format("YYYY-MM-DDTHH:mm:ss");
-    if (operation === "Crear reserva") {
-      data = {
-        ...data,
-        reservationStartDate,
-        reservationEndDate,
-        status: "PENDING",
-      };
-    } else {
-      if (data.status === "COMPLETED") {
-        createFinanceRecord(data);
+    try {
+      const reservationStartDate = moment
+        .utc(data.reservationStartDate)
+        .tz("Europe/Madrid")
+        .format("YYYY-MM-DDTHH:mm:ss");
+      const reservationEndDate = moment(reservationStartDate)
+        .add(data.timePerReservation, "m")
+        .format("YYYY-MM-DDTHH:mm:ss");
+      if (operation === "Crear reserva") {
+        data = {
+          ...data,
+          reservationStartDate,
+          reservationEndDate,
+          status: "PENDING",
+        };
+      } else {
+        if (data.status === "COMPLETED") {
+          createFinanceRecord(data);
+        }
+        const dataUpdated = getValues();
+        data = { ...dataUpdated, id, reservationStartDate, reservationEndDate };
       }
-      const dataUpdated = getValues();
-      data = { ...dataUpdated, id, reservationStartDate, reservationEndDate };
+      await executeAction(data);
+      showToast("success", operation === "Crear reserva" ? "Reserva creada correctamente." : "Reserva actualizada correctamente.");
+      handleOpenModal();
+    } finally {
+      setIsSubmitting(false);
     }
-    await executeAction(data);
-    showToast("success", operation === "Crear reserva" ? "Reserva creada correctamente." : "Reserva actualizada correctamente.");
-    handleOpenModal();
   };
 
   // Step navigation handlers
@@ -241,7 +291,6 @@ export const ReservationModal = ({
                                 newValue ? newValue.toISOString() : ""
                               );
                             }}
-                            disabled={operation === "Editar reserva"}
                             slotProps={{
                               textField: {
                                 fullWidth: true,
@@ -253,6 +302,24 @@ export const ReservationModal = ({
                       />
                     </LocalizationProvider>
                   </ThemeProvider>
+
+                  {/* Conflict warning */}
+                  {conflict && (
+                    <div className="flex items-start gap-2.5 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+                      <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-semibold text-warning">
+                          Conflicto de horario
+                        </p>
+                        <p className="text-foreground-muted mt-0.5">
+                          {watchedInCharge} ya tiene una reserva de{" "}
+                          <strong className="text-foreground">{conflict.customerName}</strong>{" "}
+                          ({conflict.service}) a las{" "}
+                          <strong className="text-foreground">{conflict.time}</strong>.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
               {/* Validation error */}
@@ -298,9 +365,10 @@ export const ReservationModal = ({
                   <Button
                     type="submit"
                     variant="primary"
-                    loading={loading}
+                    loading={isSubmitting || loading}
+                    disabled={isSubmitting}
                   >
-                    {loading ? "Guardando..." : "Guardar"}
+                    {isSubmitting ? "Guardando..." : "Guardar"}
                   </Button>
                 )}
               </ModalFooter>

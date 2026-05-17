@@ -5,6 +5,7 @@ export type Product = {
   price: number;
   type?: string;
   imageUrl?: string;
+  seller?: string;
 };
 
 export type ProductInputProps = {

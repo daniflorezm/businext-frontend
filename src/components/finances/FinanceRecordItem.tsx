@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const FinanceRecordItem = (financeRecord: FinanceRecordItemProps) => {
-  const { concept, amount, creator, type, created_at, id, customerName } =
+  const { concept, amount, creator, type, created_at, id, customerName, isEmployee } =
     financeRecord;
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const handleOpenDeleteModal = () => {
@@ -68,15 +68,17 @@ export const FinanceRecordItem = (financeRecord: FinanceRecordItemProps) => {
               {dateFormatted.toLocaleDateString("es-ES")}
             </Badge>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setOpenDeleteModal(true)}
-            title="Eliminar registro"
-            className="text-foreground-muted hover:text-danger hover:bg-danger/10"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {!isEmployee && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setOpenDeleteModal(true)}
+              title="Eliminar registro"
+              className="text-foreground-muted hover:text-danger hover:bg-danger/10"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
       {openDeleteModal && (

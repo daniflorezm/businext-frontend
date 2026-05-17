@@ -10,17 +10,23 @@ import {
   PackageSearch,
   Clock,
   Settings,
+  Link2,
+  MapPin,
+  CalendarClock,
 } from "lucide-react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { SectionSkeleton } from "@/components/common/SkeletonLoader";
 import { useConfiguration } from "@/hooks/useConfiguration";
 import { useAccessContext } from "@/hooks/useAccessContext";
 import { useWorkingHours } from "@/hooks/useWorkingHours";
+import { useLocations } from "@/hooks/useLocations";
 import { cancelUserSubscription } from "@/app/actions/cancelSubscription";
 import { Configuration } from "@/lib/configuration/types";
 import { Employee, InviteEmployeeInput } from "@/lib/employee/types";
 import { ProductsSection } from "@/components/configuration/ProductsSection";
 import { WorkingHoursEditor } from "@/components/configuration/WorkingHoursEditor";
+import { LocationsSection } from "@/components/configuration/LocationsSection";
+import { Modal, ModalHeader, ModalContent } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { useGlobalToast } from "@/context/ToastContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,7 +47,7 @@ const INITIAL_EMPLOYEE_FORM: InviteEmployeeInput = {
   role: "employee",
 };
 
-type SectionId = "profile" | "business" | "products" | "hours" | "team";
+type SectionId = "profile" | "business" | "products" | "hours" | "team" | "locations" | "booking";
 
 type NavItem = {
   id: SectionId;
@@ -54,9 +60,11 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { id: "profile", label: "Mi perfil", icon: UserCircle },
   { id: "business", label: "Negocio", icon: Building2 },
+  { id: "locations", label: "Locales", icon: MapPin, ownerOnly: true },
   { id: "products", label: "Productos", icon: PackageSearch, cap: "canManageProducts" },
   { id: "hours", label: "Horario", icon: Clock, ownerOnly: true },
   { id: "team", label: "Equipo", icon: ShieldUser, cap: "canManageTeam" },
+  { id: "booking", label: "Reserva online", icon: Link2, ownerOnly: true },
 ];
 
 type ConfirmState = {
@@ -81,9 +89,10 @@ export default function ConfigurationPage() {
     useConfiguration();
   const { workingHoursData, loading: workingHoursLoading, updateWorkingHours } =
     useWorkingHours();
+  const { locations } = useLocations();
 
   const { register, handleSubmit, setValue } = useForm<Configuration>({
-    defaultValues: { businessName: "" },
+    defaultValues: { businessName: "", businessPhone: "", businessEmail: "" },
   });
 
   const [activeSection, setActiveSection] = useState<SectionId>("profile");
@@ -95,6 +104,13 @@ export default function ConfigurationPage() {
   // Employee feedback is handled via global toast
   const [sendingInvite, setSendingInvite] = useState(false);
   const [updatingEmployeeId, setUpdatingEmployeeId] = useState<string | null>(null);
+  const [scheduleEmployee, setScheduleEmployee] = useState<Employee | null>(null);
+
+  const {
+    workingHoursData: empWorkingHoursData,
+    loading: empWorkingHoursLoading,
+    updateWorkingHours: updateEmpWorkingHours,
+  } = useWorkingHours(scheduleEmployee?.memberUserId ?? undefined, !!scheduleEmployee);
 
   const [confirm, setConfirm] = useState<ConfirmState>({
     open: false,
@@ -119,8 +135,14 @@ export default function ConfigurationPage() {
         ? await updateConfiguration({
             id: configurationData[0].id,
             businessName: data.businessName,
+            businessPhone: data.businessPhone,
+            businessEmail: data.businessEmail,
           })
-        : await createConfiguration({ businessName: data.businessName });
+        : await createConfiguration({
+            businessName: data.businessName,
+            businessPhone: data.businessPhone,
+            businessEmail: data.businessEmail,
+          });
 
     if (result !== null) {
       showToast("success", "Configuración guardada correctamente.");
@@ -150,6 +172,8 @@ export default function ConfigurationPage() {
   useEffect(() => {
     if (configurationData.length > 0) {
       setValue("businessName", configurationData[0].businessName || "");
+      setValue("businessPhone", configurationData[0].businessPhone || "");
+      setValue("businessEmail", configurationData[0].businessEmail || "");
     }
   }, [configurationData, setValue]);
 
@@ -202,15 +226,16 @@ export default function ConfigurationPage() {
     });
   };
 
-  const handleUpdateEmployee = async (memberUserId: string, field: "role" | "status", value: string) => {
+  const handleUpdateEmployee = async (memberUserId: string, field: "role" | "status" | "locationId", value: string) => {
     const snapshot = employees;
-    setEmployees((prev) => prev.map((e) => (e.memberUserId === memberUserId ? { ...e, [field]: value } : e)));
+    const parsedValue = field === "locationId" ? (value ? Number(value) : null) : value;
+    setEmployees((prev) => prev.map((e) => (e.memberUserId === memberUserId ? { ...e, [field]: parsedValue } : e)));
     setUpdatingEmployeeId(memberUserId);
     try {
       const response = await fetch(`/api/personal-management?memberUserId=${memberUserId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify({ [field]: parsedValue }),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -387,6 +412,28 @@ export default function ConfigurationPage() {
                             placeholder="Nombre de tu negocio"
                           />
                         </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-label font-semibold text-foreground-muted">
+                              Teléfono de contacto
+                            </label>
+                            <Input
+                              {...register("businessPhone")}
+                              type="tel"
+                              placeholder="+34 612 345 678"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-label font-semibold text-foreground-muted">
+                              Email de contacto
+                            </label>
+                            <Input
+                              {...register("businessEmail")}
+                              type="email"
+                              placeholder="contacto@tunegocio.com"
+                            />
+                          </div>
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                           <Button type="submit" variant="primary">
                             Guardar
@@ -418,6 +465,15 @@ export default function ConfigurationPage() {
 
               {/* ═══ Products ═══ */}
               {activeSection === "products" && <ProductsSection />}
+
+              {/* ═══ Locations ═══ */}
+              {activeSection === "locations" && (
+                <Card>
+                  <CardContent className="p-5 sm:p-6 md:p-8">
+                    <LocationsSection />
+                  </CardContent>
+                </Card>
+              )}
 
               {/* ═══ Working Hours ═══ */}
               {activeSection === "hours" && (
@@ -546,16 +602,17 @@ export default function ConfigurationPage() {
                               <div className="flex flex-wrap items-center gap-2 text-body-sm">
                                 <Select
                                   value={employee.role}
-                                  disabled={updatingEmployeeId === employee.memberUserId}
+                                  disabled={updatingEmployeeId === employee.memberUserId || employee.role === "owner"}
                                   onChange={(e) => handleUpdateEmployee(employee.memberUserId, "role", e.target.value)}
                                   className="w-auto"
                                 >
+                                  {employee.role === "owner" && <option value="owner">Owner</option>}
                                   <option value="employee">Empleado</option>
                                   <option value="manager">Manager</option>
                                 </Select>
                                 <Select
                                   value={employee.status}
-                                  disabled={updatingEmployeeId === employee.memberUserId || employee.status === "pending"}
+                                  disabled={updatingEmployeeId === employee.memberUserId || employee.status === "pending" || employee.role === "owner"}
                                   onChange={(e) => handleUpdateEmployee(employee.memberUserId, "status", e.target.value)}
                                   className="w-auto"
                                   state={employee.status === "inactive" ? "error" : "default"}
@@ -564,6 +621,30 @@ export default function ConfigurationPage() {
                                   <option value="active">Activo</option>
                                   <option value="inactive">Inactivo</option>
                                 </Select>
+                                <Select
+                                  value={String(employee.locationId ?? "")}
+                                  disabled={updatingEmployeeId === employee.memberUserId}
+                                  onChange={(e) => handleUpdateEmployee(employee.memberUserId, "locationId", e.target.value)}
+                                  className="w-auto"
+                                >
+                                  <option value="">Sin local</option>
+                                  {locations.map((loc) => (
+                                    <option key={loc.id} value={String(loc.id)}>
+                                      {loc.name}
+                                    </option>
+                                  ))}
+                                </Select>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setScheduleEmployee(employee)}
+                                  disabled={updatingEmployeeId === employee.memberUserId}
+                                  className="text-primary hover:text-primary hover:bg-primary/10"
+                                  title="Configurar horario"
+                                >
+                                  <CalendarClock className="w-4 h-4" />
+                                </Button>
+                                {employee.role !== "owner" && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -573,6 +654,7 @@ export default function ConfigurationPage() {
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -581,6 +663,11 @@ export default function ConfigurationPage() {
                     </div>
                   </CardContent>
                 </Card>
+              )}
+
+              {/* ═══ Booking Online ═══ */}
+              {activeSection === "booking" && (
+                <BookingLinkSection businessId={context?.businessId ?? ""} />
               )}
             </div>
           </div>
@@ -595,6 +682,22 @@ export default function ConfigurationPage() {
           onConfirm={confirm.onConfirm}
           onCancel={() => setConfirm((p) => ({ ...p, open: false }))}
         />
+
+        {/* Employee schedule modal */}
+        <Modal open={!!scheduleEmployee} onClose={() => setScheduleEmployee(null)}>
+          <ModalHeader onClose={() => setScheduleEmployee(null)}>
+            Horario de {scheduleEmployee?.displayName || scheduleEmployee?.email}
+          </ModalHeader>
+          <ModalContent>
+            <WorkingHoursEditor
+              workingHoursData={empWorkingHoursData}
+              loading={empWorkingHoursLoading}
+              onSave={updateEmpWorkingHours}
+              title="Horario personalizado"
+              description="Si no se configura, se usará el horario general del negocio."
+            />
+          </ModalContent>
+        </Modal>
       </div>
     </div>
   );
@@ -648,5 +751,98 @@ function ProfileField({
         {value || <span className="text-foreground-subtle italic">{fallback}</span>}
       </span>
     </div>
+  );
+}
+
+/* ────────────────────────────────────────────────── */
+/*  Booking Link + QR Section                         */
+/* ────────────────────────────────────────────────── */
+
+function BookingLinkSection({ businessId }: { businessId: string }) {
+  const { showToast } = useGlobalToast();
+  const [qrDataUrl, setQrDataUrl] = React.useState<string | null>(null);
+
+  const bookingUrl = businessId
+    ? `${window.location.origin}/book/${businessId}`
+    : "";
+
+  // Generate QR code on mount
+  React.useEffect(() => {
+    if (!bookingUrl) return;
+    import("qrcode").then((QRCode) => {
+      QRCode.toDataURL(bookingUrl, {
+        width: 300,
+        margin: 2,
+        color: { dark: "#000000", light: "#ffffff" },
+      }).then((url: string) => setQrDataUrl(url));
+    });
+  }, [bookingUrl]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(bookingUrl);
+      showToast("success", "Link copiado al portapapeles");
+    } catch {
+      showToast("error", "No se pudo copiar el link");
+    }
+  };
+
+  const handleDownloadQR = () => {
+    if (!qrDataUrl) return;
+    const link = document.createElement("a");
+    link.download = "reserva-qr.png";
+    link.href = qrDataUrl;
+    link.click();
+  };
+
+  if (!businessId) return null;
+
+  return (
+    <Card>
+      <CardContent className="p-5 sm:p-6 md:p-8 space-y-6">
+        <SectionHeader
+          icon={Link2}
+          title="Reserva online"
+          description="Comparte este enlace o código QR con tus clientes para que puedan solicitar citas."
+        />
+
+        {/* Link + copy */}
+        <div className="space-y-2">
+          <label className="text-label font-semibold text-foreground-muted">
+            Link de reserva
+          </label>
+          <div className="flex items-center gap-2">
+            <Input value={bookingUrl} readOnly className="flex-1 font-mono text-xs" />
+            <Button variant="primary" size="sm" onClick={handleCopy}>
+              Copiar
+            </Button>
+          </div>
+        </div>
+
+        {/* QR Code */}
+        <div className="space-y-3">
+          <label className="text-label font-semibold text-foreground-muted">
+            Código QR
+          </label>
+          <div className="flex flex-col items-center gap-4 p-6 rounded-lg border border-border-subtle bg-white">
+            {qrDataUrl ? (
+              <img
+                src={qrDataUrl}
+                alt="QR de reserva online"
+                className="w-[200px] h-[200px]"
+              />
+            ) : (
+              <div className="w-[200px] h-[200px] bg-gray-100 animate-pulse rounded" />
+            )}
+            <Button variant="secondary" size="sm" onClick={handleDownloadQR} disabled={!qrDataUrl}>
+              Descargar QR
+            </Button>
+          </div>
+          <p className="text-caption text-foreground-subtle">
+            Imprime este QR y colócalo en tu negocio para que los clientes escaneen y reserven directamente.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

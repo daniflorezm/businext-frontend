@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { PackageSearch, Plus, Pencil, Trash2, ImageIcon } from "lucide-react";
 import { ProductPlaceholder } from "@/components/common/ProductPlaceholder";
 import { useProduct } from "@/hooks/useProduct";
+import { useEmployee } from "@/hooks/useEmployee";
+import { useAccessContext } from "@/hooks/useAccessContext";
 import { useGlobalToast } from "@/context/ToastContext";
 import { Product } from "@/lib/product/types";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -18,6 +20,7 @@ const EMPTY_FORM: Omit<Product, "id"> = {
   price: 0,
   type: "producto",
   imageUrl: undefined,
+  seller: undefined,
 };
 
 export function ProductsSection() {
@@ -29,6 +32,8 @@ export function ProductsSection() {
     deleteProduct,
     uploadProductImage,
   } = useProduct();
+  const { activeEmployees } = useEmployee();
+  const { context } = useAccessContext();
   const { showToast } = useGlobalToast();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,6 +68,7 @@ export function ProductsSection() {
       price: product.price,
       type: product.type ?? "producto",
       imageUrl: product.imageUrl,
+      seller: product.seller,
     });
     setImageFile(null);
     setImagePreview(product.imageUrl ?? null);
@@ -194,6 +200,11 @@ export function ProductsSection() {
                       {product.type}
                     </span>
                   )}
+                  {product.seller && (
+                    <span className="text-caption text-foreground-muted truncate">
+                      {product.seller}
+                    </span>
+                  )}
                   <span className="text-body-sm font-bold text-success mt-auto">
                     {Number(product.price).toFixed(2)}€
                   </span>
@@ -286,6 +297,33 @@ export function ProductsSection() {
                     <option value="servicio">Servicio</option>
                   </Select>
                 </div>
+              </div>
+
+              {/* Seller / Vendedor */}
+              <div className="flex flex-col gap-1">
+                <label className="text-label font-semibold text-foreground-muted">
+                  Vendedor (opcional)
+                </label>
+                <Select
+                  value={form.seller ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, seller: e.target.value || undefined }))
+                  }
+                >
+                  <option value="">Sin asignar</option>
+                  {context?.profile?.displayName && (
+                    <option value={context.profile.displayName}>
+                      {context.profile.displayName} (Tú)
+                    </option>
+                  )}
+                  {activeEmployees
+                    .filter((emp) => emp.displayName !== context?.profile?.displayName)
+                    .map((emp) => (
+                      <option key={emp.memberUserId} value={emp.displayName ?? ""}>
+                        {emp.displayName ?? emp.email}
+                      </option>
+                    ))}
+                </Select>
               </div>
 
               {/* Image upload */}

@@ -8,6 +8,7 @@ export type Capabilities = {
   canManageProducts: boolean;
   canManageFinances: boolean;
   canManageReservations: boolean;
+  canManageReviews: boolean;
 };
 
 export type UserProfile = {
@@ -34,6 +35,7 @@ const DEFAULT_CAPABILITIES: Capabilities = {
   canManageProducts: false,
   canManageFinances: false,
   canManageReservations: false,
+  canManageReviews: false,
 };
 
 export const ACCESS_CONTEXT_SWR_KEY = "/api/auth/me";

@@ -12,9 +12,21 @@ export const DeleteFinancesRecordModal = ({
 }: FinancesDeleteModalProps) => {
   const { showToast } = useGlobalToast();
   const handleDelete = async () => {
-    await deleteFinanceRecord(id);
-    showToast("success", "Registro eliminado correctamente.");
-    handleOpenDeleteModal();
+    try {
+      await deleteFinanceRecord(id);
+      showToast("success", "Registro eliminado correctamente.");
+      handleOpenDeleteModal();
+    } catch (err) {
+      if (err instanceof Error && err.message === "LINKED_TO_RESERVATION") {
+        showToast(
+          "error",
+          "Este registro está vinculado a una reserva. Reviértela primero desde la sección de reservas."
+        );
+      } else {
+        showToast("error", "Error al eliminar el registro.");
+      }
+      handleOpenDeleteModal();
+    }
   };
 
   return (

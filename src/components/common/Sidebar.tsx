@@ -20,8 +20,10 @@ import {
   MessageCircleQuestion,
   Star,
   Brain,
+  Bell,
 } from "lucide-react";
 import { useAccessContext } from "@/hooks/useAccessContext";
+import { useBookingRequests } from "@/hooks/useBookingRequests";
 import { logout } from "@/app/login/logout";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,13 +47,19 @@ const NAV_LINKS = [
     href: "/reviews",
     label: "Reseñas",
     icon: Star,
-    cap: "canManageFinances" as const,
+    cap: "canManageReviews" as const,
   },
   {
     href: "/intelligence",
     label: "Inteligencia",
     icon: Brain,
     cap: "canManageTeam" as const,
+  },
+  {
+    href: "/notifications",
+    label: "Notificaciones",
+    icon: Bell,
+    cap: "canManageReservations" as const,
   },
   {
     href: "/configuration",
@@ -64,11 +72,22 @@ const NAV_LINKS = [
 export function Sidebar() {
   const pathname = usePathname();
   const { context, capabilities } = useAccessContext();
+  const { bookingRequests } = useBookingRequests();
   const { showToast } = useGlobalToast();
   const [open, setOpen] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [contactMessage, setContactMessage] = useState("");
   const [sending, setSending] = useState(false);
+
+  const pendingCount = bookingRequests.filter(
+    (r) => {
+      if (r.status !== "REQUESTED") return false;
+      if (context?.role === "owner") return true;
+      const name = context?.profile?.displayName ?? context?.profile?.email ?? "";
+      if (!r.employeeName) return true;
+      return r.employeeName.toLowerCase() === name.toLowerCase();
+    }
+  ).length;
 
   const displayName =
     context?.profile?.displayName ||
@@ -121,6 +140,7 @@ export function Sidebar() {
         {NAV_LINKS.map(({ href, label, icon: Icon, cap }) => {
           if (!capabilities[cap]) return null;
           const active = pathname.startsWith(href);
+          const badge = href === "/notifications" && pendingCount > 0 ? pendingCount : 0;
           return (
             <Link
               key={href}
@@ -135,6 +155,11 @@ export function Sidebar() {
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
               {label}
+              {badge > 0 && (
+                <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-danger rounded-full">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
             </Link>
           );
         })}

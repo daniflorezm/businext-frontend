@@ -13,9 +13,13 @@ export type Finances = {
 export type FinancesModalProps = {
   isOpen: boolean;
   handleOpenModal: () => void;
+  isEmployee?: boolean;
+  employeeName?: string;
+  employees?: { memberUserId: string; displayName?: string | null; email?: string | null }[];
+  currentUserName?: string;
 };
 
-export type FinanceRecordItemProps = Finances & { customerName?: string };
+export type FinanceRecordItemProps = Finances & { customerName?: string; isEmployee?: boolean };
 
 export const PlaceHoldersFinancesMapping = {
   id: "ID",

@@ -10,7 +10,8 @@ import { routesWithoutHeader } from "@/lib/utils";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isPublicRoute = routesWithoutHeader.includes(pathname);
+  const isPublicRoute =
+    routesWithoutHeader.includes(pathname) || pathname.startsWith("/book/");
   const { context, loading } = useAccessContext({ enabled: !isPublicRoute });
   const { mutate } = useSWRConfig();
   const prevPathname = useRef(pathname);

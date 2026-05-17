@@ -23,12 +23,12 @@ interface DailyOverviewProps {
   loading: boolean;
 }
 
-function parseUTC(dateStr: string): Date {
-  return new Date(dateStr.endsWith("Z") ? dateStr : dateStr + "Z");
+function parseDate(dateStr: string): Date {
+  return new Date(dateStr);
 }
 
 function isToday(dateStr: string): boolean {
-  const d = parseUTC(dateStr);
+  const d = parseDate(dateStr);
   const now = new Date();
   return (
     d.getFullYear() === now.getFullYear() &&
@@ -216,7 +216,7 @@ export function DailyOverview({ financesData, reservationData, loading }: DailyO
                         )?.customerName
                       : undefined;
                     const time = record.created_at
-                      ? parseUTC(record.created_at).toLocaleTimeString(
+                      ? parseDate(record.created_at).toLocaleTimeString(
                           "es-ES",
                           { hour: "2-digit", minute: "2-digit" }
                         )

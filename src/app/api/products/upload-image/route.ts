@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getVerifiedServerAccessToken } from "@/lib/auth/server-session";
-import sharp from "sharp";
 
 const BUCKET = "product-images";
-const MAX_INPUT_SIZE = 10 * 1024 * 1024; // 10MB raw input limit
+const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 function getAdminClient() {
   return createClient(
@@ -19,7 +18,7 @@ async function ensureBucketExists(supabase: ReturnType<typeof getAdminClient>) {
   if (!exists) {
     await supabase.storage.createBucket(BUCKET, {
       public: true,
-      fileSizeLimit: 5 * 1024 * 1024,
+      fileSizeLimit: MAX_SIZE,
     });
   }
 }
@@ -36,32 +35,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No se proporcionó archivo" }, { status: 400 });
     }
 
-    if (file.size > MAX_INPUT_SIZE) {
+    if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: "El archivo supera el límite de 10MB." },
+        { error: "El archivo supera el límite de 5MB." },
         { status: 400 }
       );
     }
 
-    // Convert any image format to JPEG using sharp (supports HEIC, PNG, WEBP, etc.)
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const compressed = await sharp(buffer)
-      .rotate() // auto-rotate based on EXIF
-      .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
-      .jpeg({ quality: 80 })
-      .toBuffer();
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json(
+        { error: "El archivo no es una imagen." },
+        { status: 400 }
+      );
+    }
 
     const supabase = getAdminClient();
     await ensureBucketExists(supabase);
 
-    const path = `${Date.now()}.jpg`;
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${Date.now()}.${ext}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = new Uint8Array(arrayBuffer);
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
-      .upload(path, compressed, {
-        contentType: "image/jpeg",
+      .upload(path, buffer, {
+        contentType: file.type,
         upsert: false,
       });
 

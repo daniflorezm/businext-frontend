@@ -1,5 +1,6 @@
 import { WorkingHours } from "@/lib/working-hours/types";
 import { Reservation } from "@/lib/reservation/types";
+import { BookingRequest } from "@/lib/booking-request/types";
 
 /**
  * Convert JS Date.getDay() (0=Sun..6=Sat) to our WorkingHours dayOfWeek (0=Mon..6=Sun).
@@ -39,36 +40,42 @@ function isSameDate(dateStr: string, date: Date): boolean {
 
 /**
  * Compute available 30-min slots for a given date, working hours, and existing reservations.
+ * Supports multiple working hour blocks per day.
  *
  * @param date - The target date
- * @param workingHours - Array of working hours for all days
+ * @param workingHours - Array of working hours blocks for all days
  * @param reservations - All existing reservations
  * @param inCharge - The in-charge person to filter reservations by
+ * @param bookingRequests - Pending booking requests to treat as occupied
  * @returns Sorted array of available time strings (e.g., ["09:00", "09:30", "10:00"])
  */
 export function getAvailableSlots(
   date: Date,
   workingHours: WorkingHours[],
   reservations: Reservation[],
-  inCharge: string
+  inCharge: string,
+  bookingRequests: BookingRequest[] = []
 ): string[] {
   const SLOT_DURATION = 30;
 
   const workingDay = jsDayToWorkingDay(date.getDay());
-  const dayConfig = workingHours.find((wh) => wh.dayOfWeek === workingDay);
+  // Get ALL enabled blocks for this day (multi-block support)
+  const dayBlocks = workingHours.filter(
+    (wh) => wh.dayOfWeek === workingDay && wh.enabled
+  );
 
-  // Day is disabled or not configured
-  if (!dayConfig || !dayConfig.enabled) {
+  if (dayBlocks.length === 0) {
     return [];
   }
 
-  const startMin = parseTime(dayConfig.startTime);
-  const endMin = parseTime(dayConfig.endTime);
-
-  // Generate all possible slots
-  const allSlots: number[] = [];
-  for (let t = startMin; t + SLOT_DURATION <= endMin; t += SLOT_DURATION) {
-    allSlots.push(t);
+  // Generate all possible slots from all blocks
+  const allSlots = new Set<number>();
+  for (const block of dayBlocks) {
+    const startMin = parseTime(block.startTime);
+    const endMin = parseTime(block.endTime);
+    for (let t = startMin; t + SLOT_DURATION <= endMin; t += SLOT_DURATION) {
+      allSlots.add(t);
+    }
   }
 
   // Get reservations for this date and in-charge person
@@ -86,13 +93,26 @@ export function getAvailableSlots(
       const resEnd = new Date(r.reservationEndDate);
       const resEndMin = resEnd.getHours() * 60 + resEnd.getMinutes();
 
-      // Mark all slots that overlap with this reservation
-      for (let t = startMin; t + SLOT_DURATION <= endMin; t += SLOT_DURATION) {
+      for (const t of allSlots) {
         const slotEnd = t + SLOT_DURATION;
         if (t < resEndMin && slotEnd > resStartMin) {
           occupiedSlots.add(t);
         }
       }
+    });
+
+  // Also mark slots occupied by pending booking requests for this employee/date
+  bookingRequests
+    .filter(
+      (br) =>
+        br.status === "REQUESTED" &&
+        (br.employeeName === inCharge || !br.employeeName) &&
+        isSameDate(br.requestedDate, date)
+    )
+    .forEach((br) => {
+      const brStart = new Date(br.requestedDate);
+      const brStartMin = brStart.getHours() * 60 + brStart.getMinutes();
+      occupiedSlots.add(brStartMin);
     });
 
   // Filter out past slots if date is today
@@ -103,19 +123,22 @@ export function getAvailableSlots(
     date.getDate() === now.getDate();
   const currentMin = isToday ? now.getHours() * 60 + now.getMinutes() : 0;
 
-  return allSlots
+  return Array.from(allSlots)
     .filter((t) => !occupiedSlots.has(t) && t + SLOT_DURATION > currentMin)
+    .sort((a, b) => a - b)
     .map(formatTime);
 }
 
 /**
- * Check if a day is closed (disabled in working hours).
+ * Check if a day is closed (no enabled blocks in working hours).
  */
 export function isDayClosed(
   date: Date,
   workingHours: WorkingHours[]
 ): boolean {
   const workingDay = jsDayToWorkingDay(date.getDay());
-  const dayConfig = workingHours.find((wh) => wh.dayOfWeek === workingDay);
-  return !dayConfig || !dayConfig.enabled;
+  const enabledBlocks = workingHours.filter(
+    (wh) => wh.dayOfWeek === workingDay && wh.enabled
+  );
+  return enabledBlocks.length === 0;
 }
