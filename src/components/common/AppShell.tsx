@@ -10,7 +10,8 @@ import { routesWithoutHeader } from "@/lib/utils";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { context, loading } = useAccessContext();
+  const isPublicRoute = routesWithoutHeader.includes(pathname);
+  const { context, loading } = useAccessContext({ enabled: !isPublicRoute });
   const { mutate } = useSWRConfig();
   const prevPathname = useRef(pathname);
 
@@ -26,7 +27,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     prevPathname.current = pathname;
   }, [pathname, mutate]);
 
-  const isPublicRoute = routesWithoutHeader.includes(pathname);
   const showSidebar = !isPublicRoute && (context !== null || loading);
 
   return (

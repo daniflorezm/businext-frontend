@@ -53,9 +53,9 @@ const accessFetcher = async (url: string): Promise<AccessContext | null> => {
  * request. Requests are deduplicated within a 60-second window, so
  * AppShell + Sidebar + any page component → still only 1 call to /api/auth/me.
  */
-export function useAccessContext() {
+export function useAccessContext({ enabled = true }: { enabled?: boolean } = {}) {
   const { data, isLoading, isValidating } =
-    useSWR<AccessContext | null>(ACCESS_CONTEXT_SWR_KEY, accessFetcher, {
+    useSWR<AccessContext | null>(enabled ? ACCESS_CONTEXT_SWR_KEY : null, accessFetcher, {
       revalidateOnFocus: false,
       dedupingInterval: 60_000,
       shouldRetryOnError: true,

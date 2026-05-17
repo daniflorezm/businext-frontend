@@ -9,9 +9,9 @@ const PX_PER_FRAME = 14;
 
 // ── Slide data ─────────────────────────────────────────────────────────────────
 const SLIDES_DATA = [
-  { line1: "Todo bajo",  accent: "control", subtitle: "Reservas, finanzas y equipo en un solo lugar",       start: -0.10, end: 0.28, phoneZoom: false },
-  { line1: "Más tiempo", accent: "para ti", subtitle: "Automatiza la gestión y céntrate en lo que importa", start: 0.18,  end: 0.50, phoneZoom: false },
-  { line1: "Listo para", accent: "crecer",  subtitle: "Únete a los negocios que ya confían en Businext",    start: 0.54,  end: 0.92, phoneZoom: true  },
+  { line1: "Todo bajo",  accent: "control", subtitle: "Reservas, finanzas y equipo en un solo lugar",       start: -0.10, end: 0.36, phoneZoom: false },
+  { line1: "Más tiempo", accent: "para ti", subtitle: "Automatiza la gestión y céntrate en lo que importa", start: 0.28,  end: 0.58, phoneZoom: false },
+  { line1: "Listo para", accent: "crecer",  subtitle: "Únete a los negocios que ya confían en Businext",    start: 0.54,  end: 0.97, phoneZoom: true  },
 ];
 
 // ── Animation positions (vh from bottom) ──────────────────────────────────────
@@ -30,10 +30,13 @@ const easeOutBack = (t: number) => { const c = 1.70158; return 1 + (c+1)*Math.po
 // ──────────────────────────────────────────────────────────────────────────────
 
 export function VideoScrollHero() {
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [loaded,    setLoaded]    = useState(false);
-  const [loadPct,   setLoadPct]   = useState(0);
-  const [mounted,   setMounted]   = useState(false);
+  const [isDesktop,   setIsDesktop]   = useState(false);
+  const [loaded,      setLoaded]      = useState(false);
+  const [loadPct,     setLoadPct]     = useState(0);
+  const [mounted,     setMounted]     = useState(false);
+  const [ctaHovered,       setCtaHovered]       = useState(false);
+  const [primaryHovered,   setPrimaryHovered]   = useState(false);
+  const [secondaryHovered, setSecondaryHovered] = useState(false);
 
   const sectionRef         = useRef<HTMLDivElement>(null);
   const canvasRef          = useRef<HTMLCanvasElement>(null);
@@ -48,6 +51,8 @@ export function VideoScrollHero() {
   const vignetteCloseRef   = useRef<HTMLDivElement>(null);
   const blackRef           = useRef<HTMLDivElement>(null);
   const ctaRef             = useRef<HTMLDivElement>(null);
+  const snapDoneRef        = useRef(false);
+  const snapRafRef         = useRef<number>(0);
   const touchStartY        = useRef(0);
   const rafTouch           = useRef<number>(0);
 
@@ -156,44 +161,35 @@ export function VideoScrollHero() {
           return;
         }
 
-        // ── Standard slides 1 & 2 ────────────────────────────────────────────
-        let sc: number, bot: number, op: number, cx: number;
+        // ── Standard slides — centered glassmorphism panel ───────────────────
+        let sc: number, bot: number, op: number;
 
         if (p < 0.26) {
-          // Slower entry: spreads over 26% of range, starts at 0.84 (barely scaled)
           const t = easeOutExpo(p / 0.26);
           sc = lerp(0.84, 1.0, t); bot = lerp(POS_IN, POS2, t);
-          op = clamp((p / 0.26) * 4, 0, 1); cx = t;
+          op = clamp((p / 0.26) * 4, 0, 1);
         } else if (p < 0.70) {
-          sc = 1.0; bot = POS2; op = 1; cx = 1;
+          sc = 1.0; bot = POS2; op = 1;
         } else if (p < 0.88) {
-          // Slower exit: spreads over 18% of range, subtle scale-down
           const t = easeInOut((p - 0.70) / 0.18);
-          sc = lerp(1.0, 0.90, t); bot = lerp(POS2, POS3, t); op = 1 - t; cx = 1 - t;
+          sc = 1.0; bot = POS2; op = 1 - t;
         } else {
-          sc = 0.90; bot = POS3; op = 0; cx = 0;
+          sc = 1.0; bot = POS2; op = 0;
         }
 
-        const startLeft  = Math.max(24, vw * 0.05);
-        const scaledW    = el.offsetWidth * sc;
-        const centerLeft = Math.max(startLeft, (vw - scaledW) / 2);
-        const leftPx     = lerp(startLeft, centerLeft, cx);
-
         el.style.bottom          = `${bot}vh`;
-        el.style.left            = `${leftPx}px`;
-        el.style.transform       = `scale(${sc}) translateZ(0)`;
-        el.style.transformOrigin = "left bottom";
+        el.style.left            = "50%";
+        el.style.transform       = `translateX(-50%) scale(${sc}) translateZ(0)`;
+        el.style.transformOrigin = "center bottom";
         el.style.opacity         = String(op);
         el.style.filter          = "none";
-        el.style.textAlign       = "left";
       });
     };
 
     // ── Finale ────────────────────────────────────────────────────────────────
     const animateFinale = (progress: number) => {
       const vc = vignetteCloseRef.current;
-      const bl = blackRef.current;
-      if (!vc || !bl) return;
+      if (!vc) return;
 
       if (progress >= 0.86) {
         const t  = clamp((progress - 0.86) / 0.11, 0, 1);
@@ -203,13 +199,6 @@ export function VideoScrollHero() {
         vc.style.opacity    = String(Math.min(t * 4, 1));
       } else {
         vc.style.opacity = "0";
-      }
-
-      if (progress >= 0.93) {
-        const t = easeInOut(clamp((progress - 0.93) / 0.04, 0, 1));
-        bl.style.opacity = String(t * t);
-      } else {
-        bl.style.opacity = "0";
       }
     };
 
@@ -238,6 +227,26 @@ export function VideoScrollHero() {
         const show = mountedRef.current && progress < 0.08;
         ctaRef.current.style.opacity       = show ? "1" : "0";
         ctaRef.current.style.pointerEvents = show ? "auto" : "none";
+      }
+
+      // Snap to next section when user reaches the end
+      if (progress >= 0.985 && !snapDoneRef.current) {
+        snapDoneRef.current = true;
+        const start  = window.scrollY;
+        const target = section.offsetTop + section.offsetHeight;
+        const dist   = target - start;
+        const dur    = 700;
+        const t0     = performance.now();
+        const ease   = (t: number) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+        const step   = (now: number) => {
+          const p = Math.min((now - t0) / dur, 1);
+          window.scrollTo(0, start + dist * ease(p));
+          if (p < 1) snapRafRef.current = requestAnimationFrame(step);
+        };
+        snapRafRef.current = requestAnimationFrame(step);
+      } else if (progress < 0.92) {
+        snapDoneRef.current = false;
+        cancelAnimationFrame(snapRafRef.current);
       }
 
       animateSlides(progress);
@@ -288,6 +297,7 @@ export function VideoScrollHero() {
     return () => {
       cancelAnimationFrame(rafId.current);
       cancelAnimationFrame(rafTouch.current);
+      cancelAnimationFrame(snapRafRef.current);
       observer.disconnect();
       window.removeEventListener("scroll", onScroll);
       section.removeEventListener("touchstart", onTouchStart);
@@ -300,24 +310,228 @@ export function VideoScrollHero() {
   // ── Desktop ────────────────────────────────────────────────────────────────
   if (isDesktop) {
     return (
-      <section style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden", background: "#0f172a" }}>
-        <img src="/hero app.jpeg" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 100%" }} />
-        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 35%, rgba(7,8,15,0.75) 100%)" }} />
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 160, background: "linear-gradient(to top, #0f172a, transparent)" }} />
-        <div style={{ position: "absolute", bottom: "clamp(140px, 18vh, 200px)", left: "clamp(24px, 5vw, 90px)", zIndex: 5, animation: "fadeUp 1s cubic-bezier(0.16,1,0.3,1) 0.1s both" }}>
-          <h1 style={{ margin: 0, color: "#f8fafc", fontFamily: "var(--font-heading), system-ui, sans-serif", fontSize: "clamp(2.6rem, 4vw, 4.5rem)", fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.03em", textShadow: "0 2px 20px rgba(0,0,0,0.5)" }}>
-            <span style={{ display: "block", marginBottom: "0.08em" }}>Todo bajo</span>
-            <span style={{ display: "block", background: "linear-gradient(to right, #3b82f6, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>control</span>
+      <section style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden", background: "#07080f" }}>
+
+        {/* Background image */}
+        <img src="/hero app.jpeg" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "72% 75%" }} />
+
+        {/* Overlays */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(7,8,15,0.95) 20%, rgba(7,8,15,0.40) 38%, transparent 50%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 25% 50%, rgba(99,102,241,0.08) 0%, transparent 60%)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 320, background: "linear-gradient(to top, #07080f, transparent)" }} />
+
+        {/* Content — left half, vertically centered */}
+        <div style={{
+          position: "absolute",
+          top: 0, bottom: 0, left: 0,
+          width: "52%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "0 clamp(40px, 6vw, 100px)",
+          zIndex: 5,
+        }}>
+
+          {/* Headline */}
+          <h1 style={{
+            margin: "0 0 20px",
+            fontFamily: "var(--font-heading), system-ui, sans-serif",
+            fontSize: "clamp(3.2rem, 5vw, 5.5rem)",
+            fontWeight: 800,
+            lineHeight: 0.95,
+            letterSpacing: "-0.04em",
+            color: "#f8fafc",
+            animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.08s both",
+          }}>
+            Todo bajo<br />
+            <span style={{ background: "linear-gradient(to right, #3b82f6, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              control.
+            </span>
           </h1>
-          <p style={{ margin: "clamp(0.75rem, 1.5vh, 1.1rem) 0 0", color: "rgba(255,255,255,0.65)", fontFamily: "var(--font-sans), system-ui, sans-serif", fontSize: "clamp(1rem, 1.4vw, 1.2rem)", lineHeight: 1.4, letterSpacing: "-0.01em", maxWidth: 440 }}>
-            Reservas, finanzas y equipo en un solo lugar
+
+          {/* Subtitle */}
+          <p style={{
+            margin: "0 0 32px",
+            color: "rgba(255,255,255,0.58)",
+            fontSize: "clamp(1rem, 1.2vw, 1.1rem)",
+            fontWeight: 400,
+            lineHeight: 1.7,
+            maxWidth: 400,
+            animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.16s both",
+          }}>
+            Menos tiempo gestionando.<br />Más tiempo para hacer crecer tu negocio.
           </p>
+
+          {/* Feature pills */}
+          <div style={{
+            display: "flex",
+            gap: 8,
+            marginBottom: 36,
+            flexWrap: "wrap",
+            animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.22s both",
+          }}>
+            {[
+              { label: "Reservas", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
+              { label: "Finanzas",  icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+              { label: "Reseñas", icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
+              { label: "IA integrada", icon: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" },
+            ].map(({ label, icon }) => (
+              <span key={label} style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.10)",
+                borderRadius: 8,
+                padding: "6px 12px",
+                color: "rgba(255,255,255,0.55)",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: "0.03em",
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={icon} />
+                </svg>
+                {label}
+              </span>
+            ))}
+          </div>
+
+          {/* CTAs */}
+          <div style={{
+            display: "flex",
+            gap: 14,
+            alignItems: "center",
+            animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.28s both",
+          }}>
+
+            {/* Primary */}
+            <div style={{ position: "relative" }}>
+              {/* Glow ring */}
+              <span style={{
+                position: "absolute",
+                inset: -3,
+                borderRadius: 15,
+                background: "linear-gradient(135deg, #3b82f6, #a78bfa)",
+                opacity: primaryHovered ? 0.40 : 0,
+                filter: "blur(10px)",
+                transition: "opacity 0.3s ease",
+                pointerEvents: "none",
+              }} />
+              <a
+                href="/login"
+                onMouseEnter={() => setPrimaryHovered(true)}
+                onMouseLeave={() => setPrimaryHovered(false)}
+                style={{
+                  position: "relative",
+                  display: "inline-flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  overflow: "hidden",
+                  background: "linear-gradient(135deg, #3b82f6, #a78bfa)",
+                  color: "#fff",
+                  padding: "13px 28px",
+                  borderRadius: 12,
+                  fontWeight: 700,
+                  fontSize: 15,
+                  textDecoration: "none",
+                  letterSpacing: "0.02em",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  boxShadow: primaryHovered
+                    ? "0 8px 40px rgba(99,102,241,0.60), inset 0 1px 0 rgba(255,255,255,0.28)"
+                    : "0 4px 24px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.20)",
+                  transform: primaryHovered ? "translateY(-2px)" : "translateY(0)",
+                  transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease",
+                }}
+              >
+                {/* Shimmer */}
+                <span style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.20) 50%, transparent 65%)",
+                  transform: primaryHovered ? "translateX(100%)" : "translateX(-100%)",
+                  transition: primaryHovered ? "transform 0.5s ease" : "none",
+                  pointerEvents: "none",
+                }} />
+                <span style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, lineHeight: 1.2 }}>
+                  Empieza gratis
+                  <svg
+                    width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    style={{ transform: primaryHovered ? "translateX(3px)" : "translateX(0)", transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </span>
+                <span style={{ position: "relative", fontSize: 10, fontWeight: 500, opacity: 0.75, letterSpacing: "0.05em", marginTop: 2 }}>
+                  Primer mes gratis · Sin tarjeta
+                </span>
+              </a>
+            </div>
+
+            {/* Secondary */}
+            <a
+              href="#como-funciona"
+              onMouseEnter={() => setSecondaryHovered(true)}
+              onMouseLeave={() => setSecondaryHovered(false)}
+              onClick={(e) => { e.preventDefault(); document.querySelector("section:nth-of-type(2)")?.scrollIntoView({ behavior: "smooth" }); }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                background: secondaryHovered ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.05)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                color: secondaryHovered ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.65)",
+                padding: "14px 24px",
+                borderRadius: 12,
+                fontWeight: 600,
+                fontSize: 15,
+                textDecoration: "none",
+                border: secondaryHovered
+                  ? "1px solid rgba(255,255,255,0.22)"
+                  : "1px solid rgba(255,255,255,0.11)",
+                boxShadow: secondaryHovered
+                  ? "inset 0 1px 0 rgba(255,255,255,0.18)"
+                  : "inset 0 1px 0 rgba(255,255,255,0.08)",
+                transform: secondaryHovered ? "translateY(-2px)" : "translateY(0)",
+                transition: "all 0.22s ease",
+              }}
+            >
+              <span style={{
+                width: 28, height: 28,
+                borderRadius: "50%",
+                background: secondaryHovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+                transition: "background 0.22s ease",
+              }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                  <polygon points="8 5 19 12 8 19 8 5"/>
+                </svg>
+              </span>
+              Ver cómo funciona
+            </a>
+          </div>
+
+          {/* Social proof */}
+          <div style={{
+            margin: "26px 0 0",
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.34s both",
+          }}>
+            {["Primer mes gratis", "Sin permanencia", "Cancela cuando quieras"].map((t, i) => (
+              <span key={t} style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.28)", fontSize: 11, letterSpacing: "0.04em" }}>
+                {i > 0 && <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block" }} />}
+                {t}
+              </span>
+            ))}
+          </div>
         </div>
-        <div style={{ position: "absolute", bottom: "clamp(40px, 8vh, 100px)", left: "clamp(24px, 5vw, 90px)", animation: "fadeUp 1s cubic-bezier(0.16,1,0.3,1) 0.3s both", zIndex: 5 }}>
-          <a href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(to right, #3b82f6, #a78bfa)", color: "#f8fafc", padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 16, textDecoration: "none", boxShadow: "0 4px 24px rgba(99,102,241,0.35)" }}>
-            Comienza ahora
-          </a>
-        </div>
+
       </section>
     );
   }
@@ -373,8 +587,9 @@ export function VideoScrollHero() {
             ref={(el) => { slideRefs.current[i].container = el; }}
             style={{
               position: "absolute",
-              left: "clamp(24px, 5vw, 90px)",
+              left: "50%",
               bottom: "7vh",
+              transform: "translateX(-50%)",
               willChange: "transform, opacity",
               backfaceVisibility: "hidden" as const,
               opacity: 0,
@@ -382,20 +597,29 @@ export function VideoScrollHero() {
               zIndex: 5,
               display: "flex",
               flexDirection: "column",
-              alignItems: "flex-start",
+              alignItems: "center",
+              maxWidth: "clamp(220px, 80vw, 400px)",
+              width: "max-content",
+              background: "rgba(255,255,255,0.13)",
+              backdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
+              WebkitBackdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
+              borderRadius: "20px",
+              border: "1px solid rgba(255,255,255,0.28)",
+              padding: "clamp(0.8rem, 2.5vw, 1.4rem) clamp(1rem, 3vw, 1.6rem)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.35), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(255,255,255,0.06)",
+              textAlign: "center",
             }}
           >
             <h1 style={{
               margin: 0,
               color: "#f8fafc",
               fontFamily: "var(--font-heading), system-ui, sans-serif",
-              fontSize: "clamp(2.8rem, 10vw, 5.8rem)",
+              fontSize: "clamp(2rem, 8vw, 4rem)",
               fontWeight: 800,
-              lineHeight: 0.92,
+              lineHeight: 0.95,
               letterSpacing: "-0.03em",
               WebkitFontSmoothing: "antialiased" as const,
               MozOsxFontSmoothing: "grayscale" as const,
-              whiteSpace: "nowrap",
             }}>
               <span style={{ display: "block", marginBottom: "0.1em" }}>{slide.line1}</span>
               <span style={{
@@ -406,17 +630,14 @@ export function VideoScrollHero() {
               }}>{slide.accent}</span>
             </h1>
             <p style={{
-              margin: "clamp(0.65rem, 1.8vh, 1.1rem) 0 0",
-              color: "rgba(255,255,255,0.72)",
+              margin: "clamp(0.6rem, 1.5vh, 1rem) 0 0",
+              color: "rgba(255,255,255,0.85)",
               fontFamily: "var(--font-sans), system-ui, sans-serif",
-              fontSize: "clamp(0.95rem, 3.8vw, 1.15rem)",
+              fontSize: "clamp(0.8rem, 3vw, 0.95rem)",
               fontWeight: 400,
-              lineHeight: 1.45,
-              letterSpacing: "-0.01em",
-              maxWidth: "min(340px, 76vw)",
+              lineHeight: 1.55,
               WebkitFontSmoothing: "antialiased" as const,
               MozOsxFontSmoothing: "grayscale" as const,
-              whiteSpace: "normal",
             }}>
               {slide.subtitle}
             </p>
@@ -425,16 +646,44 @@ export function VideoScrollHero() {
 
         {/* CTA */}
         <div ref={ctaRef} style={{ position: "absolute", bottom: "clamp(80px, 10vh, 120px)", left: "50%", transform: "translateX(-50%)", opacity: 0, transition: "opacity 0.4s ease", pointerEvents: "none", zIndex: 10 }}>
-          <a href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(to right, #3b82f6, #a78bfa)", color: "#f8fafc", padding: "14px 32px", borderRadius: 10, fontWeight: 700, fontSize: 16, textDecoration: "none", boxShadow: "0 4px 24px rgba(99,102,241,0.35)" }}>
+          <a
+            href="/login"
+            onMouseEnter={() => setCtaHovered(true)}
+            onMouseLeave={() => setCtaHovered(false)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: ctaHovered
+                ? "linear-gradient(135deg, rgba(59,130,246,0.30), rgba(167,139,250,0.24))"
+                : "linear-gradient(135deg, rgba(59,130,246,0.18), rgba(167,139,250,0.14))",
+              backdropFilter: "blur(48px) saturate(220%) brightness(1.25)",
+              WebkitBackdropFilter: "blur(48px) saturate(220%) brightness(1.25)",
+              color: "#f8fafc",
+              padding: "14px 32px",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 16,
+              textDecoration: "none",
+              border: ctaHovered
+                ? "1px solid rgba(255,255,255,0.55)"
+                : "1px solid rgba(255,255,255,0.35)",
+              boxShadow: ctaHovered
+                ? "0 12px 40px rgba(99,102,241,0.50), 0 0 20px rgba(167,139,250,0.25), inset 0 2px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(255,255,255,0.10)"
+                : "0 8px 32px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(255,255,255,0.08)",
+              transform: ctaHovered ? "translateY(-3px) scale(1.04)" : "translateY(0) scale(1)",
+              transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease",
+              letterSpacing: "0.01em",
+            }}
+          >
             Comienza ahora
           </a>
         </div>
 
+
         {/* Iris close */}
         <div ref={vignetteCloseRef} style={{ position: "absolute", inset: 0, opacity: 0, pointerEvents: "none", zIndex: 15 }} />
 
-        {/* Black fade */}
-        <div ref={blackRef} style={{ position: "absolute", inset: 0, background: "#000", opacity: 0, pointerEvents: "none", zIndex: 16 }} />
 
         {/* Progress bar */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "rgba(255,255,255,0.07)", zIndex: 20 }}>

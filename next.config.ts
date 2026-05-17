@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    outputFileTracingRoot: path.join(__dirname),
+  },
   // Imágenes externas permitidas - Necesario para Stripe y Supabase
   images: {
     remotePatterns: [
