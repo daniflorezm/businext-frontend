@@ -26,7 +26,6 @@ import { Select } from "@/components/ui/select";
 import { SectionSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ProductSaleForm } from "@/components/reservation/ProductSaleForm";
-import { TodaySalesList } from "@/components/reservation/TodaySalesList";
 import { WalkInModal } from "@/components/reservation/WalkInModal";
 
 import { Info, CalendarPlus, ClipboardList, CalendarClock, Zap, ShieldAlert } from "lucide-react";
@@ -148,6 +147,7 @@ export default function ReservationPage() {
         type: "INCOME",
         creator: data.inCharge,
         reservation_id: created.id,
+        product_id: service?.id ?? null,
         customer_name: data.customerName,
       });
     }
@@ -475,16 +475,6 @@ export default function ReservationPage() {
             />
           </section>
         )}
-
-        {/* ═══════════════════════════════════════════
-            SECTION 5 — Ventas del día (product sales)
-            ═══════════════════════════════════════════ */}
-        <TodaySalesList
-          financesData={financesData}
-          currentUserName={currentUserName}
-          isOwner={isOwner}
-          loading={financesLoading}
-        />
 
         {/* Walk-in modal */}
         <WalkInModal

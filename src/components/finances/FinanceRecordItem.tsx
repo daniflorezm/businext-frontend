@@ -8,14 +8,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const FinanceRecordItem = (financeRecord: FinanceRecordItemProps) => {
-  const { concept, amount, creator, type, created_at, id, customerName, isEmployee } =
-    financeRecord;
+  const {
+    concept,
+    amount,
+    creator,
+    type,
+    created_at,
+    id,
+    customerName,
+    isEmployee,
+    commission_amount,
+    commission_rate,
+  } = financeRecord;
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const handleOpenDeleteModal = () => {
     setOpenDeleteModal(!openDeleteModal);
   };
   const { deleteFinance } = useFinances();
   const dateFormatted = new Date(created_at ? created_at : "");
+  const hasCommission = (commission_amount ?? 0) > 0;
 
   const isIncome = type === "INCOME";
 
@@ -46,6 +57,12 @@ export const FinanceRecordItem = (financeRecord: FinanceRecordItemProps) => {
             <p className="text-caption text-foreground-muted">
               Emisor: {creator}
             </p>
+            {hasCommission && (
+              <p className="text-caption text-warning mt-0.5">
+                Comision: {Number(commission_amount).toLocaleString("es-ES")}EUR
+                {commission_rate ? ` (${commission_rate.toLocaleString("es-ES")}%)` : ""}
+              </p>
+            )}
             {customerName && (
               <p className="text-caption text-primary flex items-center gap-1 mt-0.5">
                 <User className="w-3 h-3" />

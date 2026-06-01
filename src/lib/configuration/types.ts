@@ -4,6 +4,8 @@ export type Configuration = {
   businessName: string;
   businessPhone?: string;
   businessEmail?: string;
+  commissionProduct?: number;
+  commissionService?: number;
 };
 
 export type InputConfig = {

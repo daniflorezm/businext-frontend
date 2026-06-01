@@ -42,6 +42,7 @@ export function ProductSaleForm({
         type: "INCOME",
         creator: currentUserName,
         reservation_id: null,
+        product_id: selectedProduct.id ?? null,
       });
       showToast("success", "Venta registrada correctamente.");
       setSelectedProduct(null);

@@ -92,7 +92,11 @@ export default function ConfigurationPage() {
   const { locations } = useLocations();
 
   const { register, handleSubmit, setValue } = useForm<Configuration>({
-    defaultValues: { businessName: "", businessPhone: "", businessEmail: "" },
+    defaultValues: {
+      businessName: "",
+      businessPhone: "",
+      businessEmail: "",
+    },
   });
 
   const [activeSection, setActiveSection] = useState<SectionId>("profile");
@@ -130,19 +134,19 @@ export default function ConfigurationPage() {
 
   // ── Configuration form ──
   const onSubmit: SubmitHandler<Configuration> = async (data) => {
+    const payload: Omit<Configuration, "id"> = {
+      businessName: data.businessName,
+      businessPhone: data.businessPhone,
+      businessEmail: data.businessEmail,
+    };
+
     const result =
       configurationData.length > 0
         ? await updateConfiguration({
             id: configurationData[0].id,
-            businessName: data.businessName,
-            businessPhone: data.businessPhone,
-            businessEmail: data.businessEmail,
+            ...payload,
           })
-        : await createConfiguration({
-            businessName: data.businessName,
-            businessPhone: data.businessPhone,
-            businessEmail: data.businessEmail,
-          });
+        : await createConfiguration(payload);
 
     if (result !== null) {
       showToast("success", "Configuración guardada correctamente.");

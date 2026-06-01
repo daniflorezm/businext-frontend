@@ -36,7 +36,7 @@ export const FinancesModal = ({
   const { showToast } = useGlobalToast();
 
   const onSubmit: SubmitHandler<Finances> = async (data: Finances) => {
-    data = { ...data, reservation_id: null };
+    data = { ...data, reservation_id: null, product_id: null };
     await createFinance(data);
     showToast("success", "Registro financiero creado correctamente.");
     handleOpenModal();

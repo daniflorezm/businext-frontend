@@ -115,6 +115,7 @@ export const ReservationModal = ({
       type: "INCOME",
       creator: data.inCharge,
       reservation_id: data.id,
+      product_id: getService[0]?.id ?? null,
       customer_name: data.customerName,
     };
     createFinance(financeRecord);

@@ -24,6 +24,10 @@ interface DailyOverviewProps {
 }
 
 function parseDate(dateStr: string): Date {
+  // Backend stores UTC without 'Z' suffix, so we append it
+  if (!dateStr.endsWith("Z") && !dateStr.includes("+")) {
+    return new Date(dateStr + "Z");
+  }
   return new Date(dateStr);
 }
 
@@ -40,7 +44,8 @@ function isToday(dateStr: string): boolean {
 interface EmployeeGroup {
   creator: string;
   records: Finances[];
-  total: number;
+  totalSales: number;
+  totalCommission: number;
 }
 
 export function DailyOverview({ financesData, reservationData, loading }: DailyOverviewProps) {
@@ -48,7 +53,7 @@ export function DailyOverview({ financesData, reservationData, loading }: DailyO
     new Set()
   );
 
-  const { groups, grandTotal } = useMemo(() => {
+  const { groups, grandSales, grandCommission } = useMemo(() => {
     // Build a map of reservation dates for quick lookup
     const reservationDateMap = new Map<number, string>();
     for (const r of reservationData) {
@@ -84,13 +89,18 @@ export function DailyOverview({ financesData, reservationData, loading }: DailyO
             new Date(b.created_at ?? "").getTime() -
             new Date(a.created_at ?? "").getTime()
         ),
-        total: records.reduce((sum, r) => sum + r.amount, 0),
+        totalSales: records.reduce((sum, r) => sum + r.amount, 0),
+        totalCommission: records.reduce(
+          (sum, r) => sum + (r.commission_amount ?? 0),
+          0
+        ),
       }))
-      .sort((a, b) => b.total - a.total);
+      .sort((a, b) => b.totalSales - a.totalSales);
 
-    const grandTotal = groups.reduce((sum, g) => sum + g.total, 0);
+    const grandSales = groups.reduce((sum, g) => sum + g.totalSales, 0);
+    const grandCommission = groups.reduce((sum, g) => sum + g.totalCommission, 0);
 
-    return { groups, grandTotal };
+    return { groups, grandSales, grandCommission };
   }, [financesData, reservationData]);
 
   const toggleGroup = (creator: string) => {
@@ -157,11 +167,11 @@ export function DailyOverview({ financesData, reservationData, loading }: DailyO
           <div className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
             <span className="text-body-sm font-medium text-foreground-muted">
-              Ingresos totales hoy
+              Total ventas hoy
             </span>
           </div>
           <span className="text-h3 font-bold text-foreground">
-            {grandTotal.toLocaleString("es-ES")}€
+            {grandSales.toLocaleString("es-ES")}€
           </span>
         </div>
       </Card>
@@ -200,9 +210,20 @@ export function DailyOverview({ financesData, reservationData, loading }: DailyO
                     {group.records.length}
                   </Badge>
                 </div>
-                <span className="text-body-sm font-bold text-foreground flex-shrink-0 ml-2">
-                  {group.total.toLocaleString("es-ES")}€
-                </span>
+                <div className="flex flex-col items-end flex-shrink-0 ml-2">
+                  <span className="text-body-sm font-bold text-foreground">
+                    {group.totalSales.toLocaleString("es-ES")}€
+                  </span>
+                  {group.totalCommission > 0 ? (
+                    <span className="text-[11px] text-warning font-medium">
+                      A pagar: {group.totalCommission.toLocaleString("es-ES")}€
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-foreground-subtle">
+                      {group.records.length} {group.records.length === 1 ? "venta" : "ventas"}
+                    </span>
+                  )}
+                </div>
               </button>
 
               {/* Expanded records */}
@@ -221,6 +242,8 @@ export function DailyOverview({ financesData, reservationData, loading }: DailyO
                           { hour: "2-digit", minute: "2-digit" }
                         )
                       : "";
+                    const commission = record.commission_amount ?? 0;
+                    const netAmount = record.amount - commission;
 
                     return (
                       <div
@@ -245,9 +268,16 @@ export function DailyOverview({ financesData, reservationData, loading }: DailyO
                         <span className="text-[11px] text-foreground-muted flex-shrink-0">
                           {time}
                         </span>
-                        <span className="text-body-sm font-semibold text-foreground flex-shrink-0">
-                          {record.amount.toLocaleString("es-ES")}€
-                        </span>
+                        <div className="flex flex-col items-end flex-shrink-0">
+                          <span className="text-body-sm font-semibold text-foreground">
+                            {record.amount.toLocaleString("es-ES")}€
+                          </span>
+                          {commission > 0 && (
+                            <span className="text-[11px] text-warning">
+                              {commission.toLocaleString("es-ES")}€
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
                   })}

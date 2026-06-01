@@ -7,7 +7,10 @@ export type Finances = {
   creator: string;
   created_at?: string;
   reservation_id?: number | null;
+  product_id?: number | null;
   customer_name?: string | null;
+  commission_rate?: number;
+  commission_amount?: number;
 };
 
 export type FinancesModalProps = {
