@@ -4,7 +4,7 @@ import { getVerifiedServerAccessToken } from "@/lib/auth/server-session";
 
 export async function GET(request: NextRequest) {
   try {
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+    const API_BASE = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE;
     const auth = await getVerifiedServerAccessToken();
     if ("error" in auth) return auth.error;
     const jwt = auth.jwt;
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+    const API_BASE = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE;
     const auth = await getVerifiedServerAccessToken();
     if ("error" in auth) return auth.error;
     const jwt = auth.jwt;
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+    const API_BASE = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE;
     const auth = await getVerifiedServerAccessToken();
     if ("error" in auth) return auth.error;
     const jwt = auth.jwt;
@@ -125,7 +125,7 @@ export async function DELETE(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+    const API_BASE = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE;
     const auth = await getVerifiedServerAccessToken();
     if ("error" in auth) return auth.error;
     const jwt = auth.jwt;

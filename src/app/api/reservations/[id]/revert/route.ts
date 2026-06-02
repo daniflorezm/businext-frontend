@@ -6,7 +6,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+    const API_BASE = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE;
     const auth = await getVerifiedServerAccessToken();
     if ("error" in auth) return auth.error;
 

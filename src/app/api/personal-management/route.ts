@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedServerAccessToken } from "@/lib/auth/server-session";
 import { InviteEmployeeInput } from "@/lib/employee/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const API_BASE = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE;
 
 async function proxyToBackend(method: "GET" | "POST", body?: InviteEmployeeInput) {
   const auth = await getVerifiedServerAccessToken();

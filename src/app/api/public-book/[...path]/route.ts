@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const API_BASE = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE;
 
 /**
  * Public booking proxy — no auth required.
