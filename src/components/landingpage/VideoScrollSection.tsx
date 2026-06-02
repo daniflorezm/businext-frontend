@@ -48,6 +48,8 @@ const FEATURE_ICONS = [
 
 export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame = 14 }: Props) {
   const [isDesktop, setIsDesktop] = useState(false);
+  const [cardsVisible, setCardsVisible] = useState(false);
+  const desktopSectionRef = useRef<HTMLElement>(null);
 
   // useLayoutEffect runs synchronously after DOM mutations but BEFORE passive
   // useEffects — this guarantees the canvas mounts/unmounts before the animation
@@ -83,6 +85,19 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
   const slideRefs = useRef<Array<{ container: HTMLDivElement | null }>>(
     slides.map(() => ({ container: null }))
   );
+
+  // ── Desktop entrance animations ───────────────────────────────────────────
+  useEffect(() => {
+    if (!isDesktop) return;
+    const el = desktopSectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setCardsVisible(true); obs.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [isDesktop]);
 
   // ── Resize: sync canvas size, --vh, and section height ─────────────────────
   useEffect(() => {
@@ -274,7 +289,7 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
 
       // Entry fade: hide seam with previous section, dissolves in first 3% of scroll
       if (entryFadeRef.current) {
-        const op = progress < 0.03 ? 1 - (progress / 0.03) : 0;
+        const op = progress < 0.008 ? 1 - (progress / 0.008) : 0;
         entryFadeRef.current.style.opacity = String(op);
       }
 
@@ -371,7 +386,7 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
     const featureSlides = slides.filter(s => !s.noBackground && s.line1 !== "Únete a");
 
     return (
-      <section style={{ position: "relative", width: "100%", minHeight: "100vh", background: "#07080f", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+      <section ref={desktopSectionRef} style={{ position: "relative", width: "100%", minHeight: "100vh", background: "#07080f", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
 
         {/* Background image */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -403,10 +418,13 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
             letterSpacing: "0.08em",
             textTransform: "uppercase" as const,
             fontFamily: "var(--font-sans), system-ui, sans-serif",
+            opacity: cardsVisible ? 1 : 0,
+            transform: cardsVisible ? "translateY(0)" : "translateY(16px)",
+            transition: "opacity 0.45s ease 0s, transform 0.45s cubic-bezier(0.16,1,0.3,1) 0s",
           }}>Funcionalidades</span>
 
           {/* Headline */}
-          <div style={{ textAlign: "center" }}>
+          <div style={{ textAlign: "center", opacity: cardsVisible ? 1 : 0, transform: cardsVisible ? "translateY(0)" : "translateY(20px)", transition: "opacity 0.5s ease 0s, transform 0.5s cubic-bezier(0.16,1,0.3,1) 0s" }}>
             <h2 style={{
               margin: 0,
               color: "#f8fafc",
@@ -448,6 +466,9 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
                 display: "flex",
                 flexDirection: "column" as const,
                 gap: "0.85rem",
+                opacity: cardsVisible ? 1 : 0,
+                transform: cardsVisible ? "translateY(0)" : "translateY(28px)",
+                transition: `opacity 0.55s ease ${0.08 + i * 0.1}s, transform 0.55s cubic-bezier(0.16,1,0.3,1) ${0.08 + i * 0.1}s`,
               }}>
                 {/* Icon */}
                 <div style={{
