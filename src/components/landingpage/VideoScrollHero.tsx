@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 // ── Constants ──────────────────────────────────────────────────────────────────
 const FRAME_COUNT  = 120;
 const FRAME_PATH   = (n: number) => `/frames/frame${String(n).padStart(4, "0")}.jpg`;
-const PX_PER_FRAME = 14;
+const PX_PER_FRAME = 5;
 
 // ── Slide data ─────────────────────────────────────────────────────────────────
 const SLIDES_DATA = [
@@ -207,7 +207,7 @@ export function VideoScrollHero() {
       if (!visible) { rafId.current = requestAnimationFrame(tick); return; }
 
       const diff  = targetFrame.current - currentFrame.current;
-      const lerpF = "ontouchstart" in window ? 0.16 : 0.14;
+      const lerpF = "ontouchstart" in window ? 0.13 : 0.16;
 
       if (Math.abs(diff) > 0.05) {
         currentFrame.current += diff * lerpF;
@@ -276,15 +276,15 @@ export function VideoScrollHero() {
       if (delta > 0 && p >= 0.97) return;
       if (delta < 0 && p <= 0.01) return;
       e.preventDefault();
-      touchVelocity = clamp(delta * 0.4, -60, 60);
+      touchVelocity = clamp(delta * 0.55, -80, 80);
       window.scrollBy({ top: touchVelocity, behavior: "instant" as ScrollBehavior });
       touchStartY.current = e.touches[0].clientY;
     };
     const onTouchEnd = () => {
       const apply = () => {
-        if (Math.abs(touchVelocity) < 0.5) { touchVelocity = 0; return; }
+        if (Math.abs(touchVelocity) < 0.2) { touchVelocity = 0; return; }
         window.scrollBy({ top: touchVelocity, behavior: "instant" as ScrollBehavior });
-        touchVelocity *= 0.74;
+        touchVelocity *= 0.88;
         rafTouch.current = requestAnimationFrame(apply);
       };
       rafTouch.current = requestAnimationFrame(apply);
@@ -539,7 +539,7 @@ export function VideoScrollHero() {
   // ── Mobile / Tablet ────────────────────────────────────────────────────────
   return (
     <div ref={sectionRef} style={{ position: "relative", width: "100%", minHeight: "100vh", background: "#07080f" }}>
-      <div style={{ position: "sticky", top: 0, width: "100%", height: "100vh", height: "calc(var(--vh, 1vh) * 100)", overflow: "clip" } as React.CSSProperties}>
+      <div style={{ position: "sticky", top: 0, width: "100%", height: "calc(var(--vh, 1vh) * 100)", overflow: "clip" } as React.CSSProperties}>
 
         {/* Loading */}
         {!loaded && (
