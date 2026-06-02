@@ -263,7 +263,7 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
 
     // ── RAF loop ───────────────────────────────────────────────────────────────
     const isMobile = "ontouchstart" in window;
-    const lerpF    = isMobile ? 0.18 : 0.14; // slightly snappier on touch
+    const lerpF    = isMobile ? 0.13 : 0.16;
 
     const tick = () => {
       if (!visible) { rafId.current = requestAnimationFrame(tick); return; }
@@ -331,15 +331,15 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
       if (delta > 0 && p >= 0.97) return;
       if (delta < 0 && p <= 0.01) return;
       e.preventDefault();
-      touchVelocity = clamp(delta * 0.4, -60, 60);
+      touchVelocity = clamp(delta * 0.55, -80, 80);
       window.scrollBy({ top: touchVelocity, behavior: "instant" as ScrollBehavior });
       touchStartY.current = e.touches[0].clientY;
     };
     const onTouchEnd = () => {
       const apply = () => {
-        if (Math.abs(touchVelocity) < 0.5) { touchVelocity = 0; return; }
+        if (Math.abs(touchVelocity) < 0.2) { touchVelocity = 0; return; }
         window.scrollBy({ top: touchVelocity, behavior: "instant" as ScrollBehavior });
-        touchVelocity *= 0.74;
+        touchVelocity *= 0.88;
         rafTouch.current = requestAnimationFrame(apply);
       };
       rafTouch.current = requestAnimationFrame(apply);

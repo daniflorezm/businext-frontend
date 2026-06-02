@@ -61,7 +61,7 @@ export default function Home() {
       <VideoScrollHero />
 
       {/* Section 2: Video scroll continuo (todos los videos en uno) */}
-      <VideoScrollSection framePath={fullFramePath} frameCount={720} slides={SLIDES_FULL} />
+      <VideoScrollSection framePath={fullFramePath} frameCount={720} slides={SLIDES_FULL} pxPerFrame={5} />
 
       {/* ── FAQ ───────────────────────────────────────────────────────────────── */}
       <section style={{
