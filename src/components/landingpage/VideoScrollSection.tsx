@@ -136,23 +136,38 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
       ctx.drawImage(frame, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
     };
 
-    // Load frames progressively — guard against stale callbacks after unmount
+    // Lazy-load frames only when section is near viewport — prevents 720 concurrent
+    // requests on page load which would compete with CSS/JS and other app resources.
     let cancelled = false;
-    for (let i = 1; i <= frameCount; i++) {
-      const img = new Image();
-      const idx = i - 1;
-      img.src = framePath(i);
-      img.onload = () => {
-        if (!cancelled) {
-          framesRef.current[idx] = img;
-          // Draw first frame immediately on load so section never shows a black canvas
-          if (idx === 0 && lastDrawnRef.current === null) {
-            lastDrawnRef.current = img;
-            drawFrame(img);
+    let loadStarted = false;
+
+    const startLoadingFrames = () => {
+      if (loadStarted || cancelled) return;
+      loadStarted = true;
+      for (let i = 1; i <= frameCount; i++) {
+        const img = new Image();
+        const idx = i - 1;
+        img.src = framePath(i);
+        img.onload = () => {
+          if (!cancelled) {
+            framesRef.current[idx] = img;
+            // Draw first frame immediately so canvas never shows black
+            if (idx === 0 && lastDrawnRef.current === null) {
+              lastDrawnRef.current = img;
+              drawFrame(img);
+            }
           }
-        }
-      };
-    }
+        };
+      }
+    };
+
+    // Start loading when the section is within 300px of the viewport.
+    // With pxPerFrame=5 the hero takes 600px of scroll — this triggers at the halfway point,
+    // giving enough lead time for frames to load before the user reaches the section.
+    const loadObs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { loadObs.disconnect(); startLoadingFrames(); }
+    }, { rootMargin: "300px" });
+    loadObs.observe(section);
 
     let visible = true;
     const observer = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0 });
@@ -371,6 +386,7 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
       cancelAnimationFrame(rafId.current);
       cancelAnimationFrame(rafTouch.current);
       cancelAnimationFrame(snapRafRef.current);
+      loadObs.disconnect();
       observer.disconnect();
       window.removeEventListener("scroll", onScroll);
       section.removeEventListener("touchstart", onTouchStart);
