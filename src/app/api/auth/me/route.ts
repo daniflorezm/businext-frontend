@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getVerifiedServerAccessToken } from "@/lib/auth/server-session";
 
-const API_BASE = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE;
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 /**
  * Proxies GET /auth/me to the backend.
