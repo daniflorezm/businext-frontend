@@ -566,22 +566,21 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
               opacity: 0,
               pointerEvents: "none",
               zIndex: 5,
-              maxWidth: isDesktop ? 480 : "clamp(220px, 80vw, 400px)",
-              width: isDesktop ? "auto" : "max-content",
+              // noBackground: ancho generoso para que el texto no quede al límite
+              maxWidth: slide.noBackground ? "min(90vw, 520px)" : "clamp(220px, 84vw, 400px)",
+              width: slide.noBackground ? "90vw" : "max-content",
               borderRadius: slide.noBackground ? undefined : "20px",
             }}
           >
-            {/* Backdrop en hijo separado — evita artifact de tile-split de WebKit en elementos con transform */}
+            {/* Fondo sólido — backdrop-filter en padre con willChange:transform causa flickering en WebKit */}
             {!slide.noBackground && (
               <div style={{
                 position: "absolute",
                 inset: 0,
                 borderRadius: "20px",
-                background: "rgba(255,255,255,0.13)",
-                backdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
-                WebkitBackdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
-                border: "1px solid rgba(255,255,255,0.28)",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.35), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(255,255,255,0.06)",
+                background: "rgba(8, 12, 24, 0.68)",
+                border: "1px solid rgba(255,255,255,0.22)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.45), inset 0 1.5px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(255,255,255,0.04)",
                 pointerEvents: "none",
               }} />
             )}
@@ -591,18 +590,23 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              padding: isDesktop ? "1.6rem 2rem" : "clamp(0.8rem, 2.5vw, 1.4rem) clamp(1rem, 3vw, 1.6rem)",
+              // noBackground no tiene caja visible — sin padding lateral para evitar que el texto quede cortado
+              padding: slide.noBackground
+                ? "0"
+                : "clamp(0.8rem, 2.5vw, 1.4rem) clamp(1rem, 3vw, 1.6rem)",
               textAlign: "center",
             }}>
               <h2 style={{
                 margin: 0,
                 color: "#f8fafc",
                 fontFamily: "var(--font-heading), system-ui, sans-serif",
+                // noBackground: escala suave — mín 1.8rem para que no desborde en móviles pequeños
+                // regular (glass panel): mín 1.4rem, más contenido en panel
                 fontSize: slide.noBackground
-                  ? (isDesktop ? "3.2rem" : "clamp(2.8rem, 11vw, 6rem)")
-                  : (isDesktop ? "2.2rem" : "clamp(1.6rem, 6vw, 3.8rem)"),
+                  ? "clamp(1.8rem, 6.5vw, 3.2rem)"
+                  : "clamp(1.4rem, 5.5vw, 2.6rem)",
                 fontWeight: 800,
-                lineHeight: 0.95,
+                lineHeight: 1.05,
                 letterSpacing: "-0.03em",
                 WebkitFontSmoothing: "antialiased" as const,
                 MozOsxFontSmoothing: "grayscale" as const,
@@ -618,12 +622,16 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
                 }}>{slide.accent}</span>
               </h2>
               <p style={{
-                margin: "clamp(0.5rem, 1.5vh, 1rem) 0 0",
-                color: "rgba(255,255,255,0.85)",
+                margin: "clamp(0.5rem, 1.5vh, 0.9rem) 0 0",
+                color: slide.noBackground ? "rgba(255,255,255,0.80)" : "rgba(255,255,255,0.85)",
                 fontFamily: "var(--font-sans), system-ui, sans-serif",
-                fontSize: isDesktop ? "0.92rem" : "clamp(0.75rem, 2.8vw, 0.95rem)",
+                fontSize: slide.noBackground
+                  ? "clamp(0.80rem, 3vw, 0.95rem)"
+                  : "clamp(0.72rem, 2.6vw, 0.90rem)",
                 fontWeight: 400,
                 lineHeight: 1.6,
+                // Sombra de texto en slides sin fondo para legibilidad sobre el vídeo
+                textShadow: slide.noBackground ? "0 1px 8px rgba(0,0,0,0.55)" : "none",
                 WebkitFontSmoothing: "antialiased" as const,
                 MozOsxFontSmoothing: "grayscale" as const,
               }}>

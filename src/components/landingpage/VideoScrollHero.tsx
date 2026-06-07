@@ -616,16 +616,14 @@ export function VideoScrollHero() {
               borderRadius: "20px",
             }}
           >
-            {/* Backdrop en hijo separado — evita el artifact de tile-split de WebKit */}
+            {/* Fondo sólido — backdrop-filter dentro de willChange:transform causa flickering en WebKit */}
             <div style={{
               position: "absolute",
               inset: 0,
               borderRadius: "20px",
-              background: "rgba(255,255,255,0.13)",
-              backdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
-              WebkitBackdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
-              border: "1px solid rgba(255,255,255,0.28)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.35), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(255,255,255,0.06)",
+              background: "rgba(8, 12, 24, 0.68)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.45), inset 0 1.5px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(255,255,255,0.04)",
               pointerEvents: "none",
             }} />
             <div style={{
