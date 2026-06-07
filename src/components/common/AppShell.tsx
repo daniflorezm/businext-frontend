@@ -10,7 +10,9 @@ import { routesWithoutHeader } from "@/lib/utils";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { context, loading } = useAccessContext();
+  const isPublicRoute =
+    routesWithoutHeader.includes(pathname) || pathname.startsWith("/book/");
+  const { context, loading } = useAccessContext({ enabled: !isPublicRoute });
   const { mutate } = useSWRConfig();
   const prevPathname = useRef(pathname);
 
@@ -18,7 +20,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const wasAuthRoute =
       prevPathname.current === "/login" || prevPathname.current === "/signup";
-    const isNowProtected = !routesWithoutHeader.includes(pathname);
+    const isNowProtected =
+      !routesWithoutHeader.includes(pathname) && !pathname.startsWith("/book/");
 
     if (wasAuthRoute && isNowProtected) {
       mutate(ACCESS_CONTEXT_SWR_KEY);
@@ -26,8 +29,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     prevPathname.current = pathname;
   }, [pathname, mutate]);
 
-  const isPublicRoute =
-    routesWithoutHeader.includes(pathname) || pathname.startsWith("/book/");
   const showSidebar = !isPublicRoute && (context !== null || loading);
 
   return (

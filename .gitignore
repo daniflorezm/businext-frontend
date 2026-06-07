@@ -43,3 +43,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# media — transfer separately (USB / Drive)
+/public/frames/
+/public/frames2/
+/public/frames-*/
+/public/*.mp4
+/public/*.mov
+/public/*.webm
+/public/hero app.jpeg
+*.png
