@@ -20,7 +20,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const wasAuthRoute =
       prevPathname.current === "/login" || prevPathname.current === "/signup";
-    const isNowProtected = !routesWithoutHeader.includes(pathname);
+    const isNowProtected =
+      !routesWithoutHeader.includes(pathname) && !pathname.startsWith("/book/");
 
     if (wasAuthRoute && isNowProtected) {
       mutate(ACCESS_CONTEXT_SWR_KEY);
