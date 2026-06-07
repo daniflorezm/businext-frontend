@@ -681,10 +681,8 @@ export function VideoScrollHero() {
               alignItems: "center",
               gap: 8,
               background: ctaHovered
-                ? "linear-gradient(135deg, rgba(59,130,246,0.30), rgba(167,139,250,0.24))"
-                : "linear-gradient(135deg, rgba(59,130,246,0.18), rgba(167,139,250,0.14))",
-              backdropFilter: "blur(48px) saturate(220%) brightness(1.25)",
-              WebkitBackdropFilter: "blur(48px) saturate(220%) brightness(1.25)",
+                ? "linear-gradient(135deg, rgba(59,130,246,0.38), rgba(167,139,250,0.30))"
+                : "linear-gradient(135deg, rgba(30,42,80,0.82), rgba(50,28,80,0.78))",
               color: "#f8fafc",
               padding: "14px 32px",
               borderRadius: 12,
