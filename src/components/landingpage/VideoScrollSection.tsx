@@ -566,58 +566,70 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
               opacity: 0,
               pointerEvents: "none",
               zIndex: 5,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
               maxWidth: isDesktop ? 480 : "clamp(220px, 80vw, 400px)",
               width: isDesktop ? "auto" : "max-content",
-              ...(slide.noBackground ? {} : {
+              borderRadius: slide.noBackground ? undefined : "20px",
+            }}
+          >
+            {/* Backdrop en hijo separado — evita artifact de tile-split de WebKit en elementos con transform */}
+            {!slide.noBackground && (
+              <div style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: "20px",
                 background: "rgba(255,255,255,0.13)",
                 backdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
                 WebkitBackdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
-                borderRadius: "20px",
                 border: "1px solid rgba(255,255,255,0.28)",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.35), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(255,255,255,0.06)",
-              }),
+                pointerEvents: "none",
+              }} />
+            )}
+            <div style={{
+              position: "relative",
+              zIndex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
               padding: isDesktop ? "1.6rem 2rem" : "clamp(0.8rem, 2.5vw, 1.4rem) clamp(1rem, 3vw, 1.6rem)",
               textAlign: "center",
-            }}
-          >
-            <h2 style={{
-              margin: 0,
-              color: "#f8fafc",
-              fontFamily: "var(--font-heading), system-ui, sans-serif",
-              fontSize: slide.noBackground
-                ? (isDesktop ? "3.2rem" : "clamp(2.8rem, 11vw, 6rem)")
-                : (isDesktop ? "2.2rem" : "clamp(1.6rem, 6vw, 3.8rem)"),
-              fontWeight: 800,
-              lineHeight: 0.95,
-              letterSpacing: "-0.03em",
-              WebkitFontSmoothing: "antialiased" as const,
-              MozOsxFontSmoothing: "grayscale" as const,
-              overflowWrap: "break-word",
-              wordBreak: "break-word",
             }}>
-              <span style={{ display: "block", marginBottom: "0.1em" }}>{slide.line1}</span>
-              <span style={{
-                display: "block",
-                background: "linear-gradient(to right, #3b82f6, #a78bfa)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}>{slide.accent}</span>
-            </h2>
-            <p style={{
-              margin: "clamp(0.5rem, 1.5vh, 1rem) 0 0",
-              color: "rgba(255,255,255,0.85)",
-              fontFamily: "var(--font-sans), system-ui, sans-serif",
-              fontSize: isDesktop ? "0.92rem" : "clamp(0.75rem, 2.8vw, 0.95rem)",
-              fontWeight: 400,
-              lineHeight: 1.6,
-              WebkitFontSmoothing: "antialiased" as const,
-              MozOsxFontSmoothing: "grayscale" as const,
-            }}>
-              {slide.subtitle}
-            </p>
+              <h2 style={{
+                margin: 0,
+                color: "#f8fafc",
+                fontFamily: "var(--font-heading), system-ui, sans-serif",
+                fontSize: slide.noBackground
+                  ? (isDesktop ? "3.2rem" : "clamp(2.8rem, 11vw, 6rem)")
+                  : (isDesktop ? "2.2rem" : "clamp(1.6rem, 6vw, 3.8rem)"),
+                fontWeight: 800,
+                lineHeight: 0.95,
+                letterSpacing: "-0.03em",
+                WebkitFontSmoothing: "antialiased" as const,
+                MozOsxFontSmoothing: "grayscale" as const,
+                overflowWrap: "break-word",
+                wordBreak: "break-word",
+              }}>
+                <span style={{ display: "block", marginBottom: "0.1em" }}>{slide.line1}</span>
+                <span style={{
+                  display: "block",
+                  background: "linear-gradient(to right, #3b82f6, #a78bfa)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}>{slide.accent}</span>
+              </h2>
+              <p style={{
+                margin: "clamp(0.5rem, 1.5vh, 1rem) 0 0",
+                color: "rgba(255,255,255,0.85)",
+                fontFamily: "var(--font-sans), system-ui, sans-serif",
+                fontSize: isDesktop ? "0.92rem" : "clamp(0.75rem, 2.8vw, 0.95rem)",
+                fontWeight: 400,
+                lineHeight: 1.6,
+                WebkitFontSmoothing: "antialiased" as const,
+                MozOsxFontSmoothing: "grayscale" as const,
+              }}>
+                {slide.subtitle}
+              </p>
+            </div>
           </div>
         ))}
 

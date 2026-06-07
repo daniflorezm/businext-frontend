@@ -96,25 +96,37 @@ export function VideoScrollHero() {
 
     section.style.height = `${window.innerHeight + FRAME_COUNT * PX_PER_FRAME}px`;
 
-    // Load frames
-    const images: HTMLImageElement[] = [];
+    // Load frames — sparse array: slots filled only when image is ready
+    const frameArr: (HTMLImageElement | null)[] = new Array(FRAME_COUNT).fill(null);
+    framesRef.current = frameArr as HTMLImageElement[];
     let loadedCount = 0;
+    let cancelled = false;
+    let shownFirst = false;
+
     for (let i = 1; i <= FRAME_COUNT; i++) {
       const img = new Image();
+      const idx = i - 1;
       img.src = FRAME_PATH(i);
       img.onload = () => {
+        if (cancelled) return;
+        frameArr[idx] = img;
         loadedCount++;
         setLoadPct(Math.round((loadedCount / FRAME_COUNT) * 100));
-        if (loadedCount === FRAME_COUNT) {
-          framesRef.current = images;
-          canvas.width  = images[0].naturalWidth;
-          canvas.height = images[0].naturalHeight;
-          ctx.drawImage(images[0], 0, 0);
+        // Show canvas as soon as ANY frame is ready — eliminates infinite spinner
+        if (!shownFirst) {
+          shownFirst = true;
+          canvas.width  = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          ctx.drawImage(img, 0, 0);
           setLoaded(true);
           setTimeout(() => { mountedRef.current = true; setMounted(true); }, 100);
         }
       };
-      images.push(img);
+      img.onerror = () => {
+        // Count errors so progress always advances even on network failures
+        loadedCount++;
+        setLoadPct(Math.round((loadedCount / FRAME_COUNT) * 100));
+      };
     }
 
     let visible = true;
@@ -299,6 +311,7 @@ export function VideoScrollHero() {
     section.addEventListener("touchend",   onTouchEnd,   { passive: true });
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(rafId.current);
       cancelAnimationFrame(rafTouch.current);
       cancelAnimationFrame(snapRafRef.current);
@@ -317,7 +330,7 @@ export function VideoScrollHero() {
       <section style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden", background: "#07080f" }}>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero app.jpeg" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "72% 75%" }} />
+        <img src="/hero%20app.jpeg" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "72% 75%" }} />
         {/* Overlays */}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(7,8,15,0.95) 20%, rgba(7,8,15,0.40) 38%, transparent 50%)" }} />
         <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 25% 50%, rgba(99,102,241,0.08) 0%, transparent 60%)" }} />
@@ -598,52 +611,64 @@ export function VideoScrollHero() {
               opacity: 0,
               pointerEvents: "none",
               zIndex: 5,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
               maxWidth: "clamp(220px, 80vw, 400px)",
               width: "max-content",
+              borderRadius: "20px",
+            }}
+          >
+            {/* Backdrop en hijo separado — evita el artifact de tile-split de WebKit */}
+            <div style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "20px",
               background: "rgba(255,255,255,0.13)",
               backdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
               WebkitBackdropFilter: "blur(40px) saturate(200%) brightness(1.15)",
-              borderRadius: "20px",
               border: "1px solid rgba(255,255,255,0.28)",
-              padding: "clamp(0.8rem, 2.5vw, 1.4rem) clamp(1rem, 3vw, 1.6rem)",
               boxShadow: "0 8px 32px rgba(0,0,0,0.35), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(255,255,255,0.06)",
+              pointerEvents: "none",
+            }} />
+            <div style={{
+              position: "relative",
+              zIndex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "clamp(0.8rem, 2.5vw, 1.4rem) clamp(1rem, 3vw, 1.6rem)",
               textAlign: "center",
-            }}
-          >
-            <h1 style={{
-              margin: 0,
-              color: "#f8fafc",
-              fontFamily: "var(--font-heading), system-ui, sans-serif",
-              fontSize: "clamp(2rem, 8vw, 4rem)",
-              fontWeight: 800,
-              lineHeight: 0.95,
-              letterSpacing: "-0.03em",
-              WebkitFontSmoothing: "antialiased" as const,
-              MozOsxFontSmoothing: "grayscale" as const,
             }}>
-              <span style={{ display: "block", marginBottom: "0.1em" }}>{slide.line1}</span>
-              <span style={{
-                display: "block",
-                background: "linear-gradient(to right, #3b82f6, #a78bfa)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}>{slide.accent}</span>
-            </h1>
-            <p style={{
-              margin: "clamp(0.6rem, 1.5vh, 1rem) 0 0",
-              color: "rgba(255,255,255,0.85)",
-              fontFamily: "var(--font-sans), system-ui, sans-serif",
-              fontSize: "clamp(0.8rem, 3vw, 0.95rem)",
-              fontWeight: 400,
-              lineHeight: 1.55,
-              WebkitFontSmoothing: "antialiased" as const,
-              MozOsxFontSmoothing: "grayscale" as const,
-            }}>
-              {slide.subtitle}
-            </p>
+              <h1 style={{
+                margin: 0,
+                color: "#f8fafc",
+                fontFamily: "var(--font-heading), system-ui, sans-serif",
+                fontSize: "clamp(2rem, 8vw, 4rem)",
+                fontWeight: 800,
+                lineHeight: 0.95,
+                letterSpacing: "-0.03em",
+                WebkitFontSmoothing: "antialiased" as const,
+                MozOsxFontSmoothing: "grayscale" as const,
+              }}>
+                <span style={{ display: "block", marginBottom: "0.1em" }}>{slide.line1}</span>
+                <span style={{
+                  display: "block",
+                  background: "linear-gradient(to right, #3b82f6, #a78bfa)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}>{slide.accent}</span>
+              </h1>
+              <p style={{
+                margin: "clamp(0.6rem, 1.5vh, 1rem) 0 0",
+                color: "rgba(255,255,255,0.85)",
+                fontFamily: "var(--font-sans), system-ui, sans-serif",
+                fontSize: "clamp(0.8rem, 3vw, 0.95rem)",
+                fontWeight: 400,
+                lineHeight: 1.55,
+                WebkitFontSmoothing: "antialiased" as const,
+                MozOsxFontSmoothing: "grayscale" as const,
+              }}>
+                {slide.subtitle}
+              </p>
+            </div>
           </div>
         ))}
 
