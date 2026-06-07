@@ -281,13 +281,13 @@ export function VideoScrollHero() {
       if (delta < 0 && p <= 0.01) return;
       e.preventDefault();
       touchVelocity = clamp(delta * 0.55, -80, 80);
-      window.scrollBy({ top: touchVelocity, behavior: "instant" as ScrollBehavior });
+      window.scrollBy(0, touchVelocity);
       touchStartY.current = e.touches[0].clientY;
     };
     const onTouchEnd = () => {
       const apply = () => {
         if (Math.abs(touchVelocity) < 0.2) { touchVelocity = 0; return; }
-        window.scrollBy({ top: touchVelocity, behavior: "instant" as ScrollBehavior });
+        window.scrollBy(0, touchVelocity);
         touchVelocity *= 0.88;
         rafTouch.current = requestAnimationFrame(apply);
       };
@@ -477,7 +477,7 @@ export function VideoScrollHero() {
               href="#como-funciona"
               onMouseEnter={() => setSecondaryHovered(true)}
               onMouseLeave={() => setSecondaryHovered(false)}
-              onClick={(e) => { e.preventDefault(); document.querySelector("section:nth-of-type(2)")?.scrollIntoView({ behavior: "smooth" }); }}
+              onClick={(e) => { e.preventDefault(); window.scrollTo({ top: window.innerHeight, behavior: "smooth" }); }}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
