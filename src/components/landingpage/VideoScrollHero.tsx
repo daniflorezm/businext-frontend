@@ -314,9 +314,8 @@ export function VideoScrollHero() {
     return (
       <section style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden", background: "#07080f" }}>
 
-        {/* Background image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/hero app.jpeg" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "72% 75%" }} />
-
         {/* Overlays */}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(7,8,15,0.95) 20%, rgba(7,8,15,0.40) 38%, transparent 50%)" }} />
         <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 25% 50%, rgba(99,102,241,0.08) 0%, transparent 60%)" }} />
