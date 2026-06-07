@@ -105,7 +105,11 @@ export default function Home() {
               return (
                 <div
                   key={i}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isOpen}
                   onClick={() => setOpenFaq(isOpen ? null : i)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenFaq(isOpen ? null : i); } }}
                   style={{
                     background: isOpen ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
                     border: isOpen ? "1px solid rgba(167,139,250,0.30)" : "1px solid rgba(255,255,255,0.08)",
