@@ -158,7 +158,7 @@ export function BusinextSection() {
         if (framesRef.current[idx]) ctx.drawImage(framesRef.current[idx], 0, 0);
       }
 
-      const progress = currentFrame.current / FRAME_COUNT;
+      const progress = currentFrame.current / (FRAME_COUNT - 1);
 
       if (progressBarRef.current)
         progressBarRef.current.style.width = `${progress * 100}%`;
@@ -187,7 +187,7 @@ export function BusinextSection() {
     // ── Touch with inertia ─────────────────────────────────────────────────────
     let touchVelocity = 0;
     const isInSection = () => {
-      const p = currentFrame.current / FRAME_COUNT;
+      const p = currentFrame.current / (FRAME_COUNT - 1);
       return p >= 0 && p <= 1;
     };
 
@@ -199,7 +199,7 @@ export function BusinextSection() {
 
     const onTouchMove = (e: TouchEvent) => {
       if (!isInSection()) return;
-      const p     = currentFrame.current / FRAME_COUNT;
+      const p     = currentFrame.current / (FRAME_COUNT - 1);
       const delta = touchStartY.current - e.touches[0].clientY;
       if (delta > 0 && p >= 0.97) return;
       if (delta < 0 && p <= 0.01) return;
