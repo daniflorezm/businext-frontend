@@ -68,11 +68,13 @@ export function VideoScrollHero() {
       innerWidthRef.current = window.innerWidth;
       document.documentElement.style.setProperty("--vh", `${window.innerHeight * 0.01}px`);
     };
-    onResize();
     window.addEventListener("resize", onResize, { passive: true });
-    window.addEventListener("orientationchange", () => setTimeout(onResize, 150));
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+    const onOrientationChange = () => setTimeout(onResize, 150);
+    window.addEventListener("orientationchange", onOrientationChange, { passive: true });
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onOrientationChange);
+    };
 
   // ── Mobile canvas animation ────────────────────────────────────────────────
   useEffect(() => {
