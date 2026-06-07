@@ -297,7 +297,7 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
         }
       }
 
-      const progress = currentFrame.current / frameCount;
+      const progress = currentFrame.current / (frameCount - 1);
 
       if (progressBarRef.current)
         progressBarRef.current.style.width = `${progress * 100}%`;
@@ -341,7 +341,7 @@ export function VideoScrollSection({ framePath, frameCount, slides, pxPerFrame =
       touchVelocity = 0;
     };
     const onTouchMove = (e: TouchEvent) => {
-      const p     = currentFrame.current / frameCount;
+      const p     = currentFrame.current / (frameCount - 1);
       const delta = touchStartY.current - e.touches[0].clientY;
       if (delta > 0 && p >= 0.97) return;
       if (delta < 0 && p <= 0.01) return;
