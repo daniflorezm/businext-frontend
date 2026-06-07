@@ -351,7 +351,7 @@ export default function Home() {
           </div>
 
           {/* CTA button */}
-          <Link href="/login" style={{ width: "100%", display: "block", position: "relative" }}>
+          <div style={{ width: "100%", position: "relative" }}>
             {/* Pulse ring */}
             <span style={{
               position: "absolute",
@@ -363,7 +363,8 @@ export default function Home() {
               transition: "opacity 0.3s ease",
               pointerEvents: "none",
             }} />
-            <button
+            <Link
+              href="/login"
               onMouseEnter={() => setCtaHovered(true)}
               onMouseLeave={() => setCtaHovered(false)}
               style={{
@@ -382,6 +383,7 @@ export default function Home() {
                 border: "1px solid rgba(255,255,255,0.20)",
                 cursor: "pointer",
                 letterSpacing: "0.03em",
+                textDecoration: "none",
                 boxShadow: ctaHovered
                   ? "0 8px 48px rgba(99,102,241,0.60), inset 0 1px 0 rgba(255,255,255,0.30)"
                   : "0 4px 24px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.20)",
@@ -412,8 +414,8 @@ export default function Home() {
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
               </span>
-            </button>
-          </Link>
+            </Link>
+          </div>
 
           {/* Trust badges */}
           <div style={{ margin: "18px 0 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
