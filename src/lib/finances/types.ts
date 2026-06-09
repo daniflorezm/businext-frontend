@@ -65,6 +65,8 @@ export type FinancesBalanceCardProps = {
   type: keyof typeof FinanceBalanceType;
   amount: number;
   monthName: string;
+  label?: string;
+  helperText?: string;
 };
 
 export type AnualBalances = {

@@ -37,6 +37,8 @@ export const FinancesBalanceCard = ({
   type,
   amount,
   monthName,
+  label,
+  helperText,
 }: FinancesBalanceCardProps) => {
   const Icon = iconMap[type];
   const colors = colorMap[type];
@@ -49,7 +51,7 @@ export const FinancesBalanceCard = ({
       <CardContent className="flex items-center justify-between gap-4 p-5">
         <div className="flex flex-col gap-1 min-w-0">
           <p className="text-caption font-semibold uppercase tracking-wide text-foreground-muted">
-            {FinanceBalanceType[type]}
+            {label ?? FinanceBalanceType[type]}
           </p>
           <p className="text-caption text-foreground-subtle">
             Mes: {monthName}
@@ -57,6 +59,9 @@ export const FinancesBalanceCard = ({
           <p className={`text-h3 font-bold ${colors.amount}`}>
             {typeof amount === "number" ? amount.toLocaleString("es-ES") : amount}&euro;
           </p>
+          {helperText && (
+            <p className="text-[11px] text-foreground-subtle mt-1">{helperText}</p>
+          )}
         </div>
         <div
           className={`flex items-center justify-center h-12 w-12 rounded-lg ${colors.iconBg} flex-shrink-0`}

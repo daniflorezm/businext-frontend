@@ -23,7 +23,7 @@ import { Plus, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
 import "@/lib/chartjs-dark-theme";
 
 export default function FinancesPage() {
-  const { context, capabilities, loading: contextLoading } = useAccessContext();
+  const { context, loading: contextLoading } = useAccessContext();
   const { activeEmployees } = useEmployee();
 
   const now = new Date();
@@ -36,6 +36,8 @@ export default function FinancesPage() {
     loading,
   } = useFinances(selectedYear);
   const { reservationData } = useReservation();
+  const isOwner = context?.role === "owner";
+  const isNonOwner = !isOwner;
   const [openModal, setopenModal] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterType, setFilterType] = useState<"ALL" | "INCOME" | "EXPENSE">(
@@ -88,21 +90,22 @@ export default function FinancesPage() {
     currentPage * itemsPerPage
   );
 
-  const totalIncome = useMemo(
-    () =>
-      financesData
-        .filter((f) => {
-          if (!f.created_at) return false;
-          const date = new Date(f.created_at);
-          return (
-            date.getMonth() === selectedMonth &&
-            date.getFullYear() === selectedYear &&
-            f.type === "INCOME"
-          );
-        })
-        .reduce((sum, f) => sum + f.amount, 0),
-    [financesData, selectedMonth, selectedYear]
-  );
+  const incomeSummary = useMemo(() => {
+    const monthIncome = financesData.filter((f) => {
+      if (!f.created_at || f.type !== "INCOME") return false;
+      const date = new Date(f.created_at);
+      return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+    });
+
+    const gross = monthIncome.reduce((sum, f) => sum + f.amount, 0);
+    const commission = monthIncome.reduce((sum, f) => sum + (f.commission_amount ?? 0), 0);
+    const net = Math.max(0, gross - commission);
+
+    return {
+      gross,
+      total: isNonOwner ? net : gross,
+    };
+  }, [financesData, selectedMonth, selectedYear, isNonOwner]);
 
   const totalExpense = useMemo(
     () =>
@@ -120,7 +123,7 @@ export default function FinancesPage() {
     [financesData, selectedMonth, selectedYear]
   );
 
-  const totalBalance = totalIncome - totalExpense;
+  const totalBalance = incomeSummary.total - totalExpense;
 
   /* ── Loading state ── */
   if (contextLoading) {
@@ -130,8 +133,6 @@ export default function FinancesPage() {
       </div>
     );
   }
-
-  const isEmployee = context?.role === "employee";
 
   return (
     <div className="min-h-screen w-full pt-14 md:pt-0">
@@ -146,7 +147,7 @@ export default function FinancesPage() {
               Resumen financiero de {monthName} {selectedYear}
             </p>
           </div>
-          {!isEmployee && (
+          {isOwner && (
             <Button variant="primary" onClick={() => setopenModal(true)}>
               <Plus className="h-4 w-4" />
               Agregar Registro
@@ -158,8 +159,14 @@ export default function FinancesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <FinancesBalanceCard
             type="income"
-            amount={totalIncome}
+            amount={incomeSummary.total}
             monthName={monthName}
+            label={isNonOwner ? "Mis Ingresos" : undefined}
+            helperText={
+              isNonOwner
+                ? `Bruto: ${incomeSummary.gross.toLocaleString("es-ES")}€`
+                : undefined
+            }
           />
           <FinancesBalanceCard
             type="expense"
@@ -253,7 +260,7 @@ export default function FinancesPage() {
               </div>
 
               {/* Issuer search — only for managers/owners */}
-              {!isEmployee && (
+              {isOwner && (
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1 min-w-0">
                   <label
                     htmlFor="issuer"
@@ -298,7 +305,7 @@ export default function FinancesPage() {
                 icon={<Receipt />}
                 title="Sin registros"
                 description="No hay registros financieros para los filtros seleccionados."
-                action={!isEmployee ? {
+                action={isOwner ? {
                   label: "Agregar Registro",
                   onClick: () => setopenModal(true),
                 } : undefined}
@@ -311,7 +318,7 @@ export default function FinancesPage() {
                       key={finance.id ?? finance.concept + finance.amount}
                       {...finance}
                       customerName={finance?.customer_name ?? ""}
-                      isEmployee={isEmployee}
+                      isEmployee={isNonOwner}
                     />
                   );
                 })}
@@ -377,7 +384,7 @@ export default function FinancesPage() {
         <FinancesModal
           isOpen={openModal}
           handleOpenModal={handleOpenModal}
-          isEmployee={isEmployee}
+          isEmployee={isNonOwner}
           employeeName={context?.profile?.displayName ?? ""}
           employees={activeEmployees}
           currentUserName={context?.profile?.displayName ?? ""}
