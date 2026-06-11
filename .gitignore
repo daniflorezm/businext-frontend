@@ -44,12 +44,31 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# media — transfer separately (USB / Drive)
-/public/frames/
+# media — videos y frames grandes excluidos del repo
 /public/frames2/
-/public/frames-*/
-/public/*.mp4
+/public/frames-cerebro/
+/public/frames-dinero/
+/public/frames-final/
+/public/frames-inicial/
+/public/frames-resenas/
+/public/frames-reservas/
 /public/*.mov
 /public/*.webm
-/public/hero app.jpeg
-*.png
+# Videos no usados en landing
+/public/Video1.mp4
+/public/busniext.mp4
+/public/features-bg.mp4
+/public/videocerebro.mp4
+/public/videodinero.mp4
+/public/videofinal.mp4
+/public/videoinicial.mp4
+/public/videoreservas.mp4
+/public/videoreseñas.mp4
+/public/video2.mp4
+/public/video3.mp4
+/public/video4.mp4
+/public/video5.mp4
+/public/video6.mp4
+/public/video7.mp4
+/public/video8.mp4
+/public/video9.mp4
