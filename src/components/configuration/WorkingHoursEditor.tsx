@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   WorkingHoursBlock,
   DAY_LABELS,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Clock, Plus, Trash2 } from "lucide-react";
 import { Toast, useToast } from "@/components/common/Toast";
+import { HelpTooltip } from "@/components/ui/tooltip";
 
 interface WorkingHoursEditorProps {
   workingHoursData: WorkingHoursBlock[];
@@ -21,6 +22,7 @@ interface WorkingHoursEditorProps {
   loading: boolean;
   title?: string;
   description?: string;
+  help?: ReactNode;
 }
 
 export function WorkingHoursEditor({
@@ -29,6 +31,14 @@ export function WorkingHoursEditor({
   loading,
   title = "Horario de Trabajo",
   description = "Configura los horarios de apertura y cierre de tu negocio",
+  help = (
+    <>
+      Define aquí los días y franjas horarias en las que tu negocio está abierto.
+      Este horario se usa para calcular los huecos disponibles al crear una{" "}
+      <span className="font-semibold text-foreground">reserva</span>. Puedes
+      añadir varios bloques por día (por ejemplo, mañana y tarde).
+    </>
+  ),
 }: WorkingHoursEditorProps) {
   const [schedules, setSchedules] = useState<DaySchedule[]>(() =>
     blocksToDaySchedules(DEFAULT_WORKING_HOURS)
@@ -146,9 +156,12 @@ export function WorkingHoursEditor({
               <Clock className="w-7 h-7 text-primary" />
             </div>
             <div>
-              <h2 className="font-heading text-h4 font-semibold text-foreground">
-                {title}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="font-heading text-h4 font-semibold text-foreground">
+                  {title}
+                </h2>
+                <HelpTooltip content={help} />
+              </div>
               <p className="text-body-sm text-foreground-muted">
                 {description}
               </p>

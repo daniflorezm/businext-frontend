@@ -25,6 +25,7 @@ import { TabGroup, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/tab
 import { Select } from "@/components/ui/select";
 import { SectionSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { HelpTooltip } from "@/components/ui/tooltip";
 import { ProductSaleForm } from "@/components/reservation/ProductSaleForm";
 import { WalkInModal } from "@/components/reservation/WalkInModal";
 
@@ -241,9 +242,25 @@ export default function ReservationPage() {
     <div className="min-h-screen w-full bg-background pt-14 md:pt-0">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 space-y-6">
         {/* Page header */}
-        <h1 className="font-heading text-h2 font-bold text-foreground">
-          Reservas
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-heading text-h2 font-bold text-foreground">
+            Reservas
+          </h1>
+          <HelpTooltip
+            content={
+              <>
+                Aquí gestionas las citas de tus clientes: puedes crear una reserva
+                rápida, ver la agenda del día o registrar una venta directa (walk-in).
+                Para crear una reserva necesitas tener al menos un producto o
+                servicio creado en{" "}
+                <span className="font-semibold text-foreground">
+                  Configuración → Productos
+                </span>
+                , ya que ahí seleccionas qué servicio se está reservando.
+              </>
+            }
+          />
+        </div>
 
         {/* Info banner */}
         <div className="flex items-center gap-3 bg-surface-raised/60 border border-border-subtle rounded-md px-4 py-3">

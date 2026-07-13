@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/modal";
+import { HelpTooltip } from "@/components/ui/tooltip";
 
 const EMPTY_FORM: Omit<Product, "id"> = {
   name: "",
@@ -183,9 +184,22 @@ export function ProductsSection() {
             <PackageSearch className="w-7 h-7 text-primary" />
           </div>
           <div>
-            <h2 className="font-heading text-h3 font-bold text-foreground">
-              Productos y Servicios
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-heading text-h3 font-bold text-foreground">
+                Productos y Servicios
+              </h2>
+              <HelpTooltip
+                content={
+                  <>
+                    Crea aquí cada producto o servicio que vendes (nombre, precio,
+                    tipo &quot;producto&quot; o &quot;servicio&quot; y, opcionalmente, una imagen).
+                    Estos son los que luego podrás seleccionar al crear una{" "}
+                    <span className="font-semibold text-foreground">reserva</span>{" "}
+                    o registrar una venta directa.
+                  </>
+                }
+              />
+            </div>
             <p className="text-body-sm text-foreground-muted">
               Gestiona los productos o servicios de tu negocio.
             </p>

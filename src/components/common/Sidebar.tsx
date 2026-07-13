@@ -21,6 +21,7 @@ import {
   Star,
   Brain,
   Bell,
+  HelpCircle,
 } from "lucide-react";
 import { useAccessContext } from "@/hooks/useAccessContext";
 import { useBookingRequests } from "@/hooks/useBookingRequests";
@@ -66,6 +67,12 @@ const NAV_LINKS = [
     label: "Configuración",
     icon: Settings,
     cap: "canManageConfiguration" as const,
+  },
+  {
+    href: "/help",
+    label: "Ayuda",
+    icon: HelpCircle,
+    cap: undefined,
   },
 ];
 
@@ -138,7 +145,7 @@ export function Sidebar() {
       {/* Nav links */}
       <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
         {NAV_LINKS.map(({ href, label, icon: Icon, cap }) => {
-          if (!capabilities[cap]) return null;
+          if (cap && !capabilities[cap]) return null;
           const active = pathname.startsWith(href);
           const badge = href === "/notifications" && pendingCount > 0 ? pendingCount : 0;
           return (
