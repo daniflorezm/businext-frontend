@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/tabs";
+import { HelpTooltip } from "@/components/ui/tooltip";
 import { Plus, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
 import "@/lib/chartjs-dark-theme";
 
@@ -140,9 +141,52 @@ export default function FinancesPage() {
         {/* ── Header + Create button ── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="font-heading text-h2 font-bold text-foreground">
-              Finanzas
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-heading text-h2 font-bold text-foreground">
+                Finanzas
+              </h1>
+              <HelpTooltip
+                content={
+                  isNonOwner ? (
+                    <>
+                      Aquí ves tus{" "}
+                      <span className="font-semibold text-foreground">
+                        ingresos
+                      </span>{" "}
+                      del mes seleccionado. La tarjeta &quot;Mis Ingresos&quot;
+                      muestra tu importe{" "}
+                      <span className="font-semibold text-foreground">neto</span>{" "}
+                      (ya descontada la comisión), y debajo el bruto de
+                      referencia. Los registros se generan automáticamente al
+                      completar reservas y ventas.
+                    </>
+                  ) : (
+                    <>
+                      Panel financiero de tu negocio. Las tarjetas superiores
+                      resumen{" "}
+                      <span className="font-semibold text-foreground">
+                        ingresos
+                      </span>
+                      ,{" "}
+                      <span className="font-semibold text-foreground">
+                        gastos
+                      </span>{" "}
+                      y{" "}
+                      <span className="font-semibold text-foreground">
+                        balance
+                      </span>{" "}
+                      del mes seleccionado. Muchos ingresos se registran solos al
+                      completar reservas; con{" "}
+                      <span className="font-semibold text-foreground">
+                        Agregar Registro
+                      </span>{" "}
+                      puedes añadir ingresos o gastos manuales. Usa los filtros
+                      de mes, año y emisor para acotar la lista.
+                    </>
+                  )
+                }
+              />
+            </div>
             <p className="text-body-sm text-foreground-muted mt-1">
               Resumen financiero de {monthName} {selectedYear}
             </p>
@@ -290,9 +334,29 @@ export default function FinancesPage() {
           {/* Left column: record list */}
           <div className="lg:col-span-3 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-heading text-h4 font-semibold text-foreground">
-                Registros
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="font-heading text-h4 font-semibold text-foreground">
+                  Registros
+                </h2>
+                <HelpTooltip
+                  content={
+                    <>
+                      Cada registro es un{" "}
+                      <span className="font-semibold text-foreground">
+                        ingreso
+                      </span>{" "}
+                      o un{" "}
+                      <span className="font-semibold text-foreground">
+                        gasto
+                      </span>{" "}
+                      del periodo seleccionado. Los que provienen de reservas
+                      completadas o ventas se crean solos; el resto los añades tú.
+                      Usa los botones Todos / Ingresos / Gastos para filtrar la
+                      lista.
+                    </>
+                  }
+                />
+              </div>
               <span className="text-caption text-foreground-muted">
                 {sortedReservations.length} registro{sortedReservations.length !== 1 && "s"}
               </span>

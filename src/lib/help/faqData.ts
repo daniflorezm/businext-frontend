@@ -7,6 +7,9 @@ import {
   Users,
   CalendarDays,
   Link2,
+  ChartBarBig,
+  Star,
+  Brain,
   type LucideIcon,
 } from "lucide-react";
 import type { Capabilities } from "@/hooks/useAccessContext";
@@ -183,6 +186,85 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: "¿Dónde veo las solicitudes que llegan por el link público?",
         answer:
           "Aparecen en la sección de Reservas, para que las confirmes o rechaces antes de que queden agendadas.",
+      },
+    ],
+  },
+  {
+    id: "finanzas",
+    label: "Finanzas",
+    icon: ChartBarBig,
+    cap: "canManageFinances",
+    items: [
+      {
+        question: "¿De dónde salen los registros financieros?",
+        answer:
+          'Muchos se crean automáticamente: al completar una reserva o registrar una venta directa se genera un ingreso. Además, el owner puede añadir ingresos o gastos manuales con el botón "Agregar Registro".',
+      },
+      {
+        question: "¿Qué significan las tarjetas de Ingresos, Gastos y Balance?",
+        answer:
+          "Resumen el mes y año seleccionados: los ingresos totales, los gastos totales y el balance (ingresos menos gastos). Cambia el mes o el año en los filtros para ver otros periodos.",
+      },
+      {
+        question: "Soy empleado, ¿por qué mis ingresos aparecen más bajos?",
+        answer:
+          'La tarjeta "Mis Ingresos" muestra tu importe neto, es decir, ya con tu comisión descontada. Justo debajo puedes ver el importe bruto de referencia.',
+      },
+      {
+        question: "¿Cómo filtro o busco un registro concreto?",
+        answer:
+          "Usa los botones Todos / Ingresos / Gastos para filtrar por tipo, los selectores de mes y año para el periodo y, si eres owner, el campo Emisor para buscar por la persona que registró el movimiento.",
+      },
+    ],
+  },
+  {
+    id: "resenas",
+    label: "Reseñas",
+    icon: Star,
+    cap: "canManageReviews",
+    items: [
+      {
+        question: "¿Cómo conecto mi negocio de Google Maps?",
+        answer:
+          "En Reseñas, pega el enlace de tu ficha de Google Maps en el formulario. Businext importará tu perfil y tus reseñas para analizarlas.",
+      },
+      {
+        question: "¿Cómo actualizo las reseñas más recientes?",
+        answer:
+          'Pulsa el botón "Sincronizar" en la cabecera del perfil. Se traerán las reseñas nuevas desde Google Maps.',
+      },
+      {
+        question: "¿Para qué sirve el resumen con IA?",
+        answer:
+          "Analiza el conjunto de tus reseñas y destaca los puntos fuertes y las quejas más habituales de tus clientes, para que sepas qué mejorar de un vistazo.",
+      },
+      {
+        question: "¿Puedo responder a las reseñas desde Businext?",
+        answer:
+          "Puedes generar un borrador de respuesta con IA para cada reseña y usarlo como punto de partida para contestar en Google.",
+      },
+    ],
+  },
+  {
+    id: "inteligencia",
+    label: "Inteligencia de negocio",
+    icon: Brain,
+    cap: "canManageTeam",
+    items: [
+      {
+        question: "¿Qué es la Inteligencia de negocio?",
+        answer:
+          "Es un análisis generado por IA a partir de los datos de tu negocio (reservas, ingresos, equipo y clientes). Incluye KPIs clave, un resumen narrativo, oportunidades de mejora y el rendimiento de tu equipo y clientela.",
+      },
+      {
+        question: "¿Cómo genero o actualizo el análisis semanal?",
+        answer:
+          'Pulsa el botón "Generar" (o "Regenerar" si ya existe uno). La IA procesará tus datos y creará el resumen de la semana.',
+      },
+      {
+        question: "¿Por qué mi análisis tiene poca información?",
+        answer:
+          "Las conclusiones dependen de los datos que tengas registrados. Cuantas más reservas, ventas y movimientos financieros haya, más útiles y precisas serán las recomendaciones.",
       },
     ],
   },

@@ -11,6 +11,7 @@ import { BusinessSummary } from "@/components/reviews/BusinessSummary";
 import { ReviewList } from "@/components/reviews/ReviewList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { HelpTooltip } from "@/components/ui/tooltip";
 import { ShieldAlert } from "lucide-react";
 import SkeletonLoader from "@/components/common/SkeletonLoader";
 
@@ -77,9 +78,32 @@ export default function ReviewsPage() {
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Page Header */}
         <div>
-          <h1 className="text-h2 font-heading font-bold text-foreground">
-            Reseñas de Google
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-h2 font-heading font-bold text-foreground">
+              Reseñas de Google
+            </h1>
+            <HelpTooltip
+              content={
+                <>
+                  Conecta tu ficha de Google Maps pegando su enlace y Businext
+                  importará tus reseñas para analizarlas. Verás tu{" "}
+                  <span className="font-semibold text-foreground">
+                    valoración media
+                  </span>
+                  , la evolución en el tiempo y un{" "}
+                  <span className="font-semibold text-foreground">
+                    resumen con IA
+                  </span>{" "}
+                  de lo que opinan tus clientes. Además, puedes generar
+                  borradores de respuesta para cada reseña. Usa{" "}
+                  <span className="font-semibold text-foreground">
+                    Sincronizar
+                  </span>{" "}
+                  para traer las reseñas más recientes.
+                </>
+              }
+            />
+          </div>
           <p className="text-body-sm text-foreground-muted mt-1">
             Estadísticas y gestión de reseñas de tu negocio en Google Maps
           </p>
