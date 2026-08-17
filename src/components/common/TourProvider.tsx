@@ -17,7 +17,10 @@ import { TourKey, TourStep } from "@/lib/tour/types";
 type TourContextValue = {
   active: boolean;
   stepIndex: number;
+  /** Pasos que señalan algo. La bienvenida no cuenta. */
   totalSteps: number;
+  /** Número del paso actual dentro de ese total, en base 1. */
+  displayStep: number;
   currentStep: TourStep | null;
   needsSidebar: boolean;
   activeSection: string | null;
@@ -32,6 +35,7 @@ const INERT: TourContextValue = {
   active: false,
   stepIndex: 0,
   totalSteps: 0,
+  displayStep: 0,
   currentStep: null,
   needsSidebar: false,
   activeSection: null,
@@ -71,6 +75,10 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   const tourKey: TourKey = tourKeyForRole(context?.role);
   const steps = TOUR_STEPS[tourKey];
   const currentStep = active ? steps[stepIndex] ?? null : null;
+
+  // La bienvenida va siempre primera y queda fuera del contador, para que el
+  // usuario vea "1 de 10" en el primer elemento que se le señala.
+  const heroOffset = steps[0]?.hero ? 1 : 0;
 
   useEffect(() => {
     if (autoStarted.current || !context) return;
@@ -118,7 +126,8 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     () => ({
       active,
       stepIndex,
-      totalSteps: steps.length,
+      totalSteps: steps.length - heroOffset,
+      displayStep: stepIndex + 1 - heroOffset,
       currentStep,
       needsSidebar: Boolean(
         currentStep?.target && SIDEBAR_TARGETS.test(currentStep.target)
@@ -128,7 +137,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
       prev,
       skip,
     }),
-    [active, stepIndex, steps.length, currentStep, next, prev, skip]
+    [active, stepIndex, steps.length, heroOffset, currentStep, next, prev, skip]
   );
 
   return <TourContext.Provider value={value}>{children}</TourContext.Provider>;

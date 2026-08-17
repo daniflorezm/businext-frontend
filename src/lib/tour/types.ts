@@ -12,8 +12,9 @@ export type TourState = Partial<Record<TourKey, TourEntry>>;
 export type TourPlacement = "top" | "bottom" | "left" | "right";
 
 export type TourStep = {
-  /** Valor del atributo `data-tour` del elemento a resaltar. */
-  target: string;
+  /** Valor del atributo `data-tour` del elemento a resaltar.
+   *  Los pasos `hero` no resaltan nada y no lo llevan. */
+  target?: string;
   title: string;
   body: string;
   placement?: TourPlacement;
@@ -21,4 +22,7 @@ export type TourStep = {
   route?: string;
   /** Sección de /configuration que debe abrirse en este paso. */
   section?: string;
+  /** Pantalla completa de bienvenida. No lleva globo ni entra en el
+   *  contador: el usuario cuenta los pasos que señalan algo. */
+  hero?: boolean;
 };

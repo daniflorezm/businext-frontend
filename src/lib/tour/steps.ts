@@ -2,6 +2,12 @@ import { TourKey, TourStep } from "@/lib/tour/types";
 
 const OWNER_STEPS: TourStep[] = [
   {
+    title: "Bienvenido a Businext",
+    body: "Vamos a dejar tu negocio listo para recibir reservas. Te acompaño por cada pantalla y en un minuto sabrás moverte solo.",
+    hero: true,
+    route: "/configuration",
+  },
+  {
     target: "config-nav-business",
     title: "1. Los datos de tu negocio",
     body: "Empieza por aquí: nombre, teléfono y email de contacto. Es lo que verán tus clientes al reservar.",
@@ -80,6 +86,12 @@ const OWNER_STEPS: TourStep[] = [
 ];
 
 const EMPLOYEE_STEPS: TourStep[] = [
+  {
+    title: "Bienvenido a Businext",
+    body: "En medio minuto te enseño lo que necesitas para trabajar con la app: tus reservas, las solicitudes de clientes y tus datos.",
+    hero: true,
+    route: "/reservation",
+  },
   {
     target: "nav-reservation",
     title: "Las reservas",

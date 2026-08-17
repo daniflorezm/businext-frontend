@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useTour } from "@/components/common/TourProvider";
+import { TourWelcome } from "@/components/common/TourWelcome";
 import { TourPlacement } from "@/lib/tour/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -130,7 +131,8 @@ function cardPosition(rect: Rect | null, placement: TourPlacement = "bottom") {
 }
 
 export function TourOverlay() {
-  const { active, currentStep, stepIndex, totalSteps, next, prev, skip } = useTour();
+  const { active, currentStep, stepIndex, totalSteps, displayStep, next, prev, skip } =
+    useTour();
   const [mounted, setMounted] = useState(false);
   const isDesktop = useIsDesktop();
 
@@ -150,6 +152,10 @@ export function TourOverlay() {
 
   useEffect(() => {
     if (!active) return;
+    // En la bienvenida no interceptamos teclas: tiene sus propios botones y
+    // el Enter del botón enfocado ya avanza.
+    if (currentStep?.hero) return;
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") skip();
       else if (e.key === "ArrowRight" || e.key === "Enter") next();
@@ -157,12 +163,27 @@ export function TourOverlay() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [active, next, prev, skip]);
+  }, [active, currentStep?.hero, next, prev, skip]);
 
   if (!mounted || !active || !currentStep) return null;
 
-  const isLast = stepIndex === totalSteps - 1;
-  const isFirst = stepIndex === 0;
+  if (currentStep.hero) {
+    return createPortal(
+      <div className="fixed inset-0 z-[100]">
+        <TourWelcome
+          title={currentStep.title}
+          body={currentStep.body}
+          totalSteps={totalSteps}
+          onStart={next}
+          onSkip={skip}
+        />
+      </div>,
+      document.body
+    );
+  }
+
+  const isLast = displayStep === totalSteps;
+  const isFirst = displayStep === 1;
   const pos = cardPosition(rect, currentStep.placement);
   const floating = isDesktop && pos !== null;
 
@@ -253,9 +274,9 @@ export function TourOverlay() {
                 key={i}
                 className={cn(
                   "h-1 rounded-full transition-all duration-300",
-                  i === stepIndex
+                  i === displayStep - 1
                     ? "w-5 bg-primary"
-                    : i < stepIndex
+                    : i < displayStep - 1
                     ? "w-1.5 bg-primary/50"
                     : "w-1.5 bg-border"
                 )}
@@ -265,7 +286,7 @@ export function TourOverlay() {
 
           <div className="flex items-center justify-between gap-2">
             <span className="text-caption text-foreground-subtle tabular-nums">
-              {stepIndex + 1} de {totalSteps}
+              {displayStep} de {totalSteps}
             </span>
             <div className="flex items-center gap-2">
               {!isFirst && (
