@@ -1,5 +1,6 @@
 "use client";
 import useSWR from "swr";
+import { TourState } from "@/lib/tour/types";
 
 export type Capabilities = {
   canAccessApp: boolean;
@@ -25,6 +26,7 @@ export type AccessContext = {
   memberStatus: string | null;
   subscriptionActive: boolean;
   profile: UserProfile | null;
+  tourState: TourState;
   capabilities: Capabilities;
 };
 
