@@ -441,7 +441,7 @@ export default function ReservationPage() {
         {/* ═══════════════════════════════════════════
             SECTION 3 — Reservas de hoy
             ═══════════════════════════════════════════ */}
-        <section className="space-y-3" ref={todayTimelineRef}>
+        <section className="space-y-3" ref={todayTimelineRef} data-tour="reservations-today">
           <h2 className="font-heading text-h4 font-semibold text-foreground flex items-center gap-2">
             <ClipboardList className="h-5 w-5 text-primary" />
             Reservas de hoy
