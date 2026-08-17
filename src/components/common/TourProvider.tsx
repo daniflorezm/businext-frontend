@@ -80,9 +80,11 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     const entry = context.tourState?.[tourKey];
     if (entry?.done) return;
 
-    setStepIndex(entry?.step ?? 0);
+    // Acotamos el paso guardado: si el tour se acorta, un progreso antiguo
+    // apuntaria fuera del array y no habria nada que pintar.
+    setStepIndex(Math.min(entry?.step ?? 0, steps.length - 1));
     setActive(true);
-  }, [context, tourKey]);
+  }, [context, tourKey, steps.length]);
 
   useEffect(() => {
     if (!active || !currentStep?.route) return;
