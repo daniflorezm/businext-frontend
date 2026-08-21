@@ -34,6 +34,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { HelpTooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 /* ────────────────────────────────────────────────── */
@@ -404,6 +405,7 @@ export default function ConfigurationPage() {
                       icon={Building2}
                       title="Información del negocio"
                       description="Datos básicos de tu negocio"
+                      help="Estos datos (nombre, teléfono y email de contacto) se muestran a tus clientes, por ejemplo en la página pública de reserva online. Solo el owner puede editarlos."
                     />
                     {canManageConfig ? (
                       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -496,6 +498,22 @@ export default function ConfigurationPage() {
                       icon={ShieldUser}
                       title="Gestión de equipo"
                       description="Invita empleados y controla quién puede acceder a tu negocio."
+                      help={
+                        <>
+                          Para invitar a un empleado solo hace falta su nombre,
+                          email, teléfono y rol (Empleado o Manager). Una vez
+                          invitado, en su fila de la lista puedes asignarle un{" "}
+                          <span className="font-semibold text-foreground">
+                            local
+                          </span>{" "}
+                          (si tienes varios) y configurarle un{" "}
+                          <span className="font-semibold text-foreground">
+                            horario personalizado
+                          </span>{" "}
+                          (icono de calendario); si no le pones uno, se usará el
+                          horario general del negocio.
+                        </>
+                      }
                     />
 
                     {/* Invite form */}
@@ -715,10 +733,12 @@ function SectionHeader({
   icon: Icon,
   title,
   description,
+  help,
 }: {
   icon: typeof Settings;
   title: string;
   description: string;
+  help?: React.ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3">
@@ -726,9 +746,12 @@ function SectionHeader({
         <Icon className="w-5 h-5 text-primary" />
       </div>
       <div>
-        <h2 className="font-heading text-h4 font-semibold text-foreground">
-          {title}
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="font-heading text-h4 font-semibold text-foreground">
+            {title}
+          </h2>
+          {help && <HelpTooltip content={help} />}
+        </div>
         <p className="text-body-sm text-foreground-muted">{description}</p>
       </div>
     </div>
@@ -808,6 +831,7 @@ function BookingLinkSection({ businessId }: { businessId: string }) {
           icon={Link2}
           title="Reserva online"
           description="Comparte este enlace o código QR con tus clientes para que puedan solicitar citas."
+          help="Este link público permite a tus clientes solicitar una cita sin necesidad de llamar. Las solicitudes aparecen en la pestaña de Reservas para que las confirmes o rechaces."
         />
 
         {/* Link + copy */}

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { HelpTooltip } from "@/components/ui/tooltip";
 
 const EMPTY_FORM: LocationCreate = {
   name: "",
@@ -106,6 +107,16 @@ export function LocationsSection() {
           {locations.length > 0 && (
             <Badge variant="muted">{locations.length}</Badge>
           )}
+          <HelpTooltip
+            content={
+              <>
+                Si tu negocio tiene varias sedes, créalas aquí (nombre, dirección,
+                teléfono y enlace de Google Maps). Luego, en{" "}
+                <span className="font-semibold text-foreground">Equipo</span>,
+                puedes asignar cada empleado a uno de estos locales.
+              </>
+            }
+          />
         </div>
         {!showForm && (
           <Button

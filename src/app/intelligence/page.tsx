@@ -13,6 +13,7 @@ import { TeamAnalysis } from "@/components/intelligence/TeamAnalysis";
 import { ClientAnalysis } from "@/components/intelligence/ClientAnalysis";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SectionSkeleton } from "@/components/ui/skeleton";
+import { HelpTooltip } from "@/components/ui/tooltip";
 import { ShieldAlert, Brain } from "lucide-react";
 
 export default function IntelligencePage() {
@@ -121,9 +122,28 @@ function PageHeader() {
         <Brain className="h-5 w-5 text-secondary" />
       </div>
       <div>
-        <h1 className="font-heading text-h3 font-bold text-foreground tracking-tight">
-          Inteligencia de negocio
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-heading text-h3 font-bold text-foreground tracking-tight">
+            Inteligencia de negocio
+          </h1>
+          <HelpTooltip
+            content={
+              <>
+                La IA analiza los datos de tu negocio (reservas, ingresos,
+                equipo y clientes) y genera cada semana un{" "}
+                <span className="font-semibold text-foreground">resumen</span>{" "}
+                con los KPIs clave, un análisis narrativo,{" "}
+                <span className="font-semibold text-foreground">
+                  oportunidades
+                </span>{" "}
+                de mejora y el rendimiento de tu equipo y clientela. Pulsa{" "}
+                <span className="font-semibold text-foreground">Generar</span>{" "}
+                para crear o actualizar el análisis. Cuantos más datos tengas
+                registrados, más útiles serán las conclusiones.
+              </>
+            }
+          />
+        </div>
         <p className="text-[14px] text-foreground-muted/70 mt-0.5 tracking-wide">
           Tu negocio, analizado por IA cada semana
         </p>
