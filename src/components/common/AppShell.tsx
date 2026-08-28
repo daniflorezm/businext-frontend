@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useSWRConfig } from "swr";
 import { useAccessContext, ACCESS_CONTEXT_SWR_KEY } from "@/hooks/useAccessContext";
 import { Sidebar } from "@/components/common/Sidebar";
+import { TourProvider } from "@/components/common/TourProvider";
+import { TourOverlay } from "@/components/common/TourOverlay";
 import { ToastProvider } from "@/context/ToastContext";
 import { routesWithoutHeader } from "@/lib/utils";
 
@@ -33,14 +35,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
-      <div className="flex min-h-screen bg-background">
-        {showSidebar && <Sidebar />}
-        <main
-          className={`flex-1 min-w-0 ${showSidebar ? "md:ml-64" : ""}`}
-        >
-          {children}
-        </main>
-      </div>
+      <TourProvider>
+        <div className="flex min-h-screen bg-background">
+          {showSidebar && <Sidebar />}
+          <main
+            className={`flex-1 min-w-0 ${showSidebar ? "md:ml-64" : ""}`}
+          >
+            {children}
+          </main>
+        </div>
+        {showSidebar && <TourOverlay />}
+      </TourProvider>
     </ToastProvider>
   );
 }

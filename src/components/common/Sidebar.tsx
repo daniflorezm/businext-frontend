@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useGlobalToast } from "@/context/ToastContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,6 +23,7 @@ import {
   Bell,
   HelpCircle,
 } from "lucide-react";
+import { useTour } from "@/components/common/TourProvider";
 import { useAccessContext } from "@/hooks/useAccessContext";
 import { useBookingRequests } from "@/hooks/useBookingRequests";
 import { logout } from "@/app/login/logout";
@@ -82,6 +83,7 @@ export function Sidebar() {
   const { bookingRequests } = useBookingRequests();
   const { showToast } = useGlobalToast();
   const [open, setOpen] = useState(false);
+  const { needsSidebar, active: tourActive } = useTour();
   const [showContact, setShowContact] = useState(false);
   const [contactMessage, setContactMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -95,6 +97,12 @@ export function Sidebar() {
       return r.employeeName.toLowerCase() === name.toLowerCase();
     }
   ).length;
+
+  // En móvil el menú es un drawer cerrado: lo abrimos para que el elemento
+  // que señala el tour exista y sea visible.
+  useEffect(() => {
+    if (tourActive && needsSidebar) setOpen(true);
+  }, [tourActive, needsSidebar]);
 
   const displayName =
     context?.profile?.displayName ||
@@ -152,6 +160,7 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
+              data-tour={`nav-${href.slice(1)}`}
               onClick={() => setOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-4 py-2.5 rounded-lg text-body-sm font-medium transition-all duration-150 ease-snappy",

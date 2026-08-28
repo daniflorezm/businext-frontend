@@ -132,6 +132,102 @@
   animation: fade-in-up 0.5s cubic-bezier(0.3, 0, 0, 1) both;
 }
 
+/* ══ Tour guiado ══════════════════════════════════════════════════════ */
+
+/* El recuadro aparece ya colocado sobre su elemento y se funde en el sitio.
+   Solo se anima el desplazamiento cuando viaja de un elemento a otro. */
+@keyframes tour-spotlight-in {
+  from {
+    opacity: 0;
+    transform: scale(1.07);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-tour-spotlight-in {
+  animation: tour-spotlight-in 0.45s var(--ease-fluid) both;
+}
+
+/* Halo que late alrededor del elemento resaltado para atraer la mirada. */
+@keyframes tour-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(1.14);
+  }
+}
+.animate-tour-pulse {
+  animation: tour-pulse 2.4s var(--ease-fluid) infinite;
+}
+
+/* Destellos que derivan despacio detrás de la bienvenida. */
+@keyframes tour-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(6vw, -4vh, 0) scale(1.12);
+  }
+  66% {
+    transform: translate3d(-5vw, 5vh, 0) scale(0.94);
+  }
+}
+.animate-tour-drift {
+  animation: tour-drift 18s ease-in-out infinite;
+}
+
+@keyframes tour-ring {
+  from {
+    opacity: 0.5;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.1);
+  }
+}
+.animate-tour-ring {
+  animation: tour-ring 3.6s var(--ease-fluid) infinite;
+}
+
+/* Entrada escalonada del contenido de la bienvenida. */
+@keyframes tour-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+.animate-tour-rise {
+  animation: tour-rise 0.75s var(--ease-fluid) both;
+}
+
+@keyframes tour-emblem-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-25deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.animate-tour-emblem-in {
+  animation: tour-emblem-in 0.9s var(--ease-spring) both;
+}
+
 /* ── Base styles ── */
 body {
   font-family: var(--font-sans);

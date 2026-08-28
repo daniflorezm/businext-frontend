@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import { useTour } from "@/components/common/TourProvider";
 import {
   Building2,
   ShieldUser,
@@ -101,6 +102,15 @@ export default function ConfigurationPage() {
   });
 
   const [activeSection, setActiveSection] = useState<SectionId>("profile");
+
+  // El apartado llega por contexto y no por la URL: useSearchParams aquí
+  // exigiría envolver la página en un Suspense.
+  const { activeSection: tourSection } = useTour();
+  useEffect(() => {
+    if (tourSection && NAV_ITEMS.some((item) => item.id === tourSection)) {
+      setActiveSection(tourSection as SectionId);
+    }
+  }, [tourSection]);
 
   // ── Employee state ──
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -342,6 +352,7 @@ export default function ConfigurationPage() {
                     <button
                       key={item.id}
                       type="button"
+                      data-tour={`config-nav-${item.id}`}
                       onClick={() => setActiveSection(item.id)}
                       className={cn(
                         "flex items-center gap-2.5 px-3 py-2.5 rounded-md text-body-sm font-medium transition-colors duration-150 whitespace-nowrap",
